@@ -1,0 +1,17 @@
+//! Travel Planner core: SQLite persistence, business rules that guard the data, documents,
+//! export/import and backups. No UI or Tauri dependencies, so it is tested on its own.
+
+pub mod db;
+pub mod documents;
+pub mod error;
+pub mod model;
+pub mod store;
+pub mod table;
+pub mod transfer;
+pub mod validate;
+
+pub use error::{CoreError, CoreResult, ErrorPayload};
+pub use store::Store;
+
+#[cfg(test)]
+mod tests;

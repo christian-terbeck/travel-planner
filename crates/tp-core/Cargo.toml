@@ -1,0 +1,20 @@
+[package]
+name = "tp-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+rusqlite = { version = "0.41", features = ["bundled", "backup"] }
+uuid = { version = "1", features = ["v7"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+ts-rs = { version = "12", features = ["serde-json-impl", "no-serde-warnings"] }
+zip = { version = "9", default-features = false, features = ["deflate"] }
+sha2 = "0.11"
+serde_rusqlite = "0.44"
+
+[dev-dependencies]
+tempfile = "3"

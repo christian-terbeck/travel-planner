@@ -1,0 +1,215 @@
+//! Tauri shell: exposes `tp-core` to the web UI as commands. All rules live in the core.
+
+use std::path::PathBuf;
+use std::sync::Mutex;
+
+use tauri::{Manager, State};
+use tp_core::model::{Booking, CancellationPolicy, Document, OptionBundle, Scenario, ScenarioSelection, TripGraph};
+use tp_core::store::{AppInfo, BookingInput, CancelInput, Entity, EntityKind};
+use tp_core::transfer::{self, BackupManifest, ImportMode, ImportPreview, RestorePreview};
+use tp_core::{CoreError, ErrorPayload, Store};
+
+struct AppState(Mutex<Store>);
+
+type CmdResult<T> = Result<T, ErrorPayload>;
+
+fn err(e: CoreError) -> ErrorPayload {
+    ErrorPayload::from(&e)
+}
+
+/// Runs `f` with the store; commands are short, so one lock keeps every change serialized.
+fn with<T>(state: &State<'_, AppState>, f: impl FnOnce(&mut Store) -> tp_core::CoreResult<T>) -> CmdResult<T> {
+    let mut store = state.0.lock().map_err(|_| err(CoreError::rule("busy", "store unavailable")))?;
+    f(&mut store).map_err(err)
+}
+
+#[tauri::command]
+fn app_info(state: State<'_, AppState>) -> CmdResult<AppInfo> {
+    with(&state, |s| s.app_info())
+}
+
+#[tauri::command]
+fn set_setting(state: State<'_, AppState>, key: String, value: Option<String>) -> CmdResult<()> {
+    with(&state, |s| s.set_setting(&key, value.as_deref()))
+}
+
+#[tauri::command]
+fn list_trips(state: State<'_, AppState>) -> CmdResult<Vec<TripGraph>> {
+    with(&state, |s| s.trip_graphs())
+}
+
+#[tauri::command]
+fn get_trip(state: State<'_, AppState>, id: String) -> CmdResult<TripGraph> {
+    with(&state, |s| s.trip_graph(&id))
+}
+
+#[tauri::command]
+fn save(state: State<'_, AppState>, entity: Entity) -> CmdResult<()> {
+    with(&state, |s| s.save(entity))
+}
+
+#[tauri::command]
+fn delete(state: State<'_, AppState>, kind: EntityKind, keys: Vec<String>) -> CmdResult<()> {
+    with(&state, |s| s.delete(kind, &keys))
+}
+
+#[tauri::command]
+fn save_option(state: State<'_, AppState>, bundle: OptionBundle, confirm_booked_edit: bool) -> CmdResult<()> {
+    with(&state, |s| s.save_option(bundle, confirm_booked_edit))
+}
+
+#[tauri::command]
+fn duplicate_option(state: State<'_, AppState>, id: String, title: String) -> CmdResult<String> {
+    with(&state, |s| s.duplicate_option(&id, &title))
+}
+
+#[tauri::command]
+fn create_booking(state: State<'_, AppState>, input: BookingInput) -> CmdResult<String> {
+    with(&state, |s| s.create_booking(input))
+}
+
+#[tauri::command]
+fn update_booking(state: State<'_, AppState>, booking: Booking, policy: Option<CancellationPolicy>) -> CmdResult<()> {
+    with(&state, |s| s.update_booking(booking, policy))
+}
+
+#[tauri::command]
+fn cancel_booking(state: State<'_, AppState>, input: CancelInput) -> CmdResult<()> {
+    with(&state, |s| s.cancel_booking(input))
+}
+
+#[tauri::command]
+fn save_scenario(state: State<'_, AppState>, scenario: Scenario, selections: Vec<ScenarioSelection>) -> CmdResult<()> {
+    with(&state, |s| s.save_scenario(scenario, selections))
+}
+
+#[tauri::command]
+fn set_preferred_scenario(state: State<'_, AppState>, trip_id: String, scenario_id: Option<String>) -> CmdResult<()> {
+    with(&state, |s| s.set_preferred_scenario(&trip_id, scenario_id.as_deref()))
+}
+
+#[tauri::command]
+fn attach_document(
+    state: State<'_, AppState>,
+    trip_id: String,
+    path: String,
+    option_id: Option<String>,
+    booking_id: Option<String>,
+) -> CmdResult<Document> {
+    with(&state, |s| s.attach_document(&trip_id, &PathBuf::from(path), option_id, booking_id))
+}
+
+#[tauri::command]
+fn update_document_notes(state: State<'_, AppState>, id: String, notes: Option<String>) -> CmdResult<()> {
+    with(&state, |s| s.update_document_notes(&id, notes))
+}
+
+/// Opens a stored document with the default app for its type.
+#[tauri::command]
+fn open_document(app: tauri::AppHandle, state: State<'_, AppState>, id: String) -> CmdResult<()> {
+    use tauri_plugin_opener::OpenerExt;
+    let path = with(&state, |s| s.document_path(&id))?;
+    app.opener()
+        .open_path(path.to_string_lossy(), None::<&str>)
+        .map_err(|e| err(CoreError::rule("open_failed", e.to_string())))
+}
+
+/// Opens a web link in the system browser, after the same check that guards stored URLs.
+#[tauri::command]
+fn open_url(app: tauri::AppHandle, url: String) -> CmdResult<()> {
+    use tauri_plugin_opener::OpenerExt;
+    tp_core::validate::url("url", &url).map_err(err)?;
+    app.opener()
+        .open_url(url, None::<&str>)
+        .map_err(|e| err(CoreError::rule("open_failed", e.to_string())))
+}
+
+#[tauri::command]
+fn export_trip(state: State<'_, AppState>, trip_id: String, path: String) -> CmdResult<()> {
+    with(&state, |s| s.export_trip(&trip_id, &PathBuf::from(path)))
+}
+
+#[tauri::command]
+fn write_export(path: String, contents: String) -> CmdResult<()> {
+    transfer::write_text_export(&PathBuf::from(path), &contents).map_err(err)
+}
+
+#[tauri::command]
+fn preview_import(state: State<'_, AppState>, path: String) -> CmdResult<ImportPreview> {
+    with(&state, |s| s.preview_import(&PathBuf::from(path)))
+}
+
+#[tauri::command]
+fn import_trip(state: State<'_, AppState>, path: String, mode: ImportMode) -> CmdResult<String> {
+    with(&state, |s| s.import_trip(&PathBuf::from(path), mode))
+}
+
+#[tauri::command]
+fn create_backup(state: State<'_, AppState>, path: String) -> CmdResult<BackupManifest> {
+    with(&state, |s| s.create_backup(&PathBuf::from(path)))
+}
+
+#[tauri::command]
+fn preview_restore(state: State<'_, AppState>, path: String) -> CmdResult<RestorePreview> {
+    with(&state, |s| s.preview_restore(&PathBuf::from(path)))
+}
+
+#[tauri::command]
+fn restore_backup(state: State<'_, AppState>, path: String) -> CmdResult<String> {
+    with(&state, |s| s.restore_backup(&PathBuf::from(path)))
+}
+
+/// Marker file that switches the app to portable mode.
+const PORTABLE_MARKER: &str = "portable.txt";
+
+/// In portable mode (marker file next to the executable) all data lives in `data\` beside it,
+/// so the folder can be copied to another PC or a USB stick.
+fn portable_data_dir() -> Option<PathBuf> {
+    let exe = std::env::current_exe().ok()?;
+    let dir = exe.parent()?;
+    dir.join(PORTABLE_MARKER).is_file().then(|| dir.join("data"))
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            let data_dir = match portable_data_dir() {
+                Some(dir) => dir,
+                None => app.path().app_data_dir()?,
+            };
+            let store = Store::open(&data_dir)?;
+            app.manage(AppState(Mutex::new(store)));
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            app_info,
+            set_setting,
+            list_trips,
+            get_trip,
+            save,
+            delete,
+            save_option,
+            duplicate_option,
+            create_booking,
+            update_booking,
+            cancel_booking,
+            save_scenario,
+            set_preferred_scenario,
+            attach_document,
+            update_document_notes,
+            open_document,
+            open_url,
+            export_trip,
+            write_export,
+            preview_import,
+            import_trip,
+            create_backup,
+            preview_restore,
+            restore_backup,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running Travel Planner");
+}
