@@ -15,6 +15,9 @@ these decisions.
 | Calendar export | ICS export of a trip's itinerary | Offline, works with Outlook/Google Calendar |
 | Travelers | Travelers are entities; payments record who paid, costs can be split | Cost splitting and per-traveler settlement |
 | Calendar rendering | Own month/week/agenda/itinerary views | Needs plan/booking/preview semantics, stays and time zones; FullCalendar 7 is a new headless API with v6 plugins |
+| Map | Offline SVG map (Natural Earth via `world-atlas`, `d3-geo`); no tile server | Works offline and sends no locations anywhere |
+| Distances | Flights: great-circle between airports. Ground: straight line × 1.25, labelled "estimated"; "car" when a rental car covers that day | Road distances need an online routing service |
+| Stay locations | Optional lat/lon, parsed offline from pasted coordinates or Google Maps/OSM links | Address geocoding needs an online service |
 | Linting | Biome (lint + format) | typescript-eslint does not support TypeScript 7 |
 | UI language | English, every string through i18next keys | German later is translation work only |
 
@@ -135,3 +138,9 @@ ExchangeRate* (explicit rate + date + source), Setting*, ChangeLog*
 | M9 | Dashboard, cancellation dashboard, reminders, tasks, Price Watch | Acceptance 11 |
 | M10 | Documents and notes, exports (JSON, HTML, ICS, CSV), backup, restore, import preview | Acceptance 15–16 |
 | M11 | Settings, polish, accessibility pass, end-to-end acceptance run on Windows | All acceptance criteria |
+| M12 | Route map with flight/drive distances | Map tab shows the plan's route and km per mode |
+
+## 5. Status
+
+M0–M10 and M12 are implemented. M11 (manual end-to-end acceptance run on Windows and UI
+polish from that run) is pending; the Windows build starts and initialises its database.

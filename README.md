@@ -703,6 +703,11 @@ Avoid implementing a large, fragile collection of provider-specific integrations
 
 ## 15. Data Model
 
+> **Implementation note:** the implemented model replaces *TripComponent* and *Alternative* with
+> **Slot → Option → Scenario**, and a **Booking** keeps an immutable snapshot of the option it was
+> made from. Stations, travelers, tasks and optional stay coordinates were added. See
+> [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the schema and all decisions.
+
 Design the data model around explicit entities and clear relationships.
 
 The following entities represent the conceptual minimum. Claude Code may adjust the physical schema where necessary to achieve a clean implementation.
@@ -1133,3 +1138,31 @@ All core information must persist locally, and the application must work without
 External integrations must be additive, optional, and isolated behind clearly defined interfaces.
 
 **The ultimate goal is a dependable personal travel workspace that helps users make better decisions, save money where possible, and never lose track of an important booking or deadline.**
+
+## 25. Development
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the architecture, domain model and decisions.
+
+```
+crates/tp-core   Rust core: SQLite schema and migrations, validation, transactional store,
+                 documents, export/import, backups (no Tauri dependency)
+src-tauri        Tauri shell exposing the core as commands
+src/domain       TypeScript business logic (money, time zones, scenarios, conflicts, budget,
+                 cancellation, reminders, ICS, routes and distances), pure and tested
+src              React UI (features/, ui/, lib/, i18n/)
+public           Offline airport list (mwgg/Airports, MIT)
+```
+
+Checks (WSL or any Linux/macOS/Windows shell with Node ≥ 22 and Rust):
+
+```
+npm install
+npm test                    # domain tests (Vitest)
+npm run typecheck && npm run lint && npm run build
+cargo test -p tp-core       # core tests; also regenerates src/api/bindings
+```
+
+Windows app: `bash scripts/build-windows.sh` builds the installer and a portable zip into
+`release/` — natively in Git Bash on Windows, or cross-compiled from WSL with cargo-xwin
+(toolchain via `scripts/setup-wincross.sh`). `bash scripts/dev-windows.sh` starts a debug build on
+Windows against the Vite dev server for UI work from WSL.

@@ -185,6 +185,8 @@ export function addStay(
     tz: "Europe/Lisbon",
     room_type: null,
     meal_plan: null,
+    lat: null,
+    lon: null,
   };
   g.accommodation_details.push(a);
   return o;
@@ -243,6 +245,8 @@ export function addActivity(
     tz: "Europe/Lisbon",
     duration_min: null,
     flexible: false,
+    lat: null,
+    lon: null,
   };
   g.activity_details.push(a);
   return o;

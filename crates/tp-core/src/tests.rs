@@ -279,6 +279,8 @@ fn cancelling_keeps_booking_payments_and_history() {
         tz: Some("Europe/Lisbon".into()),
         room_type: None,
         meal_plan: None,
+        lat: Some(38.7139),
+        lon: Some(-9.1334),
     };
     s.save_option(
         OptionBundle { option: o, segments: vec![], accommodation: Some(acc), rental_car: None, activity: None, fees: vec![], policy: None },

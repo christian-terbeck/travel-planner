@@ -7,7 +7,10 @@ use rusqlite::Connection;
 use crate::error::CoreResult;
 
 /// Ordered migrations; index + 1 is the schema version they lead to. Never edit a released one.
-const MIGRATIONS: &[&str] = &[include_str!("../migrations/0001_init.sql")];
+const MIGRATIONS: &[&str] = &[
+    include_str!("../migrations/0001_init.sql"),
+    include_str!("../migrations/0002_locations.sql"),
+];
 
 pub const SCHEMA_VERSION: i64 = MIGRATIONS.len() as i64;
 
@@ -54,6 +57,27 @@ mod tests {
         assert_eq!(schema_version(&conn).unwrap(), SCHEMA_VERSION);
         let fk: bool = conn.pragma_query_value(None, "foreign_keys", |r| r.get(0)).unwrap();
         assert!(fk);
+    }
+
+    #[test]
+    fn upgrading_keeps_existing_rows() {
+        let mut conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(MIGRATIONS[0]).unwrap();
+        conn.pragma_update(None, "user_version", 1).unwrap();
+        conn.execute_batch(
+            "INSERT INTO trips (id, title, currency, created_at, updated_at) VALUES ('t', 'Old', 'EUR', 'x', 'x');
+             INSERT INTO slots (id, trip_id, kind, title, created_at) VALUES ('s', 't', 'accommodation', 'Stay', 'x');
+             INSERT INTO options (id, slot_id, title, currency, created_at, updated_at) VALUES ('o', 's', 'Hotel', 'EUR', 'x', 'x');
+             INSERT INTO accommodation_details (option_id, check_in) VALUES ('o', '2027-06-10');",
+        )
+        .unwrap();
+        migrate_existing(&mut conn).unwrap();
+        assert_eq!(schema_version(&conn).unwrap(), SCHEMA_VERSION);
+        let (check_in, lat): (String, Option<f64>) = conn
+            .query_row("SELECT check_in, lat FROM accommodation_details WHERE option_id = 'o'", [], |r| Ok((r.get(0)?, r.get(1)?)))
+            .unwrap();
+        assert_eq!(check_in, "2027-06-10");
+        assert_eq!(lat, None);
     }
 
     #[test]

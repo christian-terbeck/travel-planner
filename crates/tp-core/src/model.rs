@@ -162,6 +162,8 @@ pub struct AccommodationDetails {
     pub tz: Option<String>,
     pub room_type: Option<String>,
     pub meal_plan: Option<String>,
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -199,6 +201,8 @@ pub struct ActivityDetails {
     pub tz: Option<String>,
     pub duration_min: Option<i64>,
     pub flexible: bool,
+    pub lat: Option<f64>,
+    pub lon: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]

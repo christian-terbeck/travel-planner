@@ -126,6 +126,15 @@ fn range(field: &str, v: Option<i64>, min: i64, max: i64) -> CoreResult<()> {
     }
 }
 
+/// Both or neither, within WGS 84 ranges.
+fn coordinates(lat: Option<f64>, lon: Option<f64>) -> CoreResult<()> {
+    match (lat, lon) {
+        (None, None) => Ok(()),
+        (Some(a), Some(o)) if (-90.0..=90.0).contains(&a) && (-180.0..=180.0).contains(&o) => Ok(()),
+        _ => Err(CoreError::invalid("lat", "expected latitude and longitude")),
+    }
+}
+
 fn not_before(field: &str, start: &Option<String>, end: &Option<String>) -> CoreResult<()> {
     if let (Some(s), Some(e)) = (start, end)
         && e < s
@@ -273,7 +282,8 @@ impl Validate for AccommodationDetails {
         opt_time("check_out_time", &self.check_out_time)?;
         opt_tz("tz", &self.tz)?;
         opt_line("room_type", &self.room_type)?;
-        opt_line("meal_plan", &self.meal_plan)
+        opt_line("meal_plan", &self.meal_plan)?;
+        coordinates(self.lat, self.lon)
     }
 }
 
@@ -309,7 +319,8 @@ impl Validate for ActivityDetails {
         opt_time("end_time", &self.end_time)?;
         not_before("end_date", &self.start_date, &self.end_date)?;
         opt_tz("tz", &self.tz)?;
-        range("duration_min", self.duration_min, 0, 60 * 24 * 60)
+        range("duration_min", self.duration_min, 0, 60 * 24 * 60)?;
+        coordinates(self.lat, self.lon)
     }
 }
 

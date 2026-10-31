@@ -16,6 +16,7 @@ export default defineConfig({
   clearScreen: false,
   server: { port: 1420, strictPort: true, host: true },
   envPrefix: ["VITE_", "TAURI_ENV_"],
-  build: { target: "es2022", outDir: "dist" },
+  // A local desktop app: one bundle is fine, there is no network to save.
+  build: { target: "es2022", outDir: "dist", chunkSizeWarningLimit: 2000 },
   test: { include: ["src/**/*.test.ts"], environment: "node" },
 });
