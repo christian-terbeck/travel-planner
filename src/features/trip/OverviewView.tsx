@@ -159,7 +159,7 @@ function PlanSummary() {
   const f = useFormat();
   const m = useTrip();
   const plan = m.plan;
-  const route = useRoute(m);
+  const { route } = useRoute(m);
   const rows: Array<{ icon: React.ReactNode; label: string; value: string; note?: React.ReactNode }> = [
     {
       icon: <BedDouble className="size-4" />,

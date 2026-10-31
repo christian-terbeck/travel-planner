@@ -1,7 +1,10 @@
 // Route and distances of a plan: flights as great-circle distances between airports, travel on
 // the ground between airports and stays as straight-line distance times a road factor. Ground
-// distances are estimates and are labelled as such; exact road distances need a route service.
+// distances are estimates and are labelled as such until road routes from the online route
+// service (when enabled) replace them.
 
+import type { RoadQuery } from "@/api/bindings/RoadQuery";
+import type { RoadResult } from "@/api/bindings/RoadResult";
 import type { PlanItem } from "./items";
 import { compareDate, type Instant, type PlainDate } from "./time";
 
@@ -72,6 +75,10 @@ export interface Leg {
   km: number;
   /** Straight line × road factor instead of a measured distance. */
   estimated: boolean;
+  /** Driving time from the route service. */
+  minutes: number | null;
+  /** Road geometry as [lon, lat] pairs from the route service; null draws a straight line. */
+  path: [number, number][] | null;
   at: Instant | null;
   optionId: string | null;
 }
@@ -140,6 +147,8 @@ export function buildRoute(
         mode: "flight",
         km: haversineKm(from.pos, to.pos),
         estimated: false,
+        minutes: null,
+        path: null,
         at: s.depart,
         optionId: item.option.id,
       });
@@ -190,12 +199,57 @@ export function buildRoute(
       mode: hasCar(day) ? "drive" : "ground",
       km: straight * ROAD_FACTOR,
       estimated: true,
+      minutes: null,
+      path: null,
       at: a.at,
       optionId: null,
     });
   }
   legs.sort((x, y) => (x.at?.epochMilliseconds ?? 0) - (y.at?.epochMilliseconds ?? 0));
+  return {
+    points: [...points.values()],
+    legs,
+    km: sumKm(legs),
+    missingStays,
+    unknownAirports: [...unknown].sort(),
+  };
+}
+
+function sumKm(legs: Leg[]): Record<LegMode, number> {
   const km: Record<LegMode, number> = { flight: 0, drive: 0, ground: 0 };
   for (const l of legs) km[l.mode] += l.km;
-  return { points: [...points.values()], legs, km, missingStays, unknownAirports: [...unknown].sort() };
+  return km;
+}
+
+/** Legs on the ground, the ones a route service can measure. */
+export function roadQueries(route: Route): RoadQuery[] {
+  return route.legs
+    .filter((l) => l.mode !== "flight")
+    .map((l) => ({
+      from_lat: l.from.pos.lat,
+      from_lon: l.from.pos.lon,
+      to_lat: l.to.pos.lat,
+      to_lon: l.to.pos.lon,
+    }));
+}
+
+/**
+ * Replaces the estimates of ground legs by road routes, given in the order of `roadQueries`.
+ * Legs without a route (no road, service failed) keep their estimate.
+ */
+export function applyRoads(route: Route, roads: RoadResult[]): Route {
+  let k = 0;
+  const legs = route.legs.map((l) => {
+    if (l.mode === "flight") return l;
+    const r = roads[k++];
+    if (r?.status !== "found") return l;
+    return {
+      ...l,
+      km: r.distance_m / 1000,
+      estimated: false,
+      minutes: Math.round(r.duration_s / 60),
+      path: r.path,
+    };
+  });
+  return { ...route, legs, km: sumKm(legs) };
 }

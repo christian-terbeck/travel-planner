@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { addCar, addFlight, addSlot, addStay, graph } from "./fixture.test-util";
-import { buildRoute, haversineKm, parseCoordinates, ROAD_FACTOR } from "./geo";
+import { applyRoads, buildRoute, haversineKm, parseCoordinates, ROAD_FACTOR, roadQueries } from "./geo";
 import { buildItems } from "./items";
 
 const AIRPORTS: Record<string, { lat: number; lon: number }> = {
@@ -118,5 +118,40 @@ describe("route", () => {
     expect(r.km.ground).toBeGreaterThan(0);
     expect(r.missingStays.map((i) => i.option.id)).toEqual([porto.id]);
     expect(r.unknownAirports).toEqual(["XXX"]);
+  });
+
+  it("replaces ground estimates by road routes where the service found one", () => {
+    const { g } = roadTrip();
+    const cs = addSlot(g, "rental_car");
+    addCar(g, cs, 1, "2027-06-10T10:00", "2027-06-17T15:00", { return_location: "OPO" });
+    const r = buildRoute(
+      [...buildItems(g, { travelerCount: null, fallbackTz: "UTC" }).values()],
+      airport,
+      "Europe/Lisbon",
+    );
+    const queries = roadQueries(r);
+    expect(queries).toHaveLength(3);
+    expect(queries[1]).toEqual({ from_lat: 38.7139, from_lon: -9.1334, to_lat: 41.1496, to_lon: -8.6109 });
+
+    const routed = applyRoads(r, [
+      { status: "failed", message: "offline" },
+      {
+        status: "found",
+        distance_m: 313_500,
+        duration_s: 3 * 3600 + 29,
+        path: [
+          [-9.13, 38.71],
+          [-8.61, 41.15],
+        ],
+      },
+      { status: "no_route" },
+    ]);
+    const [, toLisbon, lisPorto, toAirport] = routed.legs;
+    expect(lisPorto).toMatchObject({ km: 313.5, estimated: false, minutes: 180 });
+    expect(lisPorto?.path).toHaveLength(2);
+    expect(toLisbon?.estimated).toBe(true);
+    expect(toAirport?.estimated).toBe(true);
+    expect(routed.km.flight).toBe(r.km.flight);
+    expect(routed.km.drive).toBeCloseTo(r.km.drive - (r.legs[2]?.km ?? 0) + 313.5);
   });
 });

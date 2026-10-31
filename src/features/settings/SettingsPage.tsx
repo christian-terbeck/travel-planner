@@ -1,17 +1,18 @@
 import { open as openDialog, save } from "@tauri-apps/plugin-dialog";
 import { Archive, Bell, Database, Globe, Lock, Plus, RefreshCcw, Trash2, Upload } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { RestorePreview } from "@/api/bindings/RestorePreview";
 import { api } from "@/api/client";
 import { useAction } from "@/api/queries";
 import type { ReminderSettings } from "@/domain/reminders";
 import type { ExchangeRate } from "@/domain/types";
 import { useErrorText, useT } from "@/i18n";
-import { type Theme, useFormat, usePrefs } from "@/lib/prefs";
+import { DEFAULT_ROUTING_URL, type Theme, useFormat, usePrefs } from "@/lib/prefs";
 import { newId, nil, nowIso } from "@/lib/rows";
-import { Button, Card, CardHeader, Field, IconButton, Input, PageHeader, Select } from "@/ui/core";
+import { Button, Card, CardHeader, Checkbox, Field, IconButton, Input, PageHeader, Select } from "@/ui/core";
 import { Dialog, useConfirm } from "@/ui/dialog";
 import { CurrencySelect, DateInput, NumberInput } from "@/ui/inputs";
+import { useToast } from "@/ui/toast";
 import { ImportDialog } from "./ImportDialog";
 
 const LOCALES = ["de-DE", "en-GB", "en-US", "de-AT", "de-CH", "fr-FR", "es-ES", "it-IT", "nl-NL", "pt-PT"];
@@ -376,11 +377,61 @@ function DataCard() {
 
 function IntegrationsCard() {
   const t = useT();
+  const { routing } = usePrefs();
+  const run = useAction();
+  const toast = useToast();
+  const set = (key: string, value: string | null) => run(() => api.setSetting(key, value));
+  const [url, setUrl] = useState(routing.url);
+  useEffect(() => setUrl(routing.url), [routing.url]);
+  const saveUrl = () => {
+    const v = url.trim();
+    if (v !== routing.url) void set("routing_url", v && v !== DEFAULT_ROUTING_URL ? v : null);
+  };
+  const clear = async () => {
+    const n = await run(() => api.clearRoadCache());
+    if (n !== undefined) toast.show({ kind: "success", text: t("settings.routing.cleared", { count: n }) });
+  };
   return (
     <Card>
       <CardHeader icon={<Lock className="size-4" />} title={t("settings.integrations")} />
-      <div className="flex flex-col gap-2 p-4 text-sm">
-        <p>{t("settings.integrationsNone")}</p>
+      <div className="flex flex-col gap-3 p-4 text-sm">
+        <div className="flex flex-col gap-1">
+          <Checkbox
+            label={<span className="font-medium">{t("settings.routing.enable")}</span>}
+            checked={routing.enabled}
+            onChange={(e) => set("routing_enabled", e.target.checked ? "1" : null)}
+          />
+          <p className="pl-6 text-fg-3 text-xs">{t("settings.routing.hint")}</p>
+          <p className="pl-6 text-fg-3 text-xs">{t("settings.routing.sent")}</p>
+        </div>
+        <div className="grid grid-cols-[1fr_auto_auto] items-end gap-2 pl-6">
+          <Field
+            label={t("settings.routing.url")}
+            hint={t("settings.routing.urlHint")}
+            htmlFor="set-routing-url"
+          >
+            <Input
+              id="set-routing-url"
+              value={url}
+              disabled={!routing.enabled}
+              onChange={(e) => setUrl(e.target.value)}
+              onBlur={saveUrl}
+              onKeyDown={(e) => e.key === "Enter" && saveUrl()}
+            />
+          </Field>
+          <Button
+            variant="ghost"
+            disabled={!routing.enabled || routing.url === DEFAULT_ROUTING_URL}
+            onClick={() => set("routing_url", null)}
+          >
+            {t("settings.routing.reset")}
+          </Button>
+          <Button icon={<Trash2 className="size-4" />} onClick={clear}>
+            {t("settings.routing.clearCache")}
+          </Button>
+        </div>
+        <p className="pl-6 text-fg-3 text-xs">{t("settings.routing.defaultService")}</p>
+        <p className="border-line border-t pt-3">{t("settings.integrationsNone")}</p>
         <p className="text-fg-3">{t("settings.privacy")}</p>
       </div>
     </Card>

@@ -9,6 +9,15 @@ import type { ExchangeRate } from "@/domain/types";
 
 export type Theme = "system" | "light" | "dark";
 
+/** Free OSRM server of FOSSGIS e.V. (OpenStreetMap data), the default route service. */
+export const DEFAULT_ROUTING_URL = "https://routing.openstreetmap.de/routed-car";
+
+export interface RoutingPrefs {
+  /** The user allowed sending route points to the route service. */
+  enabled: boolean;
+  url: string;
+}
+
 export interface Prefs {
   locale: string;
   theme: Theme;
@@ -17,6 +26,7 @@ export interface Prefs {
   reminders: ReminderSettings;
   timeZone: string;
   rates: ExchangeRate[];
+  routing: RoutingPrefs;
   dataDir: string;
   ready: boolean;
 }
@@ -30,6 +40,7 @@ const PrefsCtx = createContext<Prefs>({
   reminders: defaultReminderSettings,
   timeZone: systemTimeZone(),
   rates: [],
+  routing: { enabled: false, url: DEFAULT_ROUTING_URL },
   dataDir: "",
   ready: false,
 });
@@ -54,6 +65,10 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
       reminders: parseReminders(s.get("reminders")),
       timeZone: systemTimeZone(),
       rates: info.data?.exchange_rates ?? [],
+      routing: {
+        enabled: s.get("routing_enabled") === "1",
+        url: s.get("routing_url")?.trim() || DEFAULT_ROUTING_URL,
+      },
       dataDir: info.data?.data_dir ?? "",
       ready: info.isSuccess,
     };

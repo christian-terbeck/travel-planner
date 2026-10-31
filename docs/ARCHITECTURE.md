@@ -16,7 +16,8 @@ these decisions.
 | Travelers | Travelers are entities; payments record who paid, costs can be split | Cost splitting and per-traveler settlement |
 | Calendar rendering | Own month/week/agenda/itinerary views | Needs plan/booking/preview semantics, stays and time zones; FullCalendar 7 is a new headless API with v6 plugins |
 | Map | Offline SVG map (Natural Earth via `world-atlas`, `d3-geo`); no tile server | Works offline and sends no locations anywhere |
-| Distances | Flights: great-circle between airports. Ground: straight line × 1.25, labelled "estimated"; "car" when a rental car covers that day | Road distances need an online routing service |
+| Distances | Flights: great-circle between airports. Ground: straight line × 1.25, labelled "estimated"; "car" when a rental car covers that day | Works offline |
+| Road routes | Optional, **off by default**: ground legs are routed by an OSRM server (default: free FOSSGIS server `routing.openstreetmap.de`, OpenStreetMap data; URL configurable). Only the leg's coordinates are sent, by the Rust core (CSP unchanged), ≤ 1 request/s, own User-Agent; answers (incl. "no road") are cached in `road_routes`, failures are retried. OSM attribution and "fix the map" link on the map | Exact road km, driving time and road lines without an API key; offline after the first fetch |
 | Stay locations | Optional lat/lon, parsed offline from pasted coordinates or Google Maps/OSM links | Address geocoding needs an online service |
 | Linting | Biome (lint + format) | typescript-eslint does not support TypeScript 7 |
 | UI language | English, every string through i18next keys | German later is translation work only |
@@ -36,6 +37,7 @@ these decisions.
 - Libraries: `@tanstack/react-query` (server state, invalidation after mutations), `react-router`
   (hash routing), `react-hook-form` + `zod` (forms and validation), `temporal-polyfill` (dates and
   time zones), `radix-ui` (accessible primitives), `lucide-react` (icons), `i18next`.
+- Online access only through the core: `ureq` (rustls) for the optional route service.
 - Tauri plugins: `dialog` (file pickers), `opener` (external URLs in the system browser, documents
   in their default app). No shell plugin, no raw SQL from the frontend.
 
@@ -139,8 +141,9 @@ ExchangeRate* (explicit rate + date + source), Setting*, ChangeLog*
 | M10 | Documents and notes, exports (JSON, HTML, ICS, CSV), backup, restore, import preview | Acceptance 15–16 |
 | M11 | Settings, polish, accessibility pass, end-to-end acceptance run on Windows | All acceptance criteria |
 | M12 | Route map with flight/drive distances | Map tab shows the plan's route and km per mode |
+| M13 | Optional online road routes (OSRM) | Ground legs show road km, driving time and road lines when enabled |
 
 ## 5. Status
 
-M0–M10 and M12 are implemented. M11 (manual end-to-end acceptance run on Windows and UI
+M0–M10, M12 and M13 are implemented. M11 (manual end-to-end acceptance run on Windows and UI
 polish from that run) is pending; the Windows build starts and initialises its database.

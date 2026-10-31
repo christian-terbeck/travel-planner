@@ -5,6 +5,7 @@ pub mod db;
 pub mod documents;
 pub mod error;
 pub mod model;
+pub mod routing;
 pub mod store;
 pub mod table;
 pub mod transfer;

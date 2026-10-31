@@ -1,18 +1,28 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { geoMercator, geoPath } from "d3-geo";
 import type { Feature, FeatureCollection, Geometry } from "geojson";
-import { AlertTriangle, ExternalLink, Minus, Plane, Plus, RotateCcw } from "lucide-react";
+import { AlertTriangle, ExternalLink, Minus, Plane, Plus, RefreshCcw, RotateCcw } from "lucide-react";
 import { type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import { feature } from "topojson-client";
 import type { GeometryCollection, Topology } from "topojson-specification";
 import worldUrl from "world-atlas/countries-50m.json?url";
-import { api } from "@/api/client";
+import { api, inDesktopApp } from "@/api/client";
 import { useAction } from "@/api/queries";
-import { buildRoute, type Leg, type LegMode, ROAD_FACTOR, type Route, type RoutePoint } from "@/domain/geo";
+import {
+  applyRoads,
+  buildRoute,
+  type Leg,
+  type LegMode,
+  ROAD_FACTOR,
+  type Route,
+  type RoutePoint,
+  roadQueries,
+} from "@/domain/geo";
 import { evaluate, scenarioSelection } from "@/domain/scenarios";
-import { useT } from "@/i18n";
+import { useErrorText, useT } from "@/i18n";
 import { useAirports } from "@/lib/airports";
 import type { TripModel } from "@/lib/model";
-import { useFormat } from "@/lib/prefs";
+import { useFormat, usePrefs } from "@/lib/prefs";
 import { useTripUi } from "@/lib/tripUi";
 import { Card, CardHeader, cn, EmptyState, IconButton, Select, Spinner } from "@/ui/core";
 import { useTrip } from "./TripLayout";
@@ -41,7 +51,7 @@ function useWorld() {
 }
 
 /** The plan's route (or a previewed scenario's), with airports from the offline list. */
-export function useRoute(m: TripModel, previewScenarioId?: string | null): Route | null {
+function useBaseRoute(m: TripModel, previewScenarioId?: string | null): Route | null {
   const airports = useAirports();
   return useMemo(() => {
     if (!airports) return null;
@@ -55,6 +65,27 @@ export function useRoute(m: TripModel, previewScenarioId?: string | null): Route
   }, [airports, m, previewScenarioId]);
 }
 
+/** Road routes for the ground legs, when the user turned on the online route service. */
+function useRoads(route: Route | null) {
+  const { routing } = usePrefs();
+  const queries = useMemo(() => (route ? roadQueries(route) : []), [route]);
+  const enabled = routing.enabled && inDesktopApp && queries.length > 0;
+  const q = useQuery({
+    queryKey: ["roads", routing.url, queries],
+    queryFn: () => api.roadRoutes(queries),
+    enabled,
+  });
+  return { ...q, enabled };
+}
+
+/** The route with road distances where the route service has them, estimates elsewhere. */
+export function useRoute(m: TripModel, previewScenarioId?: string | null) {
+  const base = useBaseRoute(m, previewScenarioId);
+  const roads = useRoads(base);
+  const route = useMemo(() => (base && roads.data ? applyRoads(base, roads.data) : base), [base, roads.data]);
+  return { route, roads };
+}
+
 const modeColor: Record<LegMode, string> = {
   flight: "var(--info)",
   drive: "var(--primary)",
@@ -66,11 +97,19 @@ export function MapView() {
   const f = useFormat();
   const m = useTrip();
   const [ui, setUi] = useTripUi(m.graph.trip.id);
-  const route = useRoute(m, ui.previewScenarioId);
+  const { route, roads } = useRoute(m, ui.previewScenarioId);
   const world = useWorld();
   const [selected, setSelected] = useState<RoutePoint | null>(null);
 
   const km = (v: number) => `${f.number(Math.round(v))} km`;
+  const roadHint = (r: Route, mode: LegMode) => {
+    const legs = groundLegs(r, mode);
+    const routed = legs.filter((l) => !l.estimated).length;
+    if (routed === 0) return t("map.driveHint", { factor: f.number(ROAD_FACTOR) });
+    return routed === legs.length
+      ? t("map.roadHint")
+      : t("map.roadPartlyHint", { routed, total: legs.length });
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -116,15 +155,15 @@ export function MapView() {
                 <DistanceRow
                   color={modeColor.drive}
                   label={t("map.drive")}
-                  value={`≈ ${km(route.km.drive)}`}
-                  hint={t("map.driveHint", { factor: f.number(ROAD_FACTOR) })}
+                  value={`${approx(route, "drive")}${km(route.km.drive)}`}
+                  hint={roadHint(route, "drive")}
                 />
                 {route.km.ground > 0 && (
                   <DistanceRow
                     color={modeColor.ground}
                     label={t("map.ground")}
-                    value={`≈ ${km(route.km.ground)}`}
-                    hint={t("map.groundHint")}
+                    value={`${approx(route, "ground")}${km(route.km.ground)}`}
+                    hint={`${t("map.groundHint")} · ${roadHint(route, "ground")}`}
                   />
                 )}
                 <div className="flex justify-between border-line border-t pt-2 font-semibold">
@@ -133,6 +172,7 @@ export function MapView() {
                 </div>
               </dl>
             )}
+            {route && <RoadStatus route={route} roads={roads} />}
             {route && (route.missingStays.length > 0 || route.unknownAirports.length > 0) && (
               <div className="flex flex-col gap-1 border-line border-t px-4 py-2.5 text-warn text-xs">
                 {route.missingStays.length > 0 && (
@@ -158,6 +198,78 @@ export function MapView() {
           {selected && <PointCard point={selected} />}
         </div>
       </div>
+    </div>
+  );
+}
+
+const groundLegs = (route: Route, mode?: LegMode) =>
+  route.legs.filter((l) => l.mode !== "flight" && (!mode || l.mode === mode));
+
+const approx = (route: Route, mode: LegMode) =>
+  groundLegs(route, mode).some((l) => l.estimated) ? "≈ " : "";
+
+function RoadStatus({ route, roads }: { route: Route; roads: ReturnType<typeof useRoute>["roads"] }) {
+  const t = useT();
+  const errorText = useErrorText();
+  const qc = useQueryClient();
+  const run = useAction();
+  const legs = groundLegs(route);
+  if (legs.length === 0) return null;
+  const routed = legs.filter((l) => !l.estimated).length;
+  const failed = roads.data?.filter((r) => r.status === "failed").length ?? 0;
+  const noRoute = roads.data?.filter((r) => r.status === "no_route").length ?? 0;
+  const retry = () => void qc.invalidateQueries({ queryKey: ["roads"] });
+  const open = (url: string) => () => run(() => api.openUrl(url));
+  return (
+    <div className="flex flex-col gap-1 border-line border-t px-4 py-2.5 text-fg-3 text-xs">
+      {!roads.enabled ? (
+        <p>{t("map.roads.off")}</p>
+      ) : roads.isFetching ? (
+        <p className="flex items-center gap-1.5">
+          <Spinner /> {t("map.roads.loading", { count: legs.length })}
+        </p>
+      ) : roads.isError ? (
+        <p className="flex items-center gap-1.5 text-warn">
+          <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
+          {errorText(roads.error)}
+        </p>
+      ) : (
+        <p>{t("map.roads.routed", { routed, total: legs.length })}</p>
+      )}
+      {noRoute > 0 && <p>{t("map.roads.noRoute", { count: noRoute })}</p>}
+      {failed > 0 && !roads.isFetching && (
+        <p className="flex items-center gap-1.5 text-warn">
+          <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
+          {t("map.roads.failed", { count: failed })}
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 text-primary hover:underline"
+            onClick={retry}
+          >
+            <RefreshCcw className="size-3" aria-hidden /> {t("map.roads.retry")}
+          </button>
+        </p>
+      )}
+      {routed > 0 && (
+        <p>
+          {t("map.roads.attribution")}{" "}
+          <button
+            type="button"
+            className="text-primary hover:underline"
+            onClick={open("https://www.openstreetmap.org/copyright")}
+          >
+            © OpenStreetMap
+          </button>
+          {" · "}
+          <button
+            type="button"
+            className="text-primary hover:underline"
+            onClick={open("https://www.openstreetmap.org/fixthemap")}
+          >
+            {t("map.roads.fixTheMap")}
+          </button>
+        </p>
+      )}
     </div>
   );
 }
@@ -222,6 +334,9 @@ function LegsCard({ legs, tz }: { legs: Leg[]; tz: string }) {
               <td className="tabular whitespace-nowrap px-4 py-1.5 text-right">
                 {l.estimated ? "≈ " : ""}
                 {f.number(Math.round(l.km))}
+                {l.minutes !== null && (
+                  <span className="block text-[11px] text-fg-3">{f.duration(l.minutes)}</span>
+                )}
               </td>
             </tr>
           ))}
@@ -362,7 +477,7 @@ function RouteMap({
               d={
                 path({
                   type: "LineString",
-                  coordinates: [
+                  coordinates: l.path ?? [
                     [l.from.pos.lon, l.from.pos.lat],
                     [l.to.pos.lon, l.to.pos.lat],
                   ],
@@ -370,7 +485,8 @@ function RouteMap({
               }
               fill="none"
               stroke={modeColor[l.mode]}
-              strokeWidth={(l.mode === "flight" ? 2 : 3) * s}
+              strokeWidth={(l.mode === "flight" ? 2 : l.path ? 2.5 : 3) * s}
+              strokeLinejoin="round"
               strokeDasharray={
                 l.mode === "flight"
                   ? `${6 * s} ${4 * s}`

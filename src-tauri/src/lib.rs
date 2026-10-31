@@ -5,6 +5,7 @@ use std::sync::Mutex;
 
 use tauri::{Manager, State};
 use tp_core::model::{Booking, CancellationPolicy, Document, OptionBundle, Scenario, ScenarioSelection, TripGraph};
+use tp_core::routing::{self, RoadQuery, RoadResult};
 use tp_core::store::{AppInfo, BookingInput, CancelInput, Entity, EntityKind};
 use tp_core::transfer::{self, BackupManifest, ImportMode, ImportPreview, RestorePreview};
 use tp_core::{CoreError, ErrorPayload, Store};
@@ -159,6 +160,59 @@ fn restore_backup(state: State<'_, AppState>, path: String) -> CmdResult<String>
     with(&state, |s| s.restore_backup(&PathBuf::from(path)))
 }
 
+/// Road routes for ground legs: answers from the cache, the rest from the route service. Only
+/// sends coordinates when the user enabled routing; the store is not locked during requests.
+#[tauri::command]
+async fn road_routes(app: tauri::AppHandle, queries: Vec<RoadQuery>) -> CmdResult<Vec<RoadResult>> {
+    let state = app.state::<AppState>();
+    let (service, mut results) = with(&state, |s| {
+        let config = s.routing_config()?;
+        if !config.enabled {
+            return Err(CoreError::rule("routing_disabled", "online routing is turned off"));
+        }
+        routing::validate_queries(&config.url, &queries)?;
+        let cached = s.cached_roads(&config.url, &queries)?;
+        Ok((config.url, cached))
+    })?;
+    let missing: Vec<usize> = (0..queries.len()).filter(|&i| results[i].is_none()).collect();
+    if !missing.is_empty() {
+        let user_agent = format!(
+            "TravelPlanner/{} (+https://github.com/christian-terbeck/travel-planner)",
+            app.package_info().version
+        );
+        let todo: Vec<RoadQuery> = missing.iter().map(|&i| queries[i]).collect();
+        let url = service.clone();
+        let fetched = tauri::async_runtime::spawn_blocking(move || {
+            let mut out: Vec<(RoadQuery, RoadResult)> = Vec::with_capacity(todo.len());
+            for q in todo {
+                // The same leg twice in one plan (e.g. there and back on another day) is asked once.
+                let r = match out.iter().find(|(p, _)| *p == q) {
+                    Some((_, r)) => r.clone(),
+                    None => routing::fetch(&url, q, &user_agent),
+                };
+                out.push((q, r));
+            }
+            out
+        })
+        .await
+        .map_err(|e| err(CoreError::rule("busy", e.to_string())))?;
+
+        with(&state, |s| {
+            for (&i, (q, r)) in missing.iter().zip(&fetched) {
+                s.cache_road(&service, *q, r)?;
+                results[i] = Some(r.clone());
+            }
+            Ok(())
+        })?;
+    }
+    Ok(results.into_iter().flatten().collect())
+}
+
+#[tauri::command]
+fn clear_road_cache(state: State<'_, AppState>) -> CmdResult<usize> {
+    with(&state, |s| s.clear_road_cache())
+}
+
 /// Marker file that switches the app to portable mode.
 const PORTABLE_MARKER: &str = "portable.txt";
 
@@ -209,6 +263,8 @@ pub fn run() {
             create_backup,
             preview_restore,
             restore_backup,
+            road_routes,
+            clear_road_cache,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Travel Planner");

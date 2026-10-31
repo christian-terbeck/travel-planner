@@ -15,6 +15,7 @@ ts-rs = { version = "12", features = ["serde-json-impl", "no-serde-warnings"] }
 zip = { version = "9", default-features = false, features = ["deflate"] }
 sha2 = "0.11"
 serde_rusqlite = "0.44"
+ureq = "3"
 
 [dev-dependencies]
 tempfile = "3"
