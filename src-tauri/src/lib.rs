@@ -7,6 +7,7 @@ use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Manager, State, WindowEvent};
 use tp_core::model::{Booking, CancellationPolicy, Document, OptionBundle, Scenario, ScenarioSelection, TripGraph};
+use tp_core::confirmation::{self, ExtractedBooking};
 use tp_core::geocoding::{self, Place};
 use tp_core::rates;
 use tp_core::routing::{self, RoadQuery, RoadResult};
@@ -257,6 +258,56 @@ async fn fetch_reference_rates(app: tauri::AppHandle) -> CmdResult<usize> {
     with(&state, |s| s.store_reference_rates(&rates))
 }
 
+/// The Anthropic API key lives in the Windows Credential Manager, never in the database or the UI.
+fn ai_key_entry() -> CmdResult<keyring::Entry> {
+    keyring::Entry::new("Travel Planner", "anthropic-api-key")
+        .map_err(|e| err(CoreError::rule("credential_store", e.to_string())))
+}
+
+fn ai_key() -> CmdResult<Option<String>> {
+    match ai_key_entry()?.get_password() {
+        Ok(k) => Ok(Some(k)),
+        Err(keyring::Error::NoEntry) => Ok(None),
+        Err(e) => Err(err(CoreError::rule("credential_store", e.to_string()))),
+    }
+}
+
+#[tauri::command]
+fn ai_key_stored() -> CmdResult<bool> {
+    Ok(ai_key()?.is_some())
+}
+
+#[tauri::command]
+fn set_ai_key(key: Option<String>) -> CmdResult<()> {
+    let entry = ai_key_entry()?;
+    let result = match key.as_deref().map(str::trim).filter(|k| !k.is_empty()) {
+        Some(k) => entry.set_password(k),
+        None => match entry.delete_credential() {
+            Err(keyring::Error::NoEntry) => Ok(()),
+            other => other,
+        },
+    };
+    result.map_err(|e| err(CoreError::rule("credential_store", e.to_string())))
+}
+
+/// Reads a booking confirmation with Claude, when the user enabled it and stored a key. Returns a
+/// proposal only; nothing is saved here.
+#[tauri::command]
+async fn extract_confirmation(app: tauri::AppHandle, path: String, language: String) -> CmdResult<ExtractedBooking> {
+    let state = app.state::<AppState>();
+    if !with(&state, |s| s.ai_import_enabled())? {
+        return Err(err(CoreError::rule("ai_disabled", "reading confirmations with Claude is turned off")));
+    }
+    let key = ai_key()?.ok_or_else(|| err(CoreError::rule("ai_no_key", "no API key stored")))?;
+    let agent = user_agent(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        confirmation::extract(&key, &PathBuf::from(path), &language, &agent)
+    })
+    .await
+    .map_err(|e| err(CoreError::rule("busy", e.to_string())))?
+    .map_err(err)
+}
+
 #[tauri::command]
 fn clear_road_cache(state: State<'_, AppState>) -> CmdResult<usize> {
     with(&state, |s| s.clear_road_cache())
@@ -406,6 +457,9 @@ pub fn run() {
             clear_road_cache,
             geocode,
             fetch_reference_rates,
+            ai_key_stored,
+            set_ai_key,
+            extract_confirmation,
             notify,
             autostart_enabled,
             set_autostart,

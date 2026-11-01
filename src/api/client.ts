@@ -11,6 +11,7 @@ import type { Document } from "./bindings/Document";
 import type { Entity } from "./bindings/Entity";
 import type { EntityKind } from "./bindings/EntityKind";
 import type { ErrorPayload } from "./bindings/ErrorPayload";
+import type { ExtractedBooking } from "./bindings/ExtractedBooking";
 import type { ImportMode } from "./bindings/ImportMode";
 import type { ImportPreview } from "./bindings/ImportPreview";
 import type { OptionBundle } from "./bindings/OptionBundle";
@@ -81,6 +82,10 @@ export const api = {
   restoreBackup: (path: string) => call<string>("restore_backup", { path }),
   geocode: (query: string, language: string) => call<Place[]>("geocode", { query, language }),
   fetchReferenceRates: () => call<number>("fetch_reference_rates"),
+  aiKeyStored: () => call<boolean>("ai_key_stored"),
+  setAiKey: (key: string | null) => call<void>("set_ai_key", { key }),
+  extractConfirmation: (path: string, language: string) =>
+    call<ExtractedBooking>("extract_confirmation", { path, language }),
   notify: (title: string, body: string) => call<void>("notify", { title, body }),
   autostartEnabled: () => call<boolean>("autostart_enabled"),
   setAutostart: (enabled: boolean) => call<void>("set_autostart", { enabled }),

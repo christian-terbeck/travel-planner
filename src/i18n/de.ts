@@ -88,6 +88,15 @@ const de: Translation = {
       "Der Online-Dienst war nicht erreichbar oder hat keine brauchbare Antwort geliefert. Versuche es später noch einmal.",
     notify_failed: "Die Benachrichtigung konnte nicht angezeigt werden.",
     autostart_failed: "Der Start mit Windows konnte nicht geändert werden.",
+    ai_disabled: "Das Einlesen von Bestätigungen mit Claude ist in den Einstellungen ausgeschaltet.",
+    ai_no_key: "Hinterlege zuerst einen Anthropic-API-Schlüssel in den Einstellungen.",
+    ai_auth: "Der Anthropic-API-Schlüssel wurde nicht akzeptiert. Prüfe ihn in den Einstellungen.",
+    ai_refused: "Claude hat das Lesen dieser Datei abgelehnt. Trag die Buchung bitte von Hand ein.",
+    ai_failed:
+      "Claude konnte die Bestätigung nicht lesen. Versuche es noch einmal oder trag die Buchung von Hand ein.",
+    file_unsupported: "Verwende ein PDF, ein Bild, eine .eml-Mail oder eine Text-/HTML-Datei.",
+    file_too_large_ai: "Die Datei ist größer als 20 MB.",
+    credential_store: "Die Windows-Anmeldeinformationsverwaltung konnte nicht verwendet werden.",
   },
   status: {
     idea: "Idee",
@@ -1019,6 +1028,21 @@ const de: Translation = {
     restoredTitle: "Sicherung wiederhergestellt",
     safety: "Deine bisherigen Daten wurden in {{path}} gesichert.",
   },
+  confirmation: {
+    button: "Bestätigung importieren",
+    title: "Buchungsbestätigung importieren",
+    hint: "Claude liest die Bestätigung und füllt die Buchungsformulare aus. Du prüfst alles, bevor gespeichert wird.",
+    privacy:
+      "Die gewählte Datei wird zum Lesen an die API von Anthropic gesendet; sonst nichts aus deinen Reisen. Beim Speichern wird die Datei an die Buchung angehängt.",
+    files: "Bestätigungen",
+    pick: "Datei wählen…",
+    reading: "Claude liest {{file}} … das kann eine Minute dauern.",
+    target: "Hinzufügen als",
+    newSlot: "Neuer Bedarf: {{kind}}",
+    review: "Prüfen und ergänzen",
+    check:
+      "Als Nächstes siehst du die gewohnten Formulare mit den gelesenen Werten. Vergleiche sie vor dem Speichern mit der Bestätigung.",
+  },
   geocode: {
     search: "Lage online suchen",
     find: "„{{query}}“ online suchen",
@@ -1096,6 +1120,16 @@ const de: Translation = {
     geocoding: {
       enable: "Online-Adresssuche",
       hint: "Ein Suchknopf neben Ortsangaben findet die Koordinaten zu einer Adresse, einem Bahnhof oder Ort. Gesendet werden nur der gesuchte Text und die Sprache der Oberfläche, an den öffentlichen Nominatim-Server von OpenStreetMap, und nur wenn du klickst. Antworten werden auf diesem Computer gespeichert.",
+    },
+    ai: {
+      enable: "Buchungsbestätigungen mit Claude einlesen",
+      hint: "Fügt bei den Buchungen „Bestätigung importieren“ hinzu. Nur die gewählte Datei wird an die API von Anthropic (Claude Opus 5.5) gesendet, und nur wenn du einen Import startest. Das kostet ein paar Cent pro Datei über dein eigenes API-Konto. Lehnt Claude eine Datei ab, wird die Anfrage mit dem von Anthropic empfohlenen Ersatzmodell wiederholt.",
+      key: "Anthropic-API-Schlüssel",
+      keyHint:
+        "Wird in der Windows-Anmeldeinformationsverwaltung gespeichert, nicht in den App-Daten oder Sicherungen.",
+      keyStored: "Ein Schlüssel ist in der Windows-Anmeldeinformationsverwaltung gespeichert.",
+      keySaved: "API-Schlüssel aktualisiert",
+      removeKey: "Schlüssel entfernen",
     },
     ecb: {
       enable: "Wechselkurse der Europäischen Zentralbank",

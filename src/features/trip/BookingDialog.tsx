@@ -24,6 +24,16 @@ export const PAYMENT_STATUSES: PaymentStatus[] = [
   "partially_refunded",
 ];
 
+/** A booking of a new option, optionally prefilled from an imported confirmation. */
+export interface BookingDraft {
+  bundle: OptionBundle;
+  slot: Slot;
+  /** Booked values read from the confirmation (reference, date, payment status). */
+  booking?: Booking;
+  /** The confirmation file, attached to the booking once it is saved. */
+  attachPath?: string;
+}
+
 /**
  * Turns a planned option into a confirmed booking (or books a new option directly). The planned
  * values stay on the option and in the booking's snapshot; the booked values are entered here.
@@ -34,7 +44,7 @@ export function BookingDialog({
   onClose,
 }: {
   item?: PlanItem | null;
-  draft?: { bundle: OptionBundle; slot: Slot } | null;
+  draft?: BookingDraft | null;
   onClose: () => void;
 }) {
   const t = useT();
@@ -50,7 +60,17 @@ export function BookingDialog({
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset only when a new target opens
   useEffect(() => {
     if (!source) return;
-    const b = newBooking(source.option);
+    const read = draft?.booking;
+    const fresh = newBooking(source.option);
+    const b = read
+      ? {
+          ...fresh,
+          reference: read.reference,
+          booked_on: read.booked_on,
+          payment_status: read.payment_status,
+          contact: read.contact ?? fresh.contact,
+        }
+      : fresh;
     setBooking(b);
     const offered = source.policy;
     setPolicy(offered ? { ...offered, id: newId(), option_id: null, booking_id: b.id } : null);
@@ -93,6 +113,10 @@ export function BookingDialog({
         }),
       t("booking.created"),
     );
+    if (id !== undefined && draft?.attachPath) {
+      const path = draft.attachPath;
+      await run(() => api.attachDocument(m.graph.trip.id, path, null, id), t("documents.attached"));
+    }
     if (id !== undefined) onClose();
   };
 

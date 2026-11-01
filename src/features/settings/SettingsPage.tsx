@@ -277,6 +277,57 @@ function RemindersCard() {
   );
 }
 
+function AiImportOptions() {
+  const t = useT();
+  const { aiImport } = usePrefs();
+  const run = useAction();
+  const [stored, setStored] = useState<boolean | null>(null);
+  const [key, setKey] = useState("");
+  useEffect(() => {
+    if (inDesktopApp) void api.aiKeyStored().then(setStored, () => setStored(null));
+  }, []);
+  const saveKey = async (value: string | null) => {
+    const ok = await run(() => api.setAiKey(value), t("settings.ai.keySaved"));
+    if (ok !== undefined) {
+      setStored(value !== null);
+      setKey("");
+    }
+  };
+  return (
+    <div className="flex flex-col gap-2 border-line border-t pt-3">
+      <Checkbox
+        label={<span className="font-medium">{t("settings.ai.enable")}</span>}
+        checked={aiImport}
+        onChange={(e) => run(() => api.setSetting("ai_import_enabled", e.target.checked ? "1" : null))}
+      />
+      <p className="pl-6 text-fg-3 text-xs">{t("settings.ai.hint")}</p>
+      <div className="grid grid-cols-[1fr_auto_auto] items-end gap-2 pl-6">
+        <Field
+          label={t("settings.ai.key")}
+          hint={stored ? t("settings.ai.keyStored") : t("settings.ai.keyHint")}
+          htmlFor="set-ai-key"
+        >
+          <Input
+            id="set-ai-key"
+            type="password"
+            autoComplete="off"
+            value={key}
+            disabled={!aiImport}
+            placeholder={stored ? "••••••••" : "sk-ant-…"}
+            onChange={(e) => setKey(e.target.value)}
+          />
+        </Field>
+        <Button disabled={!aiImport || !key.trim()} onClick={() => saveKey(key.trim())}>
+          {t("common.save")}
+        </Button>
+        <Button variant="ghost" disabled={!stored} onClick={() => saveKey(null)}>
+          {t("settings.ai.removeKey")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function NotificationOptions() {
   const t = useT();
   const prefs = usePrefs();
@@ -515,6 +566,7 @@ function IntegrationsCard() {
           />
           <p className="pl-6 text-fg-3 text-xs">{t("settings.ecb.hint")}</p>
         </div>
+        <AiImportOptions />
         <p className="border-line border-t pt-3">{t("settings.integrationsNone")}</p>
         <p className="text-fg-3">{t("settings.privacy")}</p>
       </div>

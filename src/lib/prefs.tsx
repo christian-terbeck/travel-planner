@@ -42,6 +42,8 @@ export interface Prefs {
   /** ECB reference rates are fetched automatically; last successful fetch. */
   ecbRates: boolean;
   ecbFetchedAt: string | null;
+  /** Booking confirmations may be sent to Claude for reading. */
+  aiImport: boolean;
   dataDir: string;
   ready: boolean;
 }
@@ -64,6 +66,7 @@ const PrefsCtx = createContext<Prefs>({
   geocoding: false,
   ecbRates: false,
   ecbFetchedAt: null,
+  aiImport: false,
   dataDir: "",
   ready: false,
 });
@@ -110,6 +113,7 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
       geocoding: s.get("geocoding_enabled") === "1",
       ecbRates: s.get("ecb_rates_enabled") === "1",
       ecbFetchedAt: s.get("ecb_rates_fetched_at") ?? null,
+      aiImport: s.get("ai_import_enabled") === "1",
       dataDir: info.data?.data_dir ?? "",
       ready: info.isSuccess,
     };

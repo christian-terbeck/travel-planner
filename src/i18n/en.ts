@@ -83,6 +83,14 @@ const en = {
     online_failed: "The online service could not be reached or gave no usable answer. Try again later.",
     notify_failed: "The notification could not be shown.",
     autostart_failed: "Starting with Windows could not be changed.",
+    ai_disabled: "Reading confirmations with Claude is turned off in Settings.",
+    ai_no_key: "Store an Anthropic API key in Settings first.",
+    ai_auth: "The Anthropic API key was not accepted. Check it in Settings.",
+    ai_refused: "Claude declined to read this file. Enter the booking by hand instead.",
+    ai_failed: "Claude could not read the confirmation. Try again or enter the booking by hand.",
+    file_unsupported: "Use a PDF, an image, an .eml mail or a text/HTML file.",
+    file_too_large_ai: "The file is larger than 20 MB.",
+    credential_store: "The Windows Credential Manager could not be used.",
   },
   status: {
     idea: "Idea",
@@ -1006,6 +1014,21 @@ const en = {
     restoredTitle: "Backup restored",
     safety: "Your previous data was saved to {{path}}.",
   },
+  confirmation: {
+    button: "Import confirmation",
+    title: "Import a booking confirmation",
+    hint: "Claude reads the confirmation and fills in the booking forms. You check everything before it is saved.",
+    privacy:
+      "The file you pick is sent to Anthropic's API to be read; nothing else from your trips is sent. The file is attached to the booking when you save it.",
+    files: "Confirmations",
+    pick: "Choose file…",
+    reading: "Claude is reading {{file}}… this can take a minute.",
+    target: "Add as",
+    newSlot: "New need: {{kind}}",
+    review: "Check and complete",
+    check:
+      "Next you see the usual forms with the values read from the file. Check them against the confirmation before saving.",
+  },
   geocode: {
     search: "Find the location online",
     find: "Find “{{query}}” online",
@@ -1083,6 +1106,15 @@ const en = {
     geocoding: {
       enable: "Online address search",
       hint: "A search button next to locations finds coordinates for an address, station or place. Only the text you search for and the interface language are sent, to the public Nominatim server of OpenStreetMap, and only when you click it. Answers are kept on this computer.",
+    },
+    ai: {
+      enable: "Read booking confirmations with Claude",
+      hint: "Adds “Import confirmation” to the bookings. Only the file you pick is sent to Anthropic's API (Claude Opus 5.5), and only when you start an import. It costs a few cents per file on your own API account. If Claude declines a file, the request is retried on Anthropic's recommended fallback model.",
+      key: "Anthropic API key",
+      keyHint: "Kept in the Windows Credential Manager, not in the app's data or backups.",
+      keyStored: "A key is stored in the Windows Credential Manager.",
+      keySaved: "API key updated",
+      removeKey: "Remove key",
     },
     ecb: {
       enable: "Exchange rates from the European Central Bank",

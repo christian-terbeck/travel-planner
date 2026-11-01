@@ -1,4 +1,4 @@
-import { Ban, CirclePlus, FileText, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Ban, CirclePlus, FileText, MoreHorizontal, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
 import { api } from "@/api/client";
@@ -16,7 +16,7 @@ import type {
   SlotKind,
 } from "@/domain/types";
 import { useT } from "@/i18n";
-import { useFormat } from "@/lib/prefs";
+import { useFormat, usePrefs } from "@/lib/prefs";
 import { newBundle, newPayment, newPolicy, newSlot, nil, nowIso, SLOT_KINDS } from "@/lib/rows";
 import {
   Badge,
@@ -35,7 +35,8 @@ import {
 import { Dialog, useConfirm } from "@/ui/dialog";
 import { DateInput, DateTimeInput, MoneyInput } from "@/ui/inputs";
 import { CancellationBadge, KindIcon, PaymentBadge } from "@/ui/status";
-import { BookingDialog, PAYMENT_STATUSES, PaymentFields } from "./BookingDialog";
+import { BookingDialog, type BookingDraft, PAYMENT_STATUSES, PaymentFields } from "./BookingDialog";
+import { ConfirmationImport } from "./ConfirmationImport";
 import { ExternalUrl, useWhen } from "./itemText";
 import { OptionEditor } from "./OptionEditor";
 import { PolicyEditor } from "./PolicyEditor";
@@ -51,8 +52,10 @@ export function BookingsView() {
   const [pay, setPay] = useState<Booking | null>(null);
   const [cancel, setCancel] = useState<Booking | null>(null);
   const [direct, setDirect] = useState(false);
-  const [draft, setDraft] = useState<{ bundle: OptionBundle; slot: Slot } | null>(null);
-  const [drafting, setDrafting] = useState<{ bundle: OptionBundle; slot: Slot } | null>(null);
+  const [draft, setDraft] = useState<BookingDraft | null>(null);
+  const [drafting, setDrafting] = useState<BookingDraft | null>(null);
+  const [importing, setImporting] = useState(false);
+  const { aiImport } = usePrefs();
   const bookings = m.graph.bookings.filter((b) => filter === "all" || b.status === filter);
 
   return (
@@ -69,6 +72,11 @@ export function BookingsView() {
           ]}
         />
         <p className="flex-1 text-fg-3 text-sm">{t("bookings.hint")}</p>
+        {aiImport && (
+          <Button icon={<Sparkles className="size-4" />} onClick={() => setImporting(true)}>
+            {t("confirmation.button")}
+          </Button>
+        )}
         <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setDirect(true)}>
           {t("bookings.addDirect")}
         </Button>
@@ -98,11 +106,19 @@ export function BookingsView() {
         slot={drafting?.slot ?? null}
         booked={false}
         onDraft={(bundle) => {
-          if (drafting) setDraft({ bundle, slot: drafting.slot });
+          if (drafting) setDraft({ ...drafting, bundle });
           setDrafting(null);
         }}
       />
       <BookingDialog draft={draft} onClose={() => setDraft(null)} />
+      <ConfirmationImport
+        open={importing}
+        onClose={() => setImporting(false)}
+        onStart={(d) => {
+          setImporting(false);
+          setDrafting(d);
+        }}
+      />
     </div>
   );
 }
