@@ -178,6 +178,8 @@ impl Validate for Trip {
         opt_text("notes", &self.notes)?;
         range("arrival_buffer_min", Some(self.arrival_buffer_min), 0, 24 * 60)?;
         range("departure_buffer_min", Some(self.departure_buffer_min), 0, 24 * 60)?;
+        range("connection_buffer_min", Some(self.connection_buffer_min), 0, 24 * 60)?;
+        range("mode_change_buffer_min", Some(self.mode_change_buffer_min), 0, 24 * 60)?;
         timestamp("created_at", &self.created_at)?;
         timestamp("updated_at", &self.updated_at)
     }

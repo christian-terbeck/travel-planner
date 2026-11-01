@@ -24,7 +24,12 @@ export function reviewInput(m: TripModel, today: string) {
       nights: { min: t.min_nights, max: t.max_nights },
       home_airports: t.home_airports,
       budget: { currency: t.currency, target_minor: t.budget_target_minor, max_minor: t.budget_max_minor },
-      buffers_min: { after_arrival: t.arrival_buffer_min, before_departure: t.departure_buffer_min },
+      buffers_min: {
+        after_arrival: t.arrival_buffer_min,
+        before_departure: t.departure_buffer_min,
+        change_same_means: t.connection_buffer_min,
+        change_of_means_or_airport: t.mode_change_buffer_min,
+      },
     },
     travelers: g.travelers.map((p, i) => ({ person: `Person ${i + 1}`, category: p.category })),
     stops: g.stations.map((s) => ({ name: s.name, arrive: s.arrive_date, depart: s.depart_date })),

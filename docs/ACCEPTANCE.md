@@ -74,3 +74,5 @@ untouched):
 27. During a trip (dates around today): the dashboard shows “On the way”; record two expenses with
     “Save and next”, one only for two of three travelers. Budget → “Mark as paid” on a transfer:
     the balances become even; delete the settlement and undo.
+28. Edit a trip's buffers (change 30 / 120 min): a flight followed by a train 60 minutes later is
+    flagged; an activity 30 minutes after landing and a 15:00 check-in after a 09:00 landing show up.

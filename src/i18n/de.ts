@@ -472,9 +472,12 @@ const de: Translation = {
     travelerName: "Name",
     travelerCategory: "Kategorie",
     buffers: "Puffer",
-    buffersHint: "Minuten zwischen Landung und Abholung eines Mietwagens sowie zwischen Rückgabe und Abflug.",
+    buffersHint:
+      "Minuten, die du nach der Ankunft und vor der Abreise einplanst (für Mietwagen, Aktivitäten oder Hotel), und zum Umsteigen zwischen Verbindungen.",
     arrivalBuffer: "Nach Ankunft (Min.)",
     departureBuffer: "Vor Abflug (Min.)",
+    connectionBuffer: "Umstieg, gleiches Verkehrsmittel (Min.)",
+    modeChangeBuffer: "Wechsel des Verkehrsmittels oder Flughafens (Min.)",
     statusOverride: "Reisestatus",
     statusAuto: "Automatisch",
     delete: "Reise löschen",
@@ -548,7 +551,7 @@ const de: Translation = {
     restore: "Wieder anzeigen",
     flight_overlap:
       "Verbindungen überschneiden sich: {{items}} startet {{minutes}} bevor die vorherige ankommt.",
-    short_connection: "Kurzer Anschluss von {{minutes}} in {{at}} ({{items}}).",
+    short_connection: "Kurzer Anschluss von {{minutes}} in {{at}} (Puffer {{buffer}} Min.): {{items}}.",
     airport_change: "Flughafenwechsel zwischen Flügen: Ankunft in {{from}}, Abflug von {{to}}.",
     overnight_layover: "Übernachtung beim Umsteigen in {{at}} am {{date}} ({{minutes}}).",
     stay_outside_period: "{{items}} liegt außerhalb des Reisezeitraums der Verbindungen.",
@@ -556,6 +559,12 @@ const de: Translation = {
     accommodation_gap: "Keine Unterkunft für {{nights}} Nacht/Nächte: {{from}} – {{to}}.",
     activity_outside_period: "{{items}} am {{date}} liegt außerhalb deiner Zeit vor Ort.",
     activities_overlap: "Aktivitäten überschneiden sich um {{minutes}} am {{date}}: {{items}}.",
+    activity_after_arrival: "{{items}} beginnt nur {{minutes}} nach der Ankunft (Puffer {{buffer}} Min.).",
+    activity_before_departure: "{{items}} endet nur {{minutes}} vor der Abreise (Puffer {{buffer}} Min.).",
+    check_in_wait:
+      "Etwa {{minutes}} zwischen Ankunft und Check-in um {{time}} bei {{items}}: Gepäckaufbewahrung oder früheren Check-in einplanen.",
+    check_out_wait:
+      "Etwa {{minutes}} zwischen Check-out um {{time}} bei {{items}} und Abreise: Gepäckaufbewahrung oder späteren Check-out einplanen.",
     pickup_before_arrival: "Die Abholung des Mietwagens ist {{minutes}} vor deiner Landung ({{items}}).",
     pickup_tight: "Abholung nur {{minutes}} nach der Landung (Puffer {{buffer}} Min.): {{items}}.",
     return_after_departure: "Die Rückgabe ist {{minutes}} nach dem Abflug deines Rückflugs ({{items}}).",

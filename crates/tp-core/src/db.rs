@@ -20,6 +20,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("../migrations/0010_site_icons.sql"),
     include_str!("../migrations/0011_journal.sql"),
     include_str!("../migrations/0012_settlements.sql"),
+    include_str!("../migrations/0013_connection_buffers.sql"),
 ];
 
 pub const SCHEMA_VERSION: i64 = MIGRATIONS.len() as i64;

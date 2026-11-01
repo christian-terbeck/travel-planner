@@ -42,6 +42,8 @@ export function trip(over: Partial<Trip> = {}): Trip {
     notes: null,
     arrival_buffer_min: 60,
     departure_buffer_min: 120,
+    connection_buffer_min: 45,
+    mode_change_buffer_min: 90,
     created_at: NOW,
     updated_at: NOW,
     ...over,

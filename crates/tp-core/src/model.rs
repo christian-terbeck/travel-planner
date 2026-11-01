@@ -63,6 +63,20 @@ pub struct Trip {
     pub departure_buffer_min: i64,
     pub created_at: String,
     pub updated_at: String,
+    /// Minimum change time between journeys by the same means; missing in older exports.
+    #[serde(default = "default_connection_buffer")]
+    pub connection_buffer_min: i64,
+    /// Minimum change time when the means of transport or the airport changes.
+    #[serde(default = "default_mode_change_buffer")]
+    pub mode_change_buffer_min: i64,
+}
+
+fn default_connection_buffer() -> i64 {
+    45
+}
+
+fn default_mode_change_buffer() -> i64 {
+    90
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]

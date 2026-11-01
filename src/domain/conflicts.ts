@@ -28,6 +28,10 @@ export type WarningCode =
   | "accommodation_gap"
   | "activity_outside_period"
   | "activities_overlap"
+  | "activity_after_arrival"
+  | "activity_before_departure"
+  | "check_in_wait"
+  | "check_out_wait"
   | "pickup_before_arrival"
   | "pickup_tight"
   | "return_after_departure"
@@ -55,7 +59,8 @@ export interface Warning {
   params: Record<string, string | number>;
 }
 
-export const MIN_CONNECTION_MINUTES = 45;
+/** Waiting this long for a room, or with luggage after check-out, is worth a note. */
+export const LONG_WAIT_MINUTES = 3 * 60;
 
 function warn(
   code: WarningCode,
@@ -139,17 +144,23 @@ export function checkPlan(input: CheckInput): Warning[] {
     }
     const sameTrip = gap <= 24 * 60;
     if (!sameTrip) continue;
-    if (gap < MIN_CONNECTION_MINUTES && !approximate) {
+    const arriveAt = segmentTo(prev.s.segment);
+    const [arrAirport, depAirport] = [prev.s.segment.to_airport, next.s.segment.from_airport];
+    // Leaving an airport for a train, or crossing to another airport, takes longer than a change
+    // between two flights or two trains at the same place.
+    const change =
+      prev.s.segment.mode !== next.s.segment.mode ||
+      (!!arrAirport && !!depAirport && arrAirport !== depAirport);
+    const buffer = change ? trip.mode_change_buffer_min : trip.connection_buffer_min;
+    if (gap < buffer && !approximate) {
       out.push(
         warn("short_connection", "warning", {
           optionIds: pair,
-          params: { minutes: gap, at: segmentTo(prev.s.segment) ?? "" },
+          params: { minutes: gap, at: arriveAt ?? "", buffer },
         }),
       );
     }
-    const arriveAt = segmentTo(prev.s.segment);
     // Changing airports is worth a note; moving between a station and an airport is the point of transport.
-    const [arrAirport, depAirport] = [prev.s.segment.to_airport, next.s.segment.from_airport];
     if (arrAirport && depAirport && arrAirport !== depAirport) {
       out.push(
         warn("airport_change", "info", { optionIds: pair, params: { from: arrAirport, to: depAirport } }),
@@ -247,6 +258,62 @@ export function checkPlan(input: CheckInput): Warning[] {
           date: a.startDate.toString(),
         }),
       );
+    }
+  }
+  // Activities right after landing or right before leaving: the same buffers as for a car.
+  for (const a of activities) {
+    if (a.approximate) continue;
+    if (a.start && period.arrival) {
+      const diff = minutesBetween(period.arrival, a.start);
+      if (diff >= 0 && diff < trip.arrival_buffer_min)
+        out.push(
+          warn("activity_after_arrival", "warning", {
+            optionIds: ids(a),
+            date: a.startDate?.toString(),
+            params: { minutes: diff, buffer: trip.arrival_buffer_min },
+          }),
+        );
+    }
+    const end = a.end ?? a.start;
+    if (end && period.departure) {
+      const diff = minutesBetween(end, period.departure);
+      if (diff >= 0 && diff < trip.departure_buffer_min)
+        out.push(
+          warn("activity_before_departure", "warning", {
+            optionIds: ids(a),
+            date: a.startDate?.toString(),
+            params: { minutes: diff, buffer: trip.departure_buffer_min },
+          }),
+        );
+    }
+  }
+  // Long waits for the room or with luggage, only where the stay states its times.
+  const arrivalDate = period.journeys[0]?.arriveDate ?? null;
+  const departureDate = period.departure ? (period.journeys.at(-1)?.departDate ?? null) : null;
+  for (const s of stays) {
+    const acc = s.accommodation;
+    if (!acc) continue;
+    if (period.arrival && s.start && acc.check_in_time && s.startDate && arrivalDate?.equals(s.startDate)) {
+      const wait = minutesBetween(period.arrival, s.start) - trip.arrival_buffer_min;
+      if (wait >= LONG_WAIT_MINUTES)
+        out.push(
+          warn("check_in_wait", "info", {
+            optionIds: ids(s),
+            date: s.startDate.toString(),
+            params: { minutes: wait, time: acc.check_in_time },
+          }),
+        );
+    }
+    if (period.departure && s.end && acc.check_out_time && s.endDate && departureDate?.equals(s.endDate)) {
+      const wait = minutesBetween(s.end, period.departure) - trip.departure_buffer_min;
+      if (wait >= LONG_WAIT_MINUTES)
+        out.push(
+          warn("check_out_wait", "info", {
+            optionIds: ids(s),
+            date: s.endDate.toString(),
+            params: { minutes: wait, time: acc.check_out_time },
+          }),
+        );
     }
   }
   for (let x = 0; x < activities.length; x++) {

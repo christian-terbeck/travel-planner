@@ -344,6 +344,22 @@ export function TripForm({
                 onChange={(v) => set("departure_buffer_min", v ?? 0)}
               />
             </Field>
+            <Field label={t("trip.connectionBuffer")} htmlFor="t-cb">
+              <NumberInput
+                id="t-cb"
+                min={0}
+                value={trip.connection_buffer_min}
+                onChange={(v) => set("connection_buffer_min", v ?? 0)}
+              />
+            </Field>
+            <Field label={t("trip.modeChangeBuffer")} htmlFor="t-mb">
+              <NumberInput
+                id="t-mb"
+                min={0}
+                value={trip.mode_change_buffer_min}
+                onChange={(v) => set("mode_change_buffer_min", v ?? 0)}
+              />
+            </Field>
           </div>
         </section>
         <button type="submit" hidden />

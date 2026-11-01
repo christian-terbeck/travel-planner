@@ -143,7 +143,7 @@ ExchangeRate* (explicit rate + date + source), PackingTemplate* (reusable lists)
 - *Rental days:* 24-hour blocks with a configurable grace period (default 59 min), or calendar
   days, per option.
 - *Conflicts:* activities outside the period, overlapping timed activities, accommodation gaps
-  and overlaps, rental period not covering driving days, pickup before flight arrival + buffer,
+  and overlaps, rental period not covering driving days, pickup before flight arrival + buffer, connections shorter than the trip's change time (same means, default 45 min; change of means or airport, default 90 min), activities within the arrival/departure buffers, a wait of 3 h or more for check-in or after check-out (only when the stay states its times),
   duplicate bookings, deadlines, travel insurance not covering the trip, travel documents expiring before the end (passports: within 6 months after it). Connections are checked
   across flights and other transport; parking and insurance are not activities. Each warning has a stable key (for dismissal) and references
   the components involved.
@@ -195,8 +195,9 @@ ExchangeRate* (explicit rate + date + source), PackingTemplate* (reusable lists)
 | M33 | Drop files on a trip | Dropped files are attached as documents or read as a booking |
 | M34 | Travel journal | Text and photos per trip day, with the day's plan as a reminder |
 | M35 | Expenses on the way, settling up | An expense is recorded in a few taps; a paid transfer evens out the balances |
+| M36 | Configurable buffers | Change times per trip; tight activities and long waits at the stay are flagged |
 
 ## 5. Status
 
-M0–M10 and M12–M35 are implemented. For M11, every acceptance criterion is covered by automated
+M0–M10 and M12–M36 are implemented. For M11, every acceptance criterion is covered by automated
 tests ([ACCEPTANCE.md](ACCEPTANCE.md)); the manual run on Windows listed there is still pending.

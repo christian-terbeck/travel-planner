@@ -35,6 +35,8 @@ fn trip(s: &mut Store, title: &str) -> String {
         notes: None,
         arrival_buffer_min: 60,
         departure_buffer_min: 120,
+        connection_buffer_min: 45,
+        mode_change_buffer_min: 90,
         created_at: NOW.into(),
         updated_at: NOW.into(),
     }))
