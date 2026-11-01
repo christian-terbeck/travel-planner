@@ -12,6 +12,15 @@ TOOLS="${WINCROSS:-$HOME/.local/opt/wincross}"
 export PATH="$TOOLS/bin:$HOME/.cargo/bin:$PATH"
 TARGET=x86_64-pc-windows-msvc
 case "$(uname -s)" in MINGW* | MSYS* | CYGWIN*) NATIVE=1 ;; *) NATIVE= ;; esac
+# The Tauri CLI looks up the Linux tray library (for Linux bundles) whenever the tray is enabled,
+# even when bundling for Windows. A stub pkg-config entry answers that lookup; nothing is linked.
+STUB_PC="$TOOLS/pkgconfig"
+if [ -z "$NATIVE" ] && ! pkg-config --exists ayatana-appindicator3-0.1 appindicator3-0.1 2>/dev/null; then
+  mkdir -p "$STUB_PC"
+  printf 'libdir=/nonexistent\nName: ayatana-appindicator3-0.1\nDescription: stub for cross bundling\nVersion: 0.5\nLibs: -L${libdir}\n' \
+    > "$STUB_PC/ayatana-appindicator3-0.1.pc"
+  export PKG_CONFIG_PATH="$STUB_PC${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+fi
 
 cd "$ROOT"
 VERSION="$(node -p "require('./src-tauri/tauri.conf.json').version")"
