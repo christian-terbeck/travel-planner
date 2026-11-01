@@ -5,8 +5,10 @@ import {
   Archive,
   Ban,
   BedDouble,
+  Bus,
   Calendar,
   Car,
+  CarTaxiFront,
   CheckCircle2,
   Circle,
   CircleDashed,
@@ -18,16 +20,21 @@ import {
   Lightbulb,
   Plane,
   RotateCcw,
+  Route,
   ShieldCheck,
   ShieldOff,
+  Ship,
+  SquareParking,
   Star,
   Ticket,
+  TrainFront,
+  Umbrella,
   XCircle,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import type { CancellationState } from "@/domain/cancellation";
 import type { Severity } from "@/domain/conflicts";
-import type { PaymentStatus, SlotKind, TripStatus } from "@/domain/types";
+import type { PaymentStatus, SlotKind, TransportMode, TripStatus } from "@/domain/types";
 import { useT } from "@/i18n";
 import type { EffectiveStatus } from "@/lib/model";
 import { Badge, type Tone } from "./core";
@@ -133,9 +140,29 @@ export function KindIcon({ kind, className = "size-4" }: { kind: SlotKind; class
     accommodation: <BedDouble className={className} aria-hidden />,
     rental_car: <Car className={className} aria-hidden />,
     activity: <Ticket className={className} aria-hidden />,
+    transport: <TrainFront className={className} aria-hidden />,
+    parking: <SquareParking className={className} aria-hidden />,
+    insurance: <Umbrella className={className} aria-hidden />,
     other: <Calendar className={className} aria-hidden />,
   };
   return icons[kind];
+}
+
+export function ModeIcon({ mode, className = "size-4" }: { mode: TransportMode | null; className?: string }) {
+  switch (mode) {
+    case null:
+      return <Plane className={className} aria-hidden />;
+    case "train":
+      return <TrainFront className={className} aria-hidden />;
+    case "bus":
+      return <Bus className={className} aria-hidden />;
+    case "ferry":
+      return <Ship className={className} aria-hidden />;
+    case "transfer":
+      return <CarTaxiFront className={className} aria-hidden />;
+    case "other":
+      return <Route className={className} aria-hidden />;
+  }
 }
 
 /** Marks a value as an estimate, unverified or incomplete so it never looks like a fact. */

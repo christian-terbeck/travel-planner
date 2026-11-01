@@ -2,6 +2,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { SLOT_KINDS } from "@/lib/rows";
 import en from "./en";
 
 function files(dir: string): string[] {
@@ -38,7 +39,13 @@ describe("translations", () => {
     const groups: Record<string, string[]> = {
       status: ["idea", "planned", "preferred", "booked", "cancelled", "completed", "archived", "rejected"],
       tripStatus: ["idea", "planning", "booked", "ongoing", "completed", "cancelled", "archived"],
-      kind: ["flight", "accommodation", "rental_car", "activity", "other"],
+      kind: SLOT_KINDS,
+      slotDefault: SLOT_KINDS,
+      "option.titlePlaceholder": SLOT_KINDS,
+      "option.providerPlaceholder": SLOT_KINDS,
+      transportMode: ["train", "bus", "ferry", "transfer", "other"],
+      parking: ["title", "location", "date", "start", "endDate", "end"],
+      "map.modes": ["flight", "transit", "drive", "ground"],
       warning: [
         "flight_overlap",
         "short_connection",
@@ -60,6 +67,7 @@ describe("translations", () => {
         "nights_outside_limits",
         "duplicate_booking",
         "stay_outside_station",
+        "insurance_not_covering",
       ],
       reminder: [
         "cancellation_deadline",

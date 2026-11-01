@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/api/client";
 import { useAction } from "@/api/queries";
-import type { PlanItem } from "@/domain/items";
+import { type PlanItem, segmentFrom, segmentTo } from "@/domain/items";
 import type { Booking, CancellationPolicy, OptionBundle, Payment, PaymentStatus, Slot } from "@/domain/types";
 import { useT } from "@/i18n";
 import { useFormat } from "@/lib/prefs";
@@ -218,7 +218,7 @@ export function BookingDialog({
                   onChange={(e) =>
                     setSegments(e.target.checked ? [...segments, s.id] : segments.filter((x) => x !== s.id))
                   }
-                  label={`${s.flight_number ?? ""} ${s.from_airport ?? "?"} → ${s.to_airport ?? "?"} · ${f.local(s.depart_local, s.depart_tz)}`}
+                  label={`${s.flight_number ?? ""} ${segmentFrom(s) ?? "?"} → ${segmentTo(s) ?? "?"} · ${f.local(s.depart_local, s.depart_tz)}`}
                 />
               ))}
             </div>

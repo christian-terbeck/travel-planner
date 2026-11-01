@@ -9,6 +9,7 @@ import type { SlotKind } from "@/domain/types";
 import { useT } from "@/i18n";
 import { useTripModels } from "@/lib/model";
 import { useFormat } from "@/lib/prefs";
+import { SLOT_KINDS } from "@/lib/rows";
 import { Card, cn, EmptyState, Input, PageHeader, Select, Stat } from "@/ui/core";
 import { KindIcon } from "@/ui/status";
 import { CancellationCell } from "../trip/BookingsView";
@@ -119,7 +120,7 @@ export function CancellationsPage() {
             onChange={(e) => setKind(e.target.value as SlotKind | "")}
           >
             <option value="">{t("cancellations.allKinds")}</option>
-            {(["flight", "accommodation", "rental_car", "activity", "other"] as SlotKind[]).map((k) => (
+            {SLOT_KINDS.map((k) => (
               <option key={k} value={k}>
                 {t(`kind.${k}`)}
               </option>

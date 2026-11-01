@@ -2,7 +2,7 @@
 // combination incompatible; the others are informative. Findings that cannot be evaluated
 // reliably (missing times or zones) are skipped or softened instead of guessed.
 
-import type { PlanItem } from "./items";
+import { isJourney, type PlanItem, segmentTo } from "./items";
 import type { NightPlan, Period } from "./itinerary";
 import {
   compareDate,
@@ -38,7 +38,8 @@ export type WarningCode =
   | "outside_date_limits"
   | "nights_outside_limits"
   | "duplicate_booking"
-  | "stay_outside_station";
+  | "stay_outside_station"
+  | "insurance_not_covering";
 
 export interface Warning {
   key: string;
@@ -103,13 +104,14 @@ function overlapMinutes(a: PlanItem, b: PlanItem): number {
 export function checkPlan(input: CheckInput): Warning[] {
   const { trip, items, period, nights } = input;
   const out: Warning[] = [];
-  const flights = items.filter((i) => i.kind === "flight");
+  const journeys = items.filter(isJourney);
   const stays = items.filter((i) => i.accommodation);
   const cars = items.filter((i) => i.rentalCar);
-  const activities = items.filter((i) => i.activity);
+  const activities = items.filter((i) => i.activity && (i.kind === "activity" || i.kind === "other"));
+  const insurances = items.filter((i) => i.kind === "insurance");
 
-  // Flights: order, connections and overlaps.
-  const segs = flights
+  // Flights and other transport: order, connections and overlaps.
+  const segs = journeys
     .flatMap((i) => i.segments.map((s) => ({ s, item: i })))
     .filter((x) => x.s.depart && x.s.arrive)
     .sort((a, b) => compareInstant(a.s.depart as Instant, b.s.depart as Instant));
@@ -133,15 +135,16 @@ export function checkPlan(input: CheckInput): Warning[] {
       out.push(
         warn("short_connection", "warning", {
           optionIds: pair,
-          params: { minutes: gap, at: prev.s.segment.to_airport ?? "" },
+          params: { minutes: gap, at: segmentTo(prev.s.segment) ?? "" },
         }),
       );
     }
-    const arriveAt = prev.s.segment.to_airport;
-    const departFrom = next.s.segment.from_airport;
-    if (arriveAt && departFrom && arriveAt !== departFrom) {
+    const arriveAt = segmentTo(prev.s.segment);
+    // Changing airports is worth a note; moving between a station and an airport is the point of transport.
+    const [arrAirport, depAirport] = [prev.s.segment.to_airport, next.s.segment.from_airport];
+    if (arrAirport && depAirport && arrAirport !== depAirport) {
       out.push(
-        warn("airport_change", "info", { optionIds: pair, params: { from: arriveAt, to: departFrom } }),
+        warn("airport_change", "info", { optionIds: pair, params: { from: arrAirport, to: depAirport } }),
       );
     }
     if (
@@ -360,6 +363,22 @@ export function checkPlan(input: CheckInput): Warning[] {
           params: { nights: n, min: trip.min_nights ?? "", max: trip.max_nights ?? "" },
         }),
       );
+    }
+  }
+
+  // Travel insurance should cover the whole trip.
+  if (period.start && period.end) {
+    for (const ins of insurances) {
+      if (!ins.startDate) continue;
+      const end = ins.endDate ?? ins.startDate;
+      if (compareDate(ins.startDate, period.start) > 0 || compareDate(end, period.end) < 0) {
+        out.push(
+          warn("insurance_not_covering", "warning", {
+            optionIds: ids(ins),
+            params: { from: period.start.toString(), to: period.end.toString() },
+          }),
+        );
+      }
     }
   }
 

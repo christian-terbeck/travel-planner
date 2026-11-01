@@ -2,6 +2,7 @@
 // while the app is closed, and the UI says so.
 
 import { type CancellationState, cancellationStatus } from "./cancellation";
+import { isJourney } from "./items";
 import { currentPlan, evaluate, type PlanContext } from "./scenarios";
 import { dateRuns, daysBetween, type Instant, type PlainDate, parseDate, Temporal } from "./time";
 import type { TripStatus } from "./types";
@@ -121,7 +122,7 @@ export function reminders(
         });
       }
     }
-    if (item.kind === "flight" && item.activeBookings.length > 0 && item.startDate) {
+    if (isJourney(item) && item.activeBookings.length > 0 && item.startDate) {
       const hasDoc = g.documents.some(
         (d) => d.option_id === item.option.id || item.activeBookings.some((b) => b.id === d.booking_id),
       );

@@ -11,6 +11,7 @@ import type {
   RentalCarDetails,
   Slot,
   SlotKind,
+  TransportMode,
   Trip,
   TripGraph,
 } from "./types";
@@ -158,8 +159,62 @@ export function addFlight(
       fare_class: null,
       baggage: null,
       notes: null,
+      mode: null,
+      from_place: null,
+      to_place: null,
+      from_lat: null,
+      from_lon: null,
+      to_lat: null,
+      to_lon: null,
     };
     g.flight_segments.push(s);
+  });
+  return o;
+}
+
+type Ride = [
+  from: string,
+  to: string,
+  depart: string,
+  arrive: string,
+  coords?: [number, number, number, number],
+];
+
+/** Train/bus/ferry option; places are names, coordinates optional, all times in Lisbon. */
+export function addTransport(
+  g: TripGraph,
+  slot: Slot,
+  price: number | null,
+  rides: Ride[],
+  mode: TransportMode = "train",
+): PlanOption {
+  const o = addOption(g, slot, price);
+  rides.forEach(([from, to, dep, arr, c], i) => {
+    g.flight_segments.push({
+      id: id("seg"),
+      option_id: o.id,
+      booking_id: null,
+      seq: i + 1,
+      airline: null,
+      flight_number: null,
+      from_airport: null,
+      to_airport: null,
+      depart_local: dep,
+      depart_tz: "Europe/Lisbon",
+      arrive_local: arr,
+      arrive_tz: "Europe/Lisbon",
+      cabin: null,
+      fare_class: null,
+      baggage: null,
+      notes: null,
+      mode,
+      from_place: from,
+      to_place: to,
+      from_lat: c?.[0] ?? null,
+      from_lon: c?.[1] ?? null,
+      to_lat: c?.[2] ?? null,
+      to_lon: c?.[3] ?? null,
+    });
   });
   return o;
 }
@@ -232,6 +287,7 @@ export function addActivity(
   date: string,
   start: string | null,
   end: string | null,
+  endDate: string | null = null,
 ): PlanOption {
   const o = addOption(g, slot, price);
   const a: ActivityDetails = {
@@ -240,7 +296,7 @@ export function addActivity(
     location: null,
     start_date: date,
     start_time: start,
-    end_date: null,
+    end_date: endDate,
     end_time: end,
     tz: "Europe/Lisbon",
     duration_min: null,

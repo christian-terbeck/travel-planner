@@ -36,6 +36,9 @@ const categoryOf: Record<SlotKind, CostCategory> = {
   accommodation: "accommodation",
   rental_car: "rental_car",
   activity: "activity",
+  transport: "transport",
+  parking: "other",
+  insurance: "other",
   other: "other",
 };
 

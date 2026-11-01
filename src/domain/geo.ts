@@ -1,6 +1,7 @@
-// Route and distances of a plan: flights as great-circle distances between airports, travel on
-// the ground between airports and stays as straight-line distance times a road factor. Ground
-// distances are estimates and are labelled as such until road routes from the online route
+// Route and distances of a plan: flights as great-circle distances between airports, train,
+// bus, ferry and transfer segments between their places, travel on the ground between airports
+// and stays as straight-line distance times a road factor. Ground and transit distances are
+// estimates and are labelled as such until road routes from the online route
 // service (when enabled) replace them.
 
 import type { RoadQuery } from "@/api/bindings/RoadQuery";
@@ -58,11 +59,11 @@ export function parseCoordinates(text: string | null | undefined): LatLon | null
   return null;
 }
 
-export type LegMode = "flight" | "drive" | "ground";
+export type LegMode = "flight" | "transit" | "drive" | "ground";
 
 export interface RoutePoint {
   key: string;
-  kind: "airport" | "stay" | "activity";
+  kind: "airport" | "place" | "stay" | "activity";
   label: string;
   pos: LatLon;
   optionId: string | null;
@@ -91,6 +92,8 @@ export interface Route {
   missingStays: PlanItem[];
   /** IATA codes not found in the offline airport list. */
   unknownAirports: string[];
+  /** Transport segments whose places have no coordinates. */
+  missingPlaces: number;
 }
 
 interface Visit {
@@ -116,6 +119,7 @@ export function buildRoute(
   const visits: Visit[] = [];
   const unknown = new Set<string>();
   const missingStays: PlanItem[] = [];
+  let missingPlaces = 0;
 
   const airportPoint = (code: string | null): RoutePoint | null => {
     if (!code) return null;
@@ -136,17 +140,34 @@ export function buildRoute(
     return p;
   };
 
+  const placePoint = (name: string | null, lat: number | null, lon: number | null): RoutePoint | null => {
+    const pos = lat !== null && lon !== null ? valid(lat, lon) : null;
+    if (!pos) return null;
+    const key = `place:${pos.lat.toFixed(4)},${pos.lon.toFixed(4)}`;
+    const p = points.get(key) ?? { key, kind: "place" as const, label: name ?? "", pos, optionId: null };
+    points.set(key, p);
+    return p;
+  };
+
   for (const item of items) {
     for (const s of item.segments) {
-      const from = airportPoint(s.segment.from_airport);
-      const to = airportPoint(s.segment.to_airport);
-      if (!from || !to) continue;
+      const seg = s.segment;
+      const transit = seg.mode !== null;
+      const from = transit
+        ? placePoint(seg.from_place, seg.from_lat, seg.from_lon)
+        : airportPoint(seg.from_airport);
+      const to = transit ? placePoint(seg.to_place, seg.to_lat, seg.to_lon) : airportPoint(seg.to_airport);
+      if (!from || !to) {
+        if (transit) missingPlaces++;
+        continue;
+      }
+      const straight = haversineKm(from.pos, to.pos);
       legs.push({
         from,
         to,
-        mode: "flight",
-        km: haversineKm(from.pos, to.pos),
-        estimated: false,
+        mode: transit ? "transit" : "flight",
+        km: transit ? straight * ROAD_FACTOR : straight,
+        estimated: transit,
         minutes: null,
         path: null,
         at: s.depart,
@@ -212,25 +233,26 @@ export function buildRoute(
     km: sumKm(legs),
     missingStays,
     unknownAirports: [...unknown].sort(),
+    missingPlaces,
   };
 }
 
 function sumKm(legs: Leg[]): Record<LegMode, number> {
-  const km: Record<LegMode, number> = { flight: 0, drive: 0, ground: 0 };
+  const km: Record<LegMode, number> = { flight: 0, transit: 0, drive: 0, ground: 0 };
   for (const l of legs) km[l.mode] += l.km;
   return km;
 }
 
-/** Legs on the ground, the ones a route service can measure. */
+/** Ground legs between places, the ones a route service can measure. */
+const routable = (l: Leg) => l.mode === "drive" || l.mode === "ground";
+
 export function roadQueries(route: Route): RoadQuery[] {
-  return route.legs
-    .filter((l) => l.mode !== "flight")
-    .map((l) => ({
-      from_lat: l.from.pos.lat,
-      from_lon: l.from.pos.lon,
-      to_lat: l.to.pos.lat,
-      to_lon: l.to.pos.lon,
-    }));
+  return route.legs.filter(routable).map((l) => ({
+    from_lat: l.from.pos.lat,
+    from_lon: l.from.pos.lon,
+    to_lat: l.to.pos.lat,
+    to_lon: l.to.pos.lon,
+  }));
 }
 
 /**
@@ -240,7 +262,7 @@ export function roadQueries(route: Route): RoadQuery[] {
 export function applyRoads(route: Route, roads: RoadResult[]): Route {
   let k = 0;
   const legs = route.legs.map((l) => {
-    if (l.mode === "flight") return l;
+    if (!routable(l)) return l;
     const r = roads[k++];
     if (r?.status !== "found") return l;
     return {

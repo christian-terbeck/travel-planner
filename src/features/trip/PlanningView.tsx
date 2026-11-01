@@ -20,7 +20,7 @@ import type { OptionBundle, PriceObservation, Slot, SlotKind } from "@/domain/ty
 import { useT } from "@/i18n";
 import type { TripModel } from "@/lib/model";
 import { useFormat } from "@/lib/prefs";
-import { newBundle, newId, newScenario, newSlot, nil, nowIso } from "@/lib/rows";
+import { newBundle, newId, newScenario, newSlot, nil, nowIso, SLOT_KINDS } from "@/lib/rows";
 import { useTripUi } from "@/lib/tripUi";
 import {
   Badge,
@@ -45,7 +45,7 @@ import { OptionEditor } from "./OptionEditor";
 import { ScenariosPanel } from "./ScenariosPanel";
 import { useTrip } from "./TripLayout";
 
-const KINDS: SlotKind[] = ["flight", "accommodation", "rental_car", "activity", "other"];
+const KINDS = SLOT_KINDS;
 
 /** Selects (or clears) an option for its slot in the preferred scenario, creating it if needed. */
 export function useSelectInPlan(m: TripModel) {

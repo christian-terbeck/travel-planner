@@ -1,6 +1,6 @@
 // iCalendar (RFC 5545) export of a trip's itinerary.
 
-import type { PlanItem } from "./items";
+import { isJourney, MODE_SYMBOL, type PlanItem, segmentFrom, segmentTo } from "./items";
 import type { Instant, PlainDate } from "./time";
 import type { Trip } from "./types";
 
@@ -46,15 +46,15 @@ export function itemEvents(item: PlanItem): IcsEvent[] {
     .filter(Boolean)
     .join("\n");
   const events: IcsEvent[] = [];
-  if (item.kind === "flight") {
+  if (isJourney(item)) {
     for (const s of item.segments) {
       if (!s.depart || !s.arrive) continue;
       const seg = s.segment;
       events.push({
         uid: `${seg.id}@travel-planner`,
-        summary: `✈ ${[seg.flight_number, `${seg.from_airport ?? "?"} → ${seg.to_airport ?? "?"}`].filter(Boolean).join(" ")}`,
+        summary: `${MODE_SYMBOL[seg.mode ?? "flight"]} ${[seg.flight_number, `${segmentFrom(seg) ?? "?"} → ${segmentTo(seg) ?? "?"}`].filter(Boolean).join(" ")}`,
         description: details,
-        location: seg.from_airport ?? undefined,
+        location: segmentFrom(seg) ?? undefined,
         start: { instant: s.depart },
         end: { instant: s.arrive },
         confirmed,

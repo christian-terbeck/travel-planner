@@ -1,7 +1,7 @@
 import { ExternalLink } from "lucide-react";
 import { api } from "@/api/client";
 import { useAction } from "@/api/queries";
-import type { PlanItem } from "@/domain/items";
+import { isJourney, type PlanItem, segmentFrom, segmentTo } from "@/domain/items";
 import { minutesBetween } from "@/domain/time";
 import { useT } from "@/i18n";
 import { useFormat } from "@/lib/prefs";
@@ -11,12 +11,12 @@ export function useWhen() {
   const t = useT();
   const f = useFormat();
   return (i: PlanItem): string => {
-    if (i.kind === "flight") {
+    if (isJourney(i)) {
       if (i.segments.length === 0) return t("item.noSegments");
       return i.segments
         .map(
           (s) =>
-            `${s.segment.from_airport ?? "?"}→${s.segment.to_airport ?? "?"} ${f.date(s.segment.depart_local?.slice(0, 10), "short")} ${f.localTime(s.segment.depart_local)}`,
+            `${segmentFrom(s.segment) ?? "?"}→${segmentTo(s.segment) ?? "?"} ${f.date(s.segment.depart_local?.slice(0, 10), "short")} ${f.localTime(s.segment.depart_local)}`,
         )
         .join(" · ");
     }
@@ -44,7 +44,7 @@ export function useDuration() {
   const t = useT();
   const f = useFormat();
   return (i: PlanItem): string => {
-    if (i.kind === "flight" && i.start && i.end) {
+    if (isJourney(i) && i.start && i.end) {
       const stops = Math.max(0, i.segments.length - 1);
       return `${f.duration(minutesBetween(i.start, i.end))}${stops > 0 ? ` · ${t("item.segments", { count: i.segments.length })}` : ""}`;
     }

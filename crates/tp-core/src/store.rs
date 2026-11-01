@@ -666,14 +666,22 @@ fn save_option_tx(tx: &Transaction, mut bundle: OptionBundle, confirm_booked_edi
     }
     bundle.validate()?;
     let o = &bundle.option;
-    let expected = match slot.kind {
-        SlotKind::Flight => bundle.accommodation.is_none() && bundle.rental_car.is_none() && bundle.activity.is_none(),
-        SlotKind::Accommodation => bundle.segments.is_empty() && bundle.rental_car.is_none() && bundle.activity.is_none(),
-        SlotKind::RentalCar => bundle.segments.is_empty() && bundle.accommodation.is_none() && bundle.activity.is_none(),
-        SlotKind::Activity | SlotKind::Other => {
-            bundle.segments.is_empty() && bundle.accommodation.is_none() && bundle.rental_car.is_none()
-        }
+    let segments_fit = match slot.kind {
+        SlotKind::Flight => bundle.segments.iter().all(|s| s.mode.is_none()),
+        SlotKind::Transport => bundle.segments.iter().all(|s| s.mode.is_some()),
+        _ => bundle.segments.is_empty(),
     };
+    let expected = segments_fit
+        && match slot.kind {
+            SlotKind::Flight | SlotKind::Transport => {
+                bundle.accommodation.is_none() && bundle.rental_car.is_none() && bundle.activity.is_none()
+            }
+            SlotKind::Accommodation => bundle.rental_car.is_none() && bundle.activity.is_none(),
+            SlotKind::RentalCar => bundle.accommodation.is_none() && bundle.activity.is_none(),
+            SlotKind::Activity | SlotKind::Parking | SlotKind::Insurance | SlotKind::Other => {
+                bundle.accommodation.is_none() && bundle.rental_car.is_none()
+            }
+        };
     if !expected {
         return Err(CoreError::invalid("option", "details do not match the slot kind"));
     }
@@ -690,7 +698,7 @@ fn save_option_tx(tx: &Transaction, mut bundle: OptionBundle, confirm_booked_edi
     for existing in table::select::<FlightSegment>(tx, "option_id = ?", &[&o.id])? {
         if !keep.contains(&existing.id.as_str()) {
             if existing.booking_id.is_some() {
-                return Err(CoreError::rule("segment_booked", "a booked flight segment cannot be removed"));
+                return Err(CoreError::rule("segment_booked", "a booked segment cannot be removed"));
             }
             table::delete_by::<FlightSegment>(tx, "id = ?", &[&existing.id])?;
         }

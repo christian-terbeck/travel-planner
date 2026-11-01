@@ -105,6 +105,13 @@ fn segment(option_id: &str, seq: i64, from: &str, to: &str, dep: &str, arr: &str
         fare_class: None,
         baggage: None,
         notes: None,
+        mode: None,
+        from_place: None,
+        to_place: None,
+        from_lat: None,
+        from_lon: None,
+        to_lat: None,
+        to_lon: None,
     }
 }
 
@@ -564,4 +571,42 @@ fn restore_rejects_foreign_or_unsafe_archives() {
     assert_eq!(rule_code(s.preview_restore(&path).unwrap_err()), "backup_invalid");
     std::fs::write(&path, b"not a zip").unwrap();
     assert_eq!(rule_code(s.preview_restore(&path).unwrap_err()), "backup_invalid");
+}
+
+#[test]
+fn transport_segments_need_a_mode_and_flights_must_not_have_one() {
+    let (mut s, _d) = store();
+    let t = trip(&mut s, "Portugal");
+    let rail = slot(&mut s, &t, SlotKind::Transport);
+    let o = option(&rail, Some(4_500));
+    let mut seg = segment(&o.id, 1, "LIS", "OPO", "2027-06-12T09:00", "2027-06-12T12:00");
+    seg.from_airport = None;
+    seg.to_airport = None;
+    seg.from_place = Some("Lisboa Santa Apolónia".into());
+    seg.to_place = Some("Porto Campanhã".into());
+    seg.from_lat = Some(38.7139);
+    seg.from_lon = Some(-9.1223);
+    let mut bundle = OptionBundle {
+        option: o,
+        segments: vec![seg.clone()],
+        accommodation: None,
+        rental_car: None,
+        activity: None,
+        fees: vec![],
+        policy: None,
+    };
+    assert!(matches!(s.save_option(bundle.clone(), false), Err(CoreError::Validation { .. })), "mode missing");
+    bundle.segments[0].mode = Some(TransportMode::Train);
+    s.save_option(bundle.clone(), false).unwrap();
+    let g = s.trip_graph(&t).unwrap();
+    assert_eq!(g.flight_segments[0].mode, Some(TransportMode::Train));
+    assert_eq!(g.flight_segments[0].to_place.as_deref(), Some("Porto Campanhã"));
+
+    let fl = slot(&mut s, &t, SlotKind::Flight);
+    let mut flight = flight_bundle(&fl, 10_000);
+    flight.segments[0].mode = Some(TransportMode::Bus);
+    assert!(matches!(s.save_option(flight, false), Err(CoreError::Validation { .. })));
+
+    bundle.segments[0].to_lat = Some(41.1);
+    assert!(matches!(s.save_option(bundle, false), Err(CoreError::Validation { .. })), "half a coordinate");
 }

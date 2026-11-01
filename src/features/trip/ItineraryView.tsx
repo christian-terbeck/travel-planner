@@ -2,7 +2,7 @@ import { AlertTriangle, BedDouble, Eye, Moon, Star, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { api } from "@/api/client";
 import { useAction } from "@/api/queries";
-import type { PlanItem } from "@/domain/items";
+import { type PlanItem, segmentFrom, segmentTo } from "@/domain/items";
 import { evaluate, scenarioSelection } from "@/domain/scenarios";
 import { compareDate, dateRange, type PlainDate, Temporal, todayIn } from "@/domain/time";
 import { useT } from "@/i18n";
@@ -446,7 +446,7 @@ function SelectedCard({ item, onClose }: { item: PlanItem; onClose: () => void }
         </dd>
         {item.segments.map((s) => (
           <div key={s.segment.id} className="contents">
-            <dt className="text-fg-3">{`${s.segment.from_airport}→${s.segment.to_airport}`}</dt>
+            <dt className="text-fg-3">{`${segmentFrom(s.segment) ?? "?"}→${segmentTo(s.segment) ?? "?"}`}</dt>
             <dd className="text-xs">
               {f.local(s.segment.depart_local, s.segment.depart_tz)}
               <br />

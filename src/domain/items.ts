@@ -14,6 +14,7 @@ import type {
   RentalCarDetails,
   Slot,
   SlotKind,
+  TransportMode,
   TripGraph,
 } from "./types";
 
@@ -58,6 +59,24 @@ export interface PlanItem {
   assumptions: string[];
   approximate: boolean;
 }
+
+/** Where a segment starts and ends: the airport code of a flight, the place of other transport. */
+export const segmentFrom = (s: FlightSegment): string | null => s.from_airport ?? s.from_place;
+export const segmentTo = (s: FlightSegment): string | null => s.to_airport ?? s.to_place;
+
+/** Short symbol of a segment's means, for plain-text outputs. */
+export const MODE_SYMBOL: Record<TransportMode | "flight", string> = {
+  flight: "✈",
+  train: "🚆",
+  bus: "🚌",
+  ferry: "⛴",
+  transfer: "🚐",
+  other: "➜",
+};
+
+/** Items that travel in segments (flights and other transport). */
+export const isJourney = (i: Pick<PlanItem, "kind">): boolean =>
+  i.kind === "flight" || i.kind === "transport";
 
 export interface ItemContext {
   /** People the trip is planned for, when known. */

@@ -88,6 +88,7 @@ export function useRoute(m: TripModel, previewScenarioId?: string | null) {
 
 const modeColor: Record<LegMode, string> = {
   flight: "var(--info)",
+  transit: "var(--ok)",
   drive: "var(--primary)",
   ground: "var(--accent)",
 };
@@ -152,6 +153,14 @@ export function MapView() {
                   value={km(route.km.flight)}
                   hint={t("map.flightHint")}
                 />
+                {route.km.transit > 0 && (
+                  <DistanceRow
+                    color={modeColor.transit}
+                    label={t("map.transit")}
+                    value={`≈ ${km(route.km.transit)}`}
+                    hint={t("map.transitHint", { factor: f.number(ROAD_FACTOR) })}
+                  />
+                )}
                 <DistanceRow
                   color={modeColor.drive}
                   label={t("map.drive")}
@@ -168,31 +177,42 @@ export function MapView() {
                 )}
                 <div className="flex justify-between border-line border-t pt-2 font-semibold">
                   <dt>{t("map.total")}</dt>
-                  <dd className="tabular">{km(route.km.flight + route.km.drive + route.km.ground)}</dd>
+                  <dd className="tabular">
+                    {km(route.km.flight + route.km.transit + route.km.drive + route.km.ground)}
+                  </dd>
                 </div>
               </dl>
             )}
             {route && <RoadStatus route={route} roads={roads} />}
-            {route && (route.missingStays.length > 0 || route.unknownAirports.length > 0) && (
-              <div className="flex flex-col gap-1 border-line border-t px-4 py-2.5 text-warn text-xs">
-                {route.missingStays.length > 0 && (
-                  <p className="flex gap-1.5">
-                    <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
-                    <span>
-                      {t("map.missingLocations", { count: route.missingStays.length })} (
-                      {route.missingStays.map((i) => i.option.title).join(", ")})
-                    </span>
-                  </p>
-                )}
-                {route.unknownAirports.length > 0 && (
-                  <p className="flex gap-1.5">
-                    <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
-                    {t("map.unknownAirports", { count: route.unknownAirports.length })}{" "}
-                    {route.unknownAirports.join(", ")}
-                  </p>
-                )}
-              </div>
-            )}
+            {route &&
+              (route.missingStays.length > 0 ||
+                route.unknownAirports.length > 0 ||
+                route.missingPlaces > 0) && (
+                <div className="flex flex-col gap-1 border-line border-t px-4 py-2.5 text-warn text-xs">
+                  {route.missingStays.length > 0 && (
+                    <p className="flex gap-1.5">
+                      <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
+                      <span>
+                        {t("map.missingLocations", { count: route.missingStays.length })} (
+                        {route.missingStays.map((i) => i.option.title).join(", ")})
+                      </span>
+                    </p>
+                  )}
+                  {route.missingPlaces > 0 && (
+                    <p className="flex gap-1.5">
+                      <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
+                      {t("map.missingPlaces", { count: route.missingPlaces })}
+                    </p>
+                  )}
+                  {route.unknownAirports.length > 0 && (
+                    <p className="flex gap-1.5">
+                      <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
+                      {t("map.unknownAirports", { count: route.unknownAirports.length })}{" "}
+                      {route.unknownAirports.join(", ")}
+                    </p>
+                  )}
+                </div>
+              )}
           </Card>
           {route && route.legs.length > 0 && <LegsCard legs={route.legs} tz={m.tz} />}
           {selected && <PointCard point={selected} />}
@@ -203,7 +223,7 @@ export function MapView() {
 }
 
 const groundLegs = (route: Route, mode?: LegMode) =>
-  route.legs.filter((l) => l.mode !== "flight" && (!mode || l.mode === mode));
+  route.legs.filter((l) => (l.mode === "drive" || l.mode === "ground") && (!mode || l.mode === mode));
 
 const approx = (route: Route, mode: LegMode) =>
   groundLegs(route, mode).some((l) => l.estimated) ? "≈ " : "";
@@ -533,6 +553,18 @@ function RouteMap({
                     </text>
                   </>
                 )}
+                {p.kind === "place" && (
+                  <rect
+                    x={-5}
+                    y={-5}
+                    width={10}
+                    height={10}
+                    rx={2}
+                    fill="var(--surface)"
+                    stroke="var(--ok)"
+                    strokeWidth={2.5}
+                  />
+                )}
                 {p.kind === "stay" && (
                   <>
                     <circle
@@ -587,6 +619,7 @@ function RouteMap({
       </div>
       <div className="absolute bottom-3 left-3 flex flex-wrap gap-3 rounded-md border border-line bg-surface/90 px-2.5 py-1.5 text-[11px] text-fg-2">
         <Legend color={modeColor.flight} dashed label={t("map.modes.flight")} />
+        <Legend color={modeColor.transit} label={t("map.modes.transit")} />
         <Legend color={modeColor.drive} label={t("map.modes.drive")} />
         <Legend color={modeColor.ground} dashed label={t("map.modes.ground")} />
         <span className="flex items-center gap-1">

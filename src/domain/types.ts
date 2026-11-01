@@ -37,6 +37,7 @@ export type { Slot } from "@/api/bindings/Slot";
 export type { SlotKind } from "@/api/bindings/SlotKind";
 export type { Station } from "@/api/bindings/Station";
 export type { Task } from "@/api/bindings/Task";
+export type { TransportMode } from "@/api/bindings/TransportMode";
 export type { Traveler } from "@/api/bindings/Traveler";
 export type { TravelerCategory } from "@/api/bindings/TravelerCategory";
 export type { Trip } from "@/api/bindings/Trip";

@@ -1,7 +1,7 @@
 // Human-readable exports produced in the UI (the core writes them to the chosen file).
 
 import type { TFunction } from "i18next";
-import type { PlanItem } from "@/domain/items";
+import { isJourney, MODE_SYMBOL, type PlanItem, segmentFrom, segmentTo } from "@/domain/items";
 import { compareInstant, dateRange, Temporal } from "@/domain/time";
 import type { TripModel } from "./model";
 import type { useFormat } from "./prefs";
@@ -15,11 +15,11 @@ const esc = (s: string | null | undefined) =>
   );
 
 function itemLine(i: PlanItem, f: Fmt): string {
-  if (i.kind === "flight") {
+  if (isJourney(i)) {
     return i.segments
       .map(
         (s) =>
-          `${esc(s.segment.flight_number ?? "")} ${esc(s.segment.from_airport)} → ${esc(s.segment.to_airport)}, ${esc(f.local(s.segment.depart_local, s.segment.depart_tz))} – ${esc(f.local(s.segment.arrive_local, s.segment.arrive_tz))}`,
+          `${MODE_SYMBOL[s.segment.mode ?? "flight"]} ${esc(s.segment.flight_number ?? "")} ${esc(segmentFrom(s.segment))} → ${esc(segmentTo(s.segment))}, ${esc(f.local(s.segment.depart_local, s.segment.depart_tz))} – ${esc(f.local(s.segment.arrive_local, s.segment.arrive_tz))}`,
       )
       .join("<br>");
   }

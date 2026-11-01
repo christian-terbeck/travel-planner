@@ -10,6 +10,7 @@ these decisions.
 | --- | --- | --- |
 | Planning model | **Slot → Option → Scenario**, bookings hold an immutable snapshot of the booked option (§3) | Replaces the overlapping *TripComponent*/*Alternative* pair; makes "editing an alternative never changes a booking" structural |
 | Multi-stop trips | **Stations** (ordered stops) are part of the MVP | Road trips need accommodation coverage per stop |
+| Other transport | Slot kind **transport** for train, bus, ferry and transfer: segments in the same table as flight segments with a `mode` per segment and free-text places with optional coordinates. Slot kinds **parking** and **insurance** keep their period in activity details | One journey model for connections, nights in transit, calendar, ICS and map; a slot can compare train vs. bus |
 | Airports | Bundled offline airport list (IATA → name, city, country, IANA time zone) | Correct overnight/time-zone handling without manual time-zone entry |
 | Tasks | Manual tasks plus derived tasks from warnings; warnings can be dismissed per trip | README mentions "outstanding tasks" without an entity; dismissal avoids repeated false positives |
 | Calendar export | ICS export of a trip's itinerary | Offline, works with Outlook/Google Calendar |
@@ -61,7 +62,7 @@ Trip ─┬─ Traveler
       ├─ Station (ordered stops)
       ├─ Slot (a need: "Flights", "Stay Lisbon", "Rental car", "Boat tour")
       │    └─ Option (an alternative; kind-specific details)
-      │         ├─ FlightSegment* / AccommodationDetail / RentalCarDetail / ActivityDetail
+      │         ├─ Segment* (flight or train/bus/ferry/transfer) / AccommodationDetail / RentalCarDetail / ActivityDetail
       │         ├─ OptionFee*
       │         ├─ CancellationPolicy (as offered)
       │         ├─ PriceObservation* (manual price checks, later provider data)
@@ -78,8 +79,9 @@ ExchangeRate* (explicit rate + date + source), Setting*, ChangeLog*
 
 ### Key rules
 
-- **Slots** have a kind (`flight`, `accommodation`, `rental_car`, `activity`, `other`), an optional
-  station and a `required` flag. A scenario is incomplete when a required slot has no option or
+- **Slots** have a kind (`flight`, `transport`, `accommodation`, `rental_car`, `activity`, `parking`,
+  `insurance`, `other`), an optional station and a `required` flag. Flight segments have no `mode`;
+  transport segments must have one (`train`, `bus`, `ferry`, `transfer`, `other`). A scenario is incomplete when a required slot has no option or
   the option has no price.
 - **Option lifecycle status:** `idea`, `planned`, `booked`, `cancelled`, `completed`, `archived`.
   *Preferred* is derived: the option is selected in the trip's preferred scenario. *Completed* is
@@ -114,7 +116,8 @@ ExchangeRate* (explicit rate + date + source), Setting*, ChangeLog*
   days, per option.
 - *Conflicts:* activities outside the period, overlapping timed activities, accommodation gaps
   and overlaps, rental period not covering driving days, pickup before flight arrival + buffer,
-  duplicate bookings, deadlines. Each warning has a stable key (for dismissal) and references
+  duplicate bookings, deadlines, travel insurance not covering the trip. Connections are checked
+  across flights and other transport; parking and insurance are not activities. Each warning has a stable key (for dismissal) and references
   the components involved.
 - *Combinations:* cartesian product over the options of each slot (booked options are fixed,
   rejected options are excluded), filtered by compatibility, ranked by total. The cheapest one is

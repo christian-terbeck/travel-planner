@@ -17,6 +17,7 @@ import type {
   SlotKind,
   Station,
   Task,
+  TransportMode,
   Traveler,
   Trip,
 } from "@/domain/types";
@@ -77,7 +78,7 @@ export function newSlot(tripId: string, kind: SlotKind, title: string, sort: num
     station_id: null,
     kind,
     title,
-    required: kind !== "activity" && kind !== "other",
+    required: kind === "flight" || kind === "accommodation" || kind === "rental_car" || kind === "transport",
     notes: null,
     sort,
     created_at: nowIso(),
@@ -113,7 +114,7 @@ export function newOption(slot: Slot, currency: string, sort: number): PlanOptio
   };
 }
 
-export function newSegment(optionId: string, seq: number): FlightSegment {
+export function newSegment(optionId: string, seq: number, mode: TransportMode | null = null): FlightSegment {
   return {
     id: newId(),
     option_id: optionId,
@@ -131,6 +132,13 @@ export function newSegment(optionId: string, seq: number): FlightSegment {
     fare_class: null,
     baggage: null,
     notes: null,
+    mode,
+    from_place: null,
+    to_place: null,
+    from_lat: null,
+    from_lon: null,
+    to_lat: null,
+    to_lon: null,
   };
 }
 
@@ -222,10 +230,15 @@ export function newBundle(slot: Slot, currency: string, sort: number): OptionBun
   const option = newOption(slot, currency, sort);
   return {
     option,
-    segments: slot.kind === "flight" ? [newSegment(option.id, 1)] : [],
+    segments:
+      slot.kind === "flight"
+        ? [newSegment(option.id, 1)]
+        : slot.kind === "transport"
+          ? [newSegment(option.id, 1, "train")]
+          : [],
     accommodation: slot.kind === "accommodation" ? newAccommodation(option.id) : null,
     rental_car: slot.kind === "rental_car" ? newRentalCar(option.id) : null,
-    activity: slot.kind === "activity" || slot.kind === "other" ? newActivity(option.id) : null,
+    activity: usesActivityDetails(slot.kind) ? newActivity(option.id) : null,
     fees: [],
     policy: null,
   };
@@ -326,3 +339,20 @@ export function intOrNull(v: string): number | null {
   const n = Number(v);
   return Number.isInteger(n) ? n : null;
 }
+
+/** Kinds whose options keep their time span and place in activity details. */
+export function usesActivityDetails(kind: SlotKind): boolean {
+  return kind === "activity" || kind === "parking" || kind === "insurance" || kind === "other";
+}
+
+/** Slot kinds in the order they are listed and offered. */
+export const SLOT_KINDS: SlotKind[] = [
+  "flight",
+  "transport",
+  "accommodation",
+  "rental_car",
+  "activity",
+  "parking",
+  "insurance",
+  "other",
+];

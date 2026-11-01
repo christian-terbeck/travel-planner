@@ -1,6 +1,6 @@
 // Calendar events derived from a trip's plan (or a previewed scenario).
 
-import type { PlanItem } from "@/domain/items";
+import { isJourney, type PlanItem, segmentFrom, segmentTo } from "@/domain/items";
 import type { Selection } from "@/domain/scenarios";
 import { type Instant, type PlainDate, parseDate, Temporal } from "@/domain/time";
 import type { SlotKind } from "@/domain/types";
@@ -55,14 +55,14 @@ export function itemEvents(
     ...flags,
   };
   const out: CalEvent[] = [];
-  if (item.kind === "flight") {
+  if (isJourney(item)) {
     for (const s of item.segments) {
       if (!s.depart || !s.arrive) continue;
       const tz = s.segment.depart_tz ?? m.tz;
       out.push({
         ...base,
         key: `${s.segment.id}`,
-        title: `${s.segment.from_airport ?? "?"} → ${s.segment.to_airport ?? "?"}`,
+        title: `${segmentFrom(s.segment) ?? "?"} → ${segmentTo(s.segment) ?? "?"}`,
         subtitle: [s.segment.flight_number, item.option.title].filter(Boolean).join(" · "),
         start: s.depart,
         end: s.arrive,
@@ -143,7 +143,7 @@ export function unscheduled(m: TripModel, selection?: Selection | null): PlanIte
   const sel = selection ?? m.plan.selection;
   return [...sel.values()]
     .map((id) => m.item(id))
-    .filter((i): i is PlanItem => !!i && !i.startDate && i.kind !== "flight");
+    .filter((i): i is PlanItem => !!i && !i.startDate && !isJourney(i));
 }
 
 export function eventsOnDay(events: CalEvent[], day: PlainDate): CalEvent[] {

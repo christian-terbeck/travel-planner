@@ -15,7 +15,11 @@ macro_rules! string_enum {
 }
 
 string_enum!(TravelerCategory { Adult, Child, Infant, Senior, Student, Other });
-string_enum!(SlotKind { Flight, Accommodation, RentalCar, Activity, Other });
+string_enum!(SlotKind { Flight, Accommodation, RentalCar, Activity, Transport, Parking, Insurance, Other });
+string_enum!(
+    /// Means of a non-flight transport segment.
+    TransportMode { Train, Bus, Ferry, Transfer, Other }
+);
 string_enum!(
     /// Lifecycle of a planned option. "Preferred" is derived from the preferred scenario.
     OptionStatus { Idea, Planned, Booked, Cancelled, Completed, Archived }
@@ -146,6 +150,15 @@ pub struct FlightSegment {
     pub fare_class: Option<String>,
     pub baggage: Option<String>,
     pub notes: Option<String>,
+    /// `None` for flights; transport slots name their means per segment.
+    pub mode: Option<TransportMode>,
+    /// Station, port or address for transport segments (flights use the airport codes).
+    pub from_place: Option<String>,
+    pub to_place: Option<String>,
+    pub from_lat: Option<f64>,
+    pub from_lon: Option<f64>,
+    pub to_lat: Option<f64>,
+    pub to_lon: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]

@@ -5,7 +5,7 @@ import { api } from "@/api/client";
 import { useAction } from "@/api/queries";
 import { suggestedPaymentStatus } from "@/domain/budget";
 import type { CancellationStatus } from "@/domain/cancellation";
-import type { PlanItem } from "@/domain/items";
+import { type PlanItem, segmentFrom, segmentTo } from "@/domain/items";
 import type {
   Booking,
   CancellationPolicy,
@@ -17,7 +17,7 @@ import type {
 } from "@/domain/types";
 import { useT } from "@/i18n";
 import { useFormat } from "@/lib/prefs";
-import { newBundle, newPayment, newPolicy, newSlot, nil, nowIso } from "@/lib/rows";
+import { newBundle, newPayment, newPolicy, newSlot, nil, nowIso, SLOT_KINDS } from "@/lib/rows";
 import {
   Badge,
   Button,
@@ -124,7 +124,7 @@ function BookingTable({
   const when = useWhen();
   const run = useAction();
   const confirm = useConfirm();
-  const kinds: SlotKind[] = ["flight", "accommodation", "rental_car", "activity", "other"];
+  const kinds = SLOT_KINDS;
   const sorted = [...bookings].sort((a, b) => {
     const ia = m.item(a.option_id);
     const ib = m.item(b.option_id);
@@ -194,7 +194,7 @@ function BookingTable({
                     ? segs
                         .map(
                           (s) =>
-                            `${s.segment.from_airport}→${s.segment.to_airport} ${f.date(s.segment.depart_local?.slice(0, 10), "short")}`,
+                            `${segmentFrom(s.segment) ?? "?"}→${segmentTo(s.segment) ?? "?"} ${f.date(s.segment.depart_local?.slice(0, 10), "short")}`,
                         )
                         .join(" · ")
                     : item
@@ -710,7 +710,7 @@ function CancelDialog({ booking, onClose }: { booking: Booking; onClose: () => v
   );
 }
 
-const KINDS: SlotKind[] = ["flight", "accommodation", "rental_car", "activity", "other"];
+const KINDS = SLOT_KINDS;
 
 /** First step of a booking without prior alternatives: pick the slot it fills (or a new one). */
 function DirectBookingStart({

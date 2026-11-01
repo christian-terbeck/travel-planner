@@ -262,6 +262,10 @@ impl Validate for FlightSegment {
         opt_line("cabin", &self.cabin)?;
         opt_line("fare_class", &self.fare_class)?;
         opt_line("baggage", &self.baggage)?;
+        opt_line("from_place", &self.from_place)?;
+        opt_line("to_place", &self.to_place)?;
+        coordinates(self.from_lat, self.from_lon)?;
+        coordinates(self.to_lat, self.to_lon)?;
         opt_text("notes", &self.notes)
     }
 }
