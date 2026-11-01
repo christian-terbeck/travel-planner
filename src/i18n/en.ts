@@ -142,6 +142,18 @@ const en = {
       thunder: "Thunderstorm",
     },
   },
+  updates: {
+    title: "Updates",
+    enable: "Look for new versions at start",
+    hint: "Once a day, the app asks GitHub for the latest release of Travel Planner. Nothing about you or your trips is sent. Updates are never installed automatically: download the installer or portable version from the release page.",
+    check: "Check now",
+    checkedAt: "Last checked {{date}}",
+    current: "Version {{version}} is the latest.",
+    newer: "Version {{version}} is available (you have {{current}}).",
+    open: "Open release page",
+    skip: "Skip this version",
+    available: "Version {{version}} available",
+  },
   common: {
     back: "Back",
     cancel: "Cancel",

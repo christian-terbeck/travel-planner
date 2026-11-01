@@ -14,6 +14,7 @@ pub mod store;
 pub mod table;
 pub mod transfer;
 pub mod trash;
+pub mod updates;
 pub mod validate;
 pub mod weather;
 

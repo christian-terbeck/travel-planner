@@ -1,6 +1,7 @@
 import {
   CalendarDays,
   Compass,
+  Download,
   LayoutDashboard,
   Luggage,
   Search,
@@ -16,7 +17,9 @@ import { CommandPalette, useCommandPaletteShortcut } from "@/features/search/Com
 import { useT } from "@/i18n";
 import { useTripModels } from "@/lib/model";
 import { useOsNotifications } from "@/lib/notifications";
+import { usePrefs } from "@/lib/prefs";
 import { useReferenceRateRefresh } from "@/lib/referenceRates";
+import { availableUpdate, useUpdateCheckAtStart, useUpdateResult } from "@/lib/updates";
 import { cn, EmptyState, Spinner } from "@/ui/core";
 
 function NavItem({ to, icon, label, count }: { to: string; icon: ReactNode; label: string; count?: number }) {
@@ -51,6 +54,8 @@ export function Layout() {
   const models = useTripModels(trips.data);
   useOsNotifications(models, trips.isSuccess);
   useReferenceRateRefresh();
+  useUpdateCheckAtStart();
+  const update = availableUpdate(useUpdateResult(), usePrefs().updates.skipped);
   const [searching, setSearching] = useState(false);
   useCommandPaletteShortcut(useCallback(() => setSearching(true), []));
   const urgent = models.flatMap((m) => m.reminders).filter((r) => r.kind === "cancellation_deadline").length;
@@ -83,6 +88,15 @@ export function Layout() {
           <NavItem to="/price-watch" icon={<TrendingDown />} label={t("nav.priceWatch")} />
         </nav>
         <div className="mt-auto px-2 pb-3">
+          {update && (
+            <NavLink
+              to="/settings"
+              className="mb-2 flex items-center gap-2 rounded-md bg-primary-soft px-2.5 py-2 text-primary text-xs hover:underline"
+            >
+              <Download className="size-3.5 shrink-0" aria-hidden />
+              {t("updates.available", { version: update.version })}
+            </NavLink>
+          )}
           <NavItem to="/settings" icon={<Settings />} label={t("nav.settings")} />
         </div>
       </aside>

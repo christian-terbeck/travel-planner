@@ -146,6 +146,18 @@ const de: Translation = {
       thunder: "Gewitter",
     },
   },
+  updates: {
+    title: "Updates",
+    enable: "Beim Start nach neuen Versionen suchen",
+    hint: "Einmal am Tag fragt die App bei GitHub nach der neuesten Version von Travel Planner. Dabei wird nichts über dich oder deine Reisen gesendet. Updates werden nie automatisch installiert: Lade den Installer oder die portable Version von der Release-Seite.",
+    check: "Jetzt prüfen",
+    checkedAt: "Zuletzt geprüft {{date}}",
+    current: "Version {{version}} ist die neueste.",
+    newer: "Version {{version}} ist verfügbar (installiert: {{current}}).",
+    open: "Release-Seite öffnen",
+    skip: "Diese Version überspringen",
+    available: "Version {{version}} verfügbar",
+  },
   common: {
     back: "Zurück",
     cancel: "Abbrechen",

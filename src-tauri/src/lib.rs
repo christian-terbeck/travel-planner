@@ -12,6 +12,7 @@ use tp_core::geocoding::{self, Place};
 use tp_core::rates;
 use tp_core::routing::{self, RoadQuery, RoadResult};
 use tp_core::store::{AppInfo, BookingInput, CancelInput, Entity, EntityKind};
+use tp_core::updates::{self, UpdateCheck};
 use tp_core::weather::{self, WeatherQuery, WeatherResult};
 use tp_core::transfer::{self, BackupManifest, CopyTripInput, ImportMode, ImportPreview, RestorePreview};
 use tp_core::{CoreError, ErrorPayload, Store};
@@ -306,6 +307,23 @@ async fn weather(app: tauri::AppHandle, queries: Vec<WeatherQuery>) -> CmdResult
     }
 }
 
+/// Looks for a newer release on GitHub (on request, or at start when the user turned that on).
+#[tauri::command]
+async fn check_update(app: tauri::AppHandle) -> CmdResult<UpdateCheck> {
+    let current = app.package_info().version.to_string();
+    let agent = user_agent(&app);
+    let result = tauri::async_runtime::spawn_blocking(move || updates::check(&current, &agent))
+        .await
+        .map_err(|e| err(CoreError::rule("busy", e.to_string())))?
+        .map_err(err)?;
+    let state = app.state::<AppState>();
+    with(&state, |s| {
+        let now = s.now();
+        s.set_setting(updates::CHECKED_SETTING, Some(&now))
+    })?;
+    Ok(result)
+}
+
 /// Fetches the ECB reference rates, when enabled; returns how many new rates were stored.
 #[tauri::command]
 async fn fetch_reference_rates(app: tauri::AppHandle) -> CmdResult<usize> {
@@ -540,6 +558,7 @@ pub fn run() {
             geocode,
             fetch_reference_rates,
             weather,
+            check_update,
             ai_key_stored,
             set_ai_key,
             extract_confirmation,

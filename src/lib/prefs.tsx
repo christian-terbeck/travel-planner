@@ -41,6 +41,8 @@ export interface Prefs {
   geocoding: boolean;
   /** Daily weather from Open-Meteo for the stays of a trip. */
   weather: boolean;
+  /** Looking for new versions on GitHub at start; a skipped version is not announced again. */
+  updates: { enabled: boolean; checkedAt: string | null; skipped: string | null };
   /** ECB reference rates are fetched automatically; last successful fetch. */
   ecbRates: boolean;
   ecbFetchedAt: string | null;
@@ -69,6 +71,7 @@ const PrefsCtx = createContext<Prefs>({
   routing: { enabled: false, url: DEFAULT_ROUTING_URL },
   geocoding: false,
   weather: false,
+  updates: { enabled: false, checkedAt: null, skipped: null },
   ecbRates: false,
   ecbFetchedAt: null,
   aiImport: false,
@@ -118,6 +121,11 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
       },
       geocoding: s.get("geocoding_enabled") === "1",
       weather: s.get("weather_enabled") === "1",
+      updates: {
+        enabled: s.get("update_check_enabled") === "1",
+        checkedAt: s.get("update_checked_at") ?? null,
+        skipped: s.get("update_skipped") ?? null,
+      },
       ecbRates: s.get("ecb_rates_enabled") === "1",
       ecbFetchedAt: s.get("ecb_rates_fetched_at") ?? null,
       aiImport: s.get("ai_import_enabled") === "1",
