@@ -18,5 +18,5 @@ export default defineConfig({
   envPrefix: ["VITE_", "TAURI_ENV_"],
   // A local desktop app: one bundle is fine, there is no network to save.
   build: { target: "es2022", outDir: "dist", chunkSizeWarningLimit: 2000 },
-  test: { include: ["src/**/*.test.ts"], environment: "node" },
+  test: { include: ["src/**/*.test.ts", "src/**/*.test.tsx"], environment: "node" },
 });
