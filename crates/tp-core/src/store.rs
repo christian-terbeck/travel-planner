@@ -38,6 +38,8 @@ pub enum Entity {
     Expense(Expense),
     CostShare(CostShare),
     Task(Task),
+    PackingItem(PackingItem),
+    PackingTemplate(PackingTemplate),
     Note(Note),
     DismissedWarning(DismissedWarning),
     OpenNight(OpenNight),
@@ -60,6 +62,8 @@ pub enum EntityKind {
     CostShare,
     Scenario,
     Task,
+    PackingItem,
+    PackingTemplate,
     Note,
     Document,
     DismissedWarning,
@@ -95,6 +99,7 @@ pub struct CancelInput {
 #[ts(export)]
 pub struct AppInfo {
     pub data_dir: String,
+    pub packing_templates: Vec<PackingTemplate>,
     pub schema_version: i64,
     pub settings: Vec<(String, String)>,
     pub exchange_rates: Vec<ExchangeRate>,
@@ -138,6 +143,7 @@ impl Store {
         let settings = stmt.query_map([], |r| Ok((r.get(0)?, r.get(1)?)))?.collect::<Result<_, _>>()?;
         Ok(AppInfo {
             data_dir: self.data_dir.display().to_string(),
+            packing_templates: table::select(&self.conn, "1 ORDER BY name", &[])?,
             schema_version: db::schema_version(&self.conn)?,
             settings,
             exchange_rates: table::select(&self.conn, "1 ORDER BY as_of DESC", &[])?,
@@ -248,6 +254,22 @@ impl Store {
                 table::upsert(&tx, &t)?;
                 t.trip_id
             }
+            Entity::PackingItem(p) => {
+                p.validate()?;
+                if let Some(t) = &p.traveler_id {
+                    same_trip(&p.trip_id, trip_of(&tx, "traveler", t)?, "traveler_id")?;
+                }
+                if let Some(old) = table::find::<PackingItem>(&tx, &p.id)? {
+                    same_trip(&p.trip_id, old.trip_id, "trip_id")?;
+                }
+                table::upsert(&tx, &p)?;
+                p.trip_id
+            }
+            Entity::PackingTemplate(t) => {
+                t.validate()?;
+                table::upsert(&tx, &t)?;
+                return Ok(tx.commit()?);
+            }
             Entity::Note(mut n) => {
                 n.updated_at = now.clone();
                 n.validate()?;
@@ -354,6 +376,11 @@ impl Store {
             EntityKind::Scenario => Some(del::<Scenario>(&tx, "scenario", key)?),
             EntityKind::Task => Some(del::<Task>(&tx, "task", key)?),
             EntityKind::Note => Some(del::<Note>(&tx, "note", key)?),
+            EntityKind::PackingItem => Some(del::<PackingItem>(&tx, "packing_item", key)?),
+            EntityKind::PackingTemplate => {
+                table::delete_by::<PackingTemplate>(&tx, "id = ?", &[&key])?;
+                None
+            }
             EntityKind::PriceObservation => Some(del::<PriceObservation>(&tx, "observation", key)?),
             EntityKind::DismissedWarning => {
                 table::delete_by::<DismissedWarning>(&tx, "trip_id = ? AND key = ?", &[&key, &second()?])?;
@@ -851,6 +878,7 @@ pub(crate) fn load_graph(conn: &Connection, trip: Trip) -> CoreResult<TripGraph>
         scenario_selections: table::select(conn, "scenario_id IN (SELECT id FROM scenarios WHERE trip_id = ?)", &id)?,
         price_observations: table::select(conn, &by_option(" ORDER BY observed_at"), &id)?,
         tasks: table::select(conn, "trip_id = ? ORDER BY sort, created_at", &id)?,
+        packing_items: table::select(conn, "trip_id = ? ORDER BY sort, rowid", &id)?,
         dismissed_warnings: table::select(conn, "trip_id = ?", &id)?,
         open_nights: table::select(conn, "trip_id = ? ORDER BY night", &id)?,
         documents: table::select(conn, "trip_id = ? ORDER BY created_at", &id)?,
@@ -874,6 +902,8 @@ fn table_of(kind: EntityKind) -> &'static str {
         EntityKind::Scenario => Scenario::TABLE,
         EntityKind::Task => Task::TABLE,
         EntityKind::Note => Note::TABLE,
+        EntityKind::PackingItem => PackingItem::TABLE,
+        EntityKind::PackingTemplate => PackingTemplate::TABLE,
         EntityKind::Document => Document::TABLE,
         EntityKind::DismissedWarning => DismissedWarning::TABLE,
         EntityKind::OpenNight => OpenNight::TABLE,
@@ -898,6 +928,7 @@ pub(crate) fn trip_of(conn: &Connection, what: &str, id: &str) -> CoreResult<Str
         "scenario" => "SELECT trip_id FROM scenarios WHERE id = ?1",
         "task" => "SELECT trip_id FROM tasks WHERE id = ?1",
         "note" => "SELECT trip_id FROM notes WHERE id = ?1",
+        "packing_item" => "SELECT trip_id FROM packing_items WHERE id = ?1",
         "document" => "SELECT trip_id FROM documents WHERE id = ?1",
         "option" => "SELECT s.trip_id FROM options o JOIN slots s ON s.id = o.slot_id WHERE o.id = ?1",
         "observation" => {

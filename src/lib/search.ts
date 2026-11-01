@@ -13,7 +13,8 @@ export type SearchKind =
   | "expense"
   | "task"
   | "note"
-  | "document";
+  | "document"
+  | "packing";
 
 export interface SearchEntry {
   kind: SearchKind;
@@ -24,7 +25,7 @@ export interface SearchEntry {
   /** Second line, e.g. the booking reference or the start of a note. */
   detail: string | null;
   /** Route inside the trip ("" for the overview). */
-  view: "" | "planning" | "bookings" | "budget" | "documents";
+  view: "" | "planning" | "bookings" | "budget" | "documents" | "packing";
   /** Option to select in the planning view. */
   optionId?: string;
   text: string;
@@ -110,6 +111,7 @@ export function buildIndex(graphs: TripGraph[]): SearchEntry[] {
       out.push(
         entry(g, "note", n.id, n.title, n.body.slice(0, 80).replace(/\s+/g, " "), "documents", [n.body]),
       );
+    for (const p of g.packing_items) out.push(entry(g, "packing", p.id, p.title, p.category, "packing"));
     for (const d of g.documents)
       out.push(entry(g, "document", d.id, d.filename, null, "documents", [d.notes]));
   }
@@ -127,6 +129,7 @@ const RANK: Record<SearchKind, number> = {
   note: 7,
   document: 8,
   expense: 9,
+  packing: 10,
 };
 
 /** Entries containing every word of the query; title matches first, then by kind. */

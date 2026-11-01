@@ -10,6 +10,7 @@ import { DocumentsView } from "@/features/trip/DocumentsView";
 import { ItineraryView } from "@/features/trip/ItineraryView";
 import { MapView } from "@/features/trip/MapView";
 import { OverviewView } from "@/features/trip/OverviewView";
+import { PackingView } from "@/features/trip/PackingView";
 import { PlanningView } from "@/features/trip/PlanningView";
 import { TripLayout } from "@/features/trip/TripLayout";
 import { TripsPage } from "@/features/trips/TripsPage";
@@ -32,6 +33,7 @@ export const router = createHashRouter([
           { path: "bookings", element: <BookingsView /> },
           { path: "budget", element: <BudgetView /> },
           { path: "documents", element: <DocumentsView /> },
+          { path: "packing", element: <PackingView /> },
         ],
       },
       { path: "calendar", element: <CalendarPage /> },

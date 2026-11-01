@@ -56,6 +56,7 @@ pub struct CopyTripInput {
     /// Alternatives with their details, fees, terms and the saved scenarios; else only the needs.
     pub include_options: bool,
     pub include_travelers: bool,
+    /// Tasks (reopened), notes and the packing list (unpacked).
     pub include_tasks_and_notes: bool,
 }
 
@@ -127,6 +128,7 @@ impl Store {
                 ("scenarios".into(), g.scenarios.len()),
                 ("documents".into(), g.documents.len()),
                 ("notes".into(), g.notes.len()),
+                ("packing_items".into(), g.packing_items.len()),
             ],
             missing_documents: missing,
             new_exchange_rates: export.exchange_rates.iter().filter(|r| !rates.iter().any(|x| x.id == r.id)).count(),
@@ -401,6 +403,11 @@ fn validate_graph(g: &TripGraph) -> CoreResult<()> {
         own_trip(&r.trip_id, "task")?;
         check_opt(&options, &r.option_id, "task")?;
     }
+    for r in &g.packing_items {
+        r.validate()?;
+        own_trip(&r.trip_id, "packing item")?;
+        check_opt(&travelers, &r.traveler_id, "packing item")?;
+    }
     for r in &g.dismissed_warnings {
         r.validate()?;
         own_trip(&r.trip_id, "dismissed warning")?;
@@ -475,6 +482,7 @@ fn copy_graph(g: TripGraph, input: &CopyTripInput, now: &str) -> CoreResult<Trip
         scenario_selections: vec![],
         price_observations: vec![],
         tasks: vec![],
+        packing_items: vec![],
         dismissed_warnings: vec![],
         open_nights: vec![],
         documents: vec![],
@@ -573,6 +581,14 @@ fn copy_graph(g: TripGraph, input: &CopyTripInput, now: &str) -> CoreResult<Trip
             t.created_at = now.to_string();
             out.tasks.push(t);
         }
+        let travelers: HashSet<String> = out.travelers.iter().map(|t| t.id.clone()).collect();
+        for mut p in g.packing_items {
+            p.packed = false;
+            if p.traveler_id.as_deref().is_some_and(|t| !travelers.contains(t)) {
+                p.traveler_id = None;
+            }
+            out.packing_items.push(p);
+        }
         for mut n in g.notes {
             option_ref(&mut n.option_id);
             n.created_at = now.to_string();
@@ -666,6 +682,7 @@ fn insert_graph(conn: &Connection, g: &TripGraph) -> CoreResult<()> {
     all(conn, &g.scenario_selections)?;
     all(conn, &g.price_observations)?;
     all(conn, &g.tasks)?;
+    all(conn, &g.packing_items)?;
     all(conn, &g.dismissed_warnings)?;
     all(conn, &g.open_nights)?;
     all(conn, &g.documents)?;

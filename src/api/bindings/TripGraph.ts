@@ -12,6 +12,7 @@ import type { FlightSegment } from "./FlightSegment";
 import type { Note } from "./Note";
 import type { OpenNight } from "./OpenNight";
 import type { OptionFee } from "./OptionFee";
+import type { PackingItem } from "./PackingItem";
 import type { Payment } from "./Payment";
 import type { PlanOption } from "./PlanOption";
 import type { PriceObservation } from "./PriceObservation";
@@ -27,4 +28,8 @@ import type { Trip } from "./Trip";
 /**
  * Everything that belongs to one trip. The UI derives all summaries from this.
  */
-export type TripGraph = { trip: Trip, travelers: Array<Traveler>, stations: Array<Station>, slots: Array<Slot>, options: Array<PlanOption>, flight_segments: Array<FlightSegment>, accommodation_details: Array<AccommodationDetails>, rental_car_details: Array<RentalCarDetails>, activity_details: Array<ActivityDetails>, option_fees: Array<OptionFee>, cancellation_policies: Array<CancellationPolicy>, bookings: Array<Booking>, payments: Array<Payment>, expenses: Array<Expense>, cost_shares: Array<CostShare>, scenarios: Array<Scenario>, scenario_selections: Array<ScenarioSelection>, price_observations: Array<PriceObservation>, tasks: Array<Task>, dismissed_warnings: Array<DismissedWarning>, open_nights: Array<OpenNight>, documents: Array<Document>, notes: Array<Note>, change_log: Array<ChangeLogEntry>, };
+export type TripGraph = { trip: Trip, travelers: Array<Traveler>, stations: Array<Station>, slots: Array<Slot>, options: Array<PlanOption>, flight_segments: Array<FlightSegment>, accommodation_details: Array<AccommodationDetails>, rental_car_details: Array<RentalCarDetails>, activity_details: Array<ActivityDetails>, option_fees: Array<OptionFee>, cancellation_policies: Array<CancellationPolicy>, bookings: Array<Booking>, payments: Array<Payment>, expenses: Array<Expense>, cost_shares: Array<CostShare>, scenarios: Array<Scenario>, scenario_selections: Array<ScenarioSelection>, price_observations: Array<PriceObservation>, tasks: Array<Task>, 
+/**
+ * Missing in exports made before packing lists existed.
+ */
+packing_items: Array<PackingItem>, dismissed_warnings: Array<DismissedWarning>, open_nights: Array<OpenNight>, documents: Array<Document>, notes: Array<Note>, change_log: Array<ChangeLogEntry>, };

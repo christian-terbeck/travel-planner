@@ -12,4 +12,8 @@ shift_days: number,
 /**
  * Alternatives with their details, fees, terms and the saved scenarios; else only the needs.
  */
-include_options: boolean, include_travelers: boolean, include_tasks_and_notes: boolean, };
+include_options: boolean, include_travelers: boolean, 
+/**
+ * Tasks (reopened), notes and the packing list (unpacked).
+ */
+include_tasks_and_notes: boolean, };

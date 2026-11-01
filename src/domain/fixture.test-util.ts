@@ -69,6 +69,7 @@ export function graph(t: Trip = trip()): TripGraph {
     scenario_selections: [],
     price_observations: [],
     tasks: [],
+    packing_items: [],
     dismissed_warnings: [],
     open_nights: [],
     documents: [],

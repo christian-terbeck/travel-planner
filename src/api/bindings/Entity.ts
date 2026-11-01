@@ -5,6 +5,8 @@ import type { ExchangeRate } from "./ExchangeRate";
 import type { Expense } from "./Expense";
 import type { Note } from "./Note";
 import type { OpenNight } from "./OpenNight";
+import type { PackingItem } from "./PackingItem";
+import type { PackingTemplate } from "./PackingTemplate";
 import type { Payment } from "./Payment";
 import type { PriceObservation } from "./PriceObservation";
 import type { Slot } from "./Slot";
@@ -16,4 +18,4 @@ import type { Trip } from "./Trip";
 /**
  * Rows that are saved as they are (after validation and ownership checks).
  */
-export type Entity = { "type": "trip", "row": Trip } | { "type": "traveler", "row": Traveler } | { "type": "station", "row": Station } | { "type": "slot", "row": Slot } | { "type": "payment", "row": Payment } | { "type": "expense", "row": Expense } | { "type": "cost_share", "row": CostShare } | { "type": "task", "row": Task } | { "type": "note", "row": Note } | { "type": "dismissed_warning", "row": DismissedWarning } | { "type": "open_night", "row": OpenNight } | { "type": "exchange_rate", "row": ExchangeRate } | { "type": "price_observation", "row": PriceObservation };
+export type Entity = { "type": "trip", "row": Trip } | { "type": "traveler", "row": Traveler } | { "type": "station", "row": Station } | { "type": "slot", "row": Slot } | { "type": "payment", "row": Payment } | { "type": "expense", "row": Expense } | { "type": "cost_share", "row": CostShare } | { "type": "task", "row": Task } | { "type": "packing_item", "row": PackingItem } | { "type": "packing_template", "row": PackingTemplate } | { "type": "note", "row": Note } | { "type": "dismissed_warning", "row": DismissedWarning } | { "type": "open_night", "row": OpenNight } | { "type": "exchange_rate", "row": ExchangeRate } | { "type": "price_observation", "row": PriceObservation };

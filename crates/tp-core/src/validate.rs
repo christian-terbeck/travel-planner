@@ -473,6 +473,35 @@ impl Validate for Task {
     }
 }
 
+impl Validate for PackingItem {
+    fn validate(&self) -> CoreResult<()> {
+        id("id", &self.id)?;
+        id("trip_id", &self.trip_id)?;
+        opt_id("traveler_id", &self.traveler_id)?;
+        opt_line("category", &self.category)?;
+        title("title", &self.title)?;
+        range("quantity", self.quantity, 1, 999)
+    }
+}
+
+impl Validate for PackingTemplate {
+    fn validate(&self) -> CoreResult<()> {
+        id("id", &self.id)?;
+        title("name", &self.name)?;
+        let items: Vec<PackingTemplateItem> =
+            serde_json::from_str(&self.items).map_err(|_| CoreError::invalid("items", "expected a list of items"))?;
+        if items.len() > 1000 {
+            return Err(CoreError::invalid("items", "too many items"));
+        }
+        for i in &items {
+            opt_line("category", &i.category)?;
+            title("title", &i.title)?;
+            range("quantity", i.quantity, 1, 999)?;
+        }
+        timestamp("created_at", &self.created_at)
+    }
+}
+
 impl Validate for DismissedWarning {
     fn validate(&self) -> CoreResult<()> {
         id("trip_id", &self.trip_id)?;

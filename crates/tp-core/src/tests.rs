@@ -609,6 +609,84 @@ fn copying_a_trip_moves_the_dates_and_leaves_bookings_behind() {
     assert_eq!(bare.tasks[0].option_id, None);
 }
 
+fn traveler(s: &mut Store, trip_id: &str, name: &str) -> String {
+    let id = new_id();
+    s.save(Entity::Traveler(Traveler {
+        id: id.clone(),
+        trip_id: trip_id.into(),
+        name: name.into(),
+        category: TravelerCategory::Adult,
+        birth_date: None,
+        notes: None,
+        sort: 0,
+    }))
+    .unwrap();
+    id
+}
+
+fn packing_item(trip_id: &str, traveler_id: Option<String>, title: &str) -> PackingItem {
+    PackingItem {
+        id: new_id(),
+        trip_id: trip_id.into(),
+        traveler_id,
+        category: Some("Clothes".into()),
+        title: title.into(),
+        quantity: Some(2),
+        packed: true,
+        sort: 0,
+    }
+}
+
+#[test]
+fn packing_lists_belong_to_their_trip_and_start_unpacked_in_a_copy() {
+    let (mut s, dir) = store();
+    let t = trip(&mut s, "Portugal");
+    let other = trip(&mut s, "Iceland");
+    let anna = traveler(&mut s, &t, "Anna");
+    let stranger = traveler(&mut s, &other, "Ben");
+    s.save(Entity::PackingItem(packing_item(&t, Some(anna.clone()), "Shirts"))).unwrap();
+    let wrong = s.save(Entity::PackingItem(packing_item(&t, Some(stranger), "Socks")));
+    assert!(matches!(wrong, Err(CoreError::Validation { .. })));
+    let mut moved = packing_item(&t, None, "Hat");
+    s.save(Entity::PackingItem(moved.clone())).unwrap();
+    moved.trip_id = other.clone();
+    assert!(s.save(Entity::PackingItem(moved)).is_err(), "items do not move between trips");
+
+    let copy = s
+        .copy_trip(CopyTripInput {
+            trip_id: t.clone(),
+            title: "Again".into(),
+            shift_days: 0,
+            include_options: false,
+            include_travelers: false,
+            include_tasks_and_notes: true,
+        })
+        .unwrap();
+    let items = s.trip_graph(&copy).unwrap().packing_items;
+    assert_eq!(items.len(), 2);
+    assert!(items.iter().all(|i| !i.packed && i.traveler_id.is_none()));
+
+    let file = dir.path().join("trip.json");
+    s.export_trip(&t, &file).unwrap();
+    let imported = s.import_trip(&file, ImportMode::AsNew).unwrap();
+    assert_eq!(s.trip_graph(&imported).unwrap().packing_items.len(), 2);
+}
+
+#[test]
+fn packing_templates_are_checked_and_listed() {
+    let (mut s, _dir) = store();
+    let template = |items: &str| PackingTemplate {
+        id: new_id(),
+        name: "Beach".into(),
+        items: items.into(),
+        created_at: NOW.into(),
+    };
+    s.save(Entity::PackingTemplate(template(r#"[{"category":"Sun","title":"Sunscreen","quantity":null}]"#))).unwrap();
+    assert!(s.save(Entity::PackingTemplate(template("not json"))).is_err());
+    assert!(s.save(Entity::PackingTemplate(template(r#"[{"category":null,"title":"","quantity":null}]"#))).is_err());
+    assert_eq!(s.app_info().unwrap().packing_templates.len(), 1);
+}
+
 #[test]
 fn import_replace_and_validation_errors() {
     let (mut s, dir) = store();

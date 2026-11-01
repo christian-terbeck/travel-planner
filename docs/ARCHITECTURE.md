@@ -18,6 +18,7 @@ these decisions.
 | Travel companion | Export of one self-contained, mobile-first HTML file (no scripts, no external resources): bookings with references on top, open tasks, then day by day with local times, contacts and OSM / `geo:` map links; light/dark and print styles | Readable offline on any phone without an app; prints to PDF |
 | Confirmation import | Optional, **off by default**: a picked PDF/image/mail is sent by the Rust core to the Anthropic Messages API (`claude-opus-5-5`, structured JSON output, `fallbacks: "default"`; raw HTTP because there is no Rust SDK). The answer only pre-fills the normal option and booking forms; every value is format-checked and dropped if it does not fit; the file is attached to the booking on save. The API key is kept in the Windows Credential Manager (`keyring`), never in the database, backups or the UI | README §12 "extract candidate details and ask the user to confirm"; AI stays optional (README Phase 5) |
 | Automatic backup | Optional, **off** until a folder is chosen: a thread in the Tauri shell checks every 30 min; when the last automatic backup is ≥ 20 h old and the data changed (trip count, last trip change, documents, rates), a normal full backup `travel-planner-auto-YYYYMMDD-HHMMSS.zip` is written there and the oldest beyond the limit (default 10) are deleted. Errors are kept in the settings and shown on the settings page | A synced folder (OneDrive) protects against a lost PC without a sync service; runs while the app waits in the tray |
+| Packing lists | Own rows per trip (category, quantity, optional traveler, packed), not tasks: tasks are dated to-dos, packing is a checklist per person. Starting lists ship with the UI in English and German; own lists are saved as `packing_templates` (JSON items) and merged without duplicates. Trip copies take the list unpacked | Reused every trip; a template per trip type saves retyping |
 | Calendar export | ICS export of a trip's itinerary | Offline, works with Outlook/Google Calendar |
 | Travelers | Travelers are entities; payments record who paid, costs can be split | Cost splitting and per-traveler settlement |
 | Calendar rendering | Own month/week/agenda/itinerary views | Needs plan/booking/preview semantics, stays and time zones; FullCalendar 7 is a new headless API with v6 plugins |
@@ -79,8 +80,9 @@ Trip ─┬─ Traveler
       ├─ Scenario ── ScenarioSelection (slot → option | intentionally none)
       ├─ Expense* (planned or actual, category, optional booking) ── CostShare*
       ├─ Task*, DismissedWarning*, OpenNight* (nights intentionally left unbooked)
+      ├─ PackingItem* (optionally per traveler)
       ├─ Document* (local file reference), Note*
-ExchangeRate* (explicit rate + date + source), Setting*, ChangeLog*
+ExchangeRate* (explicit rate + date + source), PackingTemplate* (reusable lists), Setting*, ChangeLog*
 ```
 
 ### Key rules

@@ -370,6 +370,39 @@ pub struct Task {
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export)]
+pub struct PackingItem {
+    pub id: String,
+    pub trip_id: String,
+    /// Who packs it; none means shared.
+    pub traveler_id: Option<String>,
+    pub category: Option<String>,
+    pub title: String,
+    pub quantity: Option<i64>,
+    pub packed: bool,
+    pub sort: i64,
+}
+
+/// A reusable packing list (not part of a trip).
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct PackingTemplate {
+    pub id: String,
+    pub name: String,
+    /// JSON array of [`PackingTemplateItem`].
+    pub items: String,
+    pub created_at: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct PackingTemplateItem {
+    pub category: Option<String>,
+    pub title: String,
+    pub quantity: Option<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct DismissedWarning {
     pub trip_id: String,
     pub key: String,
@@ -476,6 +509,9 @@ pub struct TripGraph {
     pub scenario_selections: Vec<ScenarioSelection>,
     pub price_observations: Vec<PriceObservation>,
     pub tasks: Vec<Task>,
+    /// Missing in exports made before packing lists existed.
+    #[serde(default)]
+    pub packing_items: Vec<PackingItem>,
     pub dismissed_warnings: Vec<DismissedWarning>,
     pub open_nights: Vec<OpenNight>,
     pub documents: Vec<Document>,

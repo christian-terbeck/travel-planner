@@ -44,6 +44,8 @@ rows! {
     ScenarioSelection => "scenario_selections" key "scenario_id", "slot_id";
     PriceObservation => "price_observations";
     Task => "tasks";
+    PackingItem => "packing_items";
+    PackingTemplate => "packing_templates";
     DismissedWarning => "dismissed_warnings" key "trip_id", "key";
     OpenNight => "open_nights" key "trip_id", "night";
     Document => "documents";

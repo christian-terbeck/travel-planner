@@ -1,4 +1,5 @@
 import {
+  Backpack,
   CalendarDays,
   CheckSquare,
   CircleDollarSign,
@@ -46,6 +47,7 @@ const KIND_ICON: Record<SearchKind, ReactNode> = {
   task: <CheckSquare />,
   note: <StickyNote />,
   document: <FileText />,
+  packing: <Backpack />,
 };
 
 /** Opens with Ctrl+K (⌘K) anywhere, or with "/" outside of text fields. */
