@@ -15,6 +15,7 @@ pub mod table;
 pub mod transfer;
 pub mod trash;
 pub mod validate;
+pub mod weather;
 
 pub use error::{CoreError, CoreResult, ErrorPayload};
 pub use store::Store;

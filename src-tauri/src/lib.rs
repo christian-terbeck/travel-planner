@@ -12,6 +12,7 @@ use tp_core::geocoding::{self, Place};
 use tp_core::rates;
 use tp_core::routing::{self, RoadQuery, RoadResult};
 use tp_core::store::{AppInfo, BookingInput, CancelInput, Entity, EntityKind};
+use tp_core::weather::{self, WeatherQuery, WeatherResult};
 use tp_core::transfer::{self, BackupManifest, CopyTripInput, ImportMode, ImportPreview, RestorePreview};
 use tp_core::{CoreError, ErrorPayload, Store};
 
@@ -259,6 +260,52 @@ async fn geocode(app: tauri::AppHandle, query: String, language: String) -> CmdR
     Ok(places)
 }
 
+/// Daily weather per place and dates, when the user enabled it: answers from the cache, the rest
+/// from Open-Meteo. A query that cannot be answered gives `null`; only when all fail is it an error.
+#[tauri::command]
+async fn weather(app: tauri::AppHandle, queries: Vec<WeatherQuery>) -> CmdResult<Vec<Option<WeatherResult>>> {
+    let state = app.state::<AppState>();
+    let (requests, mut results) = with(&state, |s| {
+        if !s.weather_enabled()? {
+            return Err(CoreError::rule("weather_disabled", "the weather service is turned off"));
+        }
+        let today = s.today_utc();
+        let requests = queries.iter().map(|q| weather::plan(q, today)).collect::<Result<Vec<_>, _>>()?;
+        let cached = requests
+            .iter()
+            .map(|r| Ok(s.cached_weather(r)?.map(|days| WeatherResult { source: r.source, days })))
+            .collect::<tp_core::CoreResult<Vec<_>>>()?;
+        Ok((requests, cached))
+    })?;
+    let missing: Vec<usize> = (0..requests.len()).filter(|&i| results[i].is_none()).collect();
+    let mut failure = None;
+    if !missing.is_empty() {
+        let agent = user_agent(&app);
+        let todo: Vec<_> = missing.iter().map(|&i| requests[i].clone()).collect();
+        let fetched = tauri::async_runtime::spawn_blocking(move || {
+            todo.iter().map(|r| weather::fetch(r, &agent)).collect::<Vec<_>>()
+        })
+        .await
+        .map_err(|e| err(CoreError::rule("busy", e.to_string())))?;
+        with(&state, |s| {
+            for (&i, answer) in missing.iter().zip(fetched) {
+                match answer {
+                    Ok(days) => {
+                        s.cache_weather(&requests[i], &days)?;
+                        results[i] = Some(WeatherResult { source: requests[i].source, days });
+                    }
+                    Err(e) => failure = Some(e),
+                }
+            }
+            Ok(())
+        })?;
+    }
+    match failure {
+        Some(e) if results.iter().all(Option::is_none) => Err(err(e)),
+        _ => Ok(results),
+    }
+}
+
 /// Fetches the ECB reference rates, when enabled; returns how many new rates were stored.
 #[tauri::command]
 async fn fetch_reference_rates(app: tauri::AppHandle) -> CmdResult<usize> {
@@ -492,6 +539,7 @@ pub fn run() {
             clear_road_cache,
             geocode,
             fetch_reference_rates,
+            weather,
             ai_key_stored,
             set_ai_key,
             extract_confirmation,

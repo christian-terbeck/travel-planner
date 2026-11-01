@@ -119,6 +119,29 @@ const en = {
       other: "Document",
     },
   },
+  weather: {
+    title: "Weather",
+    attribution: "Weather data by Open-Meteo.com (CC BY 4.0)",
+    noPlaces: "Add coordinates to the stays of the plan to see their weather.",
+    unavailable: "No weather data for this place.",
+    mm: "{{mm}} mm",
+    source: {
+      forecast: "Forecast",
+      last_year: "Last year, as a guide",
+      observed: "Measured",
+    },
+    kind: {
+      clear: "Clear",
+      partly: "Partly cloudy",
+      cloudy: "Overcast",
+      fog: "Fog",
+      drizzle: "Drizzle",
+      rain: "Rain",
+      showers: "Showers",
+      snow: "Snow",
+      thunder: "Thunderstorm",
+    },
+  },
   common: {
     back: "Back",
     cancel: "Cancel",
@@ -140,6 +163,7 @@ const en = {
     restored: "Restored",
   },
   errors: {
+    weather_disabled: "The weather service is turned off.",
     backup_folder_missing: "The backup folder does not exist (any more). Choose another one.",
     undo_unavailable: "This deletion can no longer be undone.",
     unknown: "Something went wrong. Your data was not changed.",
@@ -1223,6 +1247,10 @@ const en = {
     geocoding: {
       enable: "Online address search",
       hint: "A search button next to locations finds coordinates for an address, station or place. Only the text you search for and the interface language are sent, to the public Nominatim server of OpenStreetMap, and only when you click it. Answers are kept on this computer.",
+    },
+    weather: {
+      enable: "Weather at the stays",
+      hint: "Shows the daily weather for stays with coordinates: the forecast for the next two weeks, last year's weather on the same days for trips further ahead. The coordinates (rounded to about 1 km) and dates are sent to Open-Meteo when a trip's overview opens. Answers are kept on this computer.",
     },
     ai: {
       enable: "Read booking confirmations with Claude",

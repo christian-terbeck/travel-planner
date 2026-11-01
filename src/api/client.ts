@@ -23,6 +23,8 @@ import type { RoadResult } from "./bindings/RoadResult";
 import type { Scenario } from "./bindings/Scenario";
 import type { ScenarioSelection } from "./bindings/ScenarioSelection";
 import type { TripGraph } from "./bindings/TripGraph";
+import type { WeatherQuery } from "./bindings/WeatherQuery";
+import type { WeatherResult } from "./bindings/WeatherResult";
 
 export class ApiError extends Error {
   constructor(
@@ -95,6 +97,7 @@ export const api = {
   previewRestore: (path: string) => call<RestorePreview>("preview_restore", { path }),
   restoreBackup: (path: string) => call<string>("restore_backup", { path }),
   geocode: (query: string, language: string) => call<Place[]>("geocode", { query, language }),
+  weather: (queries: WeatherQuery[]) => call<Array<WeatherResult | null>>("weather", { queries }),
   fetchReferenceRates: () => call<number>("fetch_reference_rates"),
   aiKeyStored: () => call<boolean>("ai_key_stored"),
   setAiKey: (key: string | null) => call<void>("set_ai_key", { key }),

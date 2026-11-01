@@ -123,6 +123,29 @@ const de: Translation = {
       other: "Dokument",
     },
   },
+  weather: {
+    title: "Wetter",
+    attribution: "Wetterdaten von Open-Meteo.com (CC BY 4.0)",
+    noPlaces: "Ergänze Koordinaten bei den Unterkünften des Plans, um ihr Wetter zu sehen.",
+    unavailable: "Keine Wetterdaten für diesen Ort.",
+    mm: "{{mm}} mm",
+    source: {
+      forecast: "Vorhersage",
+      last_year: "Vorjahr als Anhaltspunkt",
+      observed: "Gemessen",
+    },
+    kind: {
+      clear: "Sonnig",
+      partly: "Teils bewölkt",
+      cloudy: "Bedeckt",
+      fog: "Nebel",
+      drizzle: "Nieselregen",
+      rain: "Regen",
+      showers: "Schauer",
+      snow: "Schnee",
+      thunder: "Gewitter",
+    },
+  },
   common: {
     back: "Zurück",
     cancel: "Abbrechen",
@@ -144,6 +167,7 @@ const de: Translation = {
     restored: "Wiederhergestellt",
   },
   errors: {
+    weather_disabled: "Der Wetterdienst ist ausgeschaltet.",
     backup_folder_missing: "Der Sicherungsordner existiert nicht (mehr). Wähle einen anderen.",
     undo_unavailable: "Das Löschen kann nicht mehr rückgängig gemacht werden.",
     unknown: "Etwas ist schiefgelaufen. Deine Daten wurden nicht verändert.",
@@ -1239,6 +1263,10 @@ const de: Translation = {
     geocoding: {
       enable: "Online-Adresssuche",
       hint: "Ein Suchknopf neben Ortsangaben findet die Koordinaten zu einer Adresse, einem Bahnhof oder Ort. Gesendet werden nur der gesuchte Text und die Sprache der Oberfläche, an den öffentlichen Nominatim-Server von OpenStreetMap, und nur wenn du klickst. Antworten werden auf diesem Computer gespeichert.",
+    },
+    weather: {
+      enable: "Wetter an den Unterkünften",
+      hint: "Zeigt das tägliche Wetter für Unterkünfte mit Koordinaten: die Vorhersage für die nächsten zwei Wochen, für spätere Reisen das Wetter derselben Tage im Vorjahr. Die Koordinaten (auf etwa 1 km gerundet) und Daten werden an Open-Meteo gesendet, wenn die Übersicht einer Reise geöffnet wird. Antworten bleiben auf diesem Computer.",
     },
     ai: {
       enable: "Buchungsbestätigungen mit Claude einlesen",

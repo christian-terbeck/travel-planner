@@ -572,7 +572,7 @@ function AutoBackupOptions() {
 
 function IntegrationsCard() {
   const t = useT();
-  const { routing, geocoding, ecbRates } = usePrefs();
+  const { routing, geocoding, weather, ecbRates } = usePrefs();
   const run = useAction();
   const toast = useToast();
   const set = (key: string, value: string | null) => run(() => api.setSetting(key, value));
@@ -633,6 +633,14 @@ function IntegrationsCard() {
             onChange={(e) => set("geocoding_enabled", e.target.checked ? "1" : null)}
           />
           <p className="pl-6 text-fg-3 text-xs">{t("settings.geocoding.hint")}</p>
+        </div>
+        <div className="flex flex-col gap-1 border-line border-t pt-3">
+          <Checkbox
+            label={<span className="font-medium">{t("settings.weather.enable")}</span>}
+            checked={weather}
+            onChange={(e) => set("weather_enabled", e.target.checked ? "1" : null)}
+          />
+          <p className="pl-6 text-fg-3 text-xs">{t("settings.weather.hint")}</p>
         </div>
         <div className="flex flex-col gap-1 border-line border-t pt-3">
           <Checkbox

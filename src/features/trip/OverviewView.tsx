@@ -25,6 +25,7 @@ import { Certainty, SeverityIcon } from "@/ui/status";
 import { useRoute } from "./MapView";
 import { TravelersCard } from "./TravelersCard";
 import { useTrip } from "./TripLayout";
+import { WeatherCard } from "./WeatherCard";
 import { DismissedList, useReminderText, WarningList } from "./warnings";
 
 export function OverviewView() {
@@ -148,6 +149,7 @@ export function OverviewView() {
               </Link>
             )}
           </Card>
+          <WeatherCard />
           <StationsCard />
           <TravelersCard />
         </div>
