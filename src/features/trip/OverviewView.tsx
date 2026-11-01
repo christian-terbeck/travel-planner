@@ -22,7 +22,7 @@ import { Badge, Button, Card, CardHeader, Field, IconButton, Input, Stat } from 
 import { Dialog } from "@/ui/dialog";
 import { DateInput } from "@/ui/inputs";
 import { Certainty, SeverityIcon } from "@/ui/status";
-import { useRoute } from "./MapView";
+import { useRoute } from "./map/route";
 import { ReviewCard } from "./ReviewCard";
 import { TravelersCard } from "./TravelersCard";
 import { useTrip } from "./TripLayout";
