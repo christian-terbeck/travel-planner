@@ -3,14 +3,16 @@ import {
   Compass,
   LayoutDashboard,
   Luggage,
+  Search,
   Settings,
   ShieldAlert,
   TrendingDown,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 import { NavLink, Outlet } from "react-router";
 import { inDesktopApp } from "@/api/client";
 import { useTrips } from "@/api/queries";
+import { CommandPalette, useCommandPaletteShortcut } from "@/features/search/CommandPalette";
 import { useT } from "@/i18n";
 import { useTripModels } from "@/lib/model";
 import { useOsNotifications } from "@/lib/notifications";
@@ -49,6 +51,8 @@ export function Layout() {
   const models = useTripModels(trips.data);
   useOsNotifications(models, trips.isSuccess);
   useReferenceRateRefresh();
+  const [searching, setSearching] = useState(false);
+  useCommandPaletteShortcut(useCallback(() => setSearching(true), []));
   const urgent = models.flatMap((m) => m.reminders).filter((r) => r.kind === "cancellation_deadline").length;
 
   return (
@@ -59,6 +63,17 @@ export function Layout() {
             <Compass className="size-4" aria-hidden />
           </div>
           <span className="font-semibold tracking-tight">Travel Planner</span>
+        </div>
+        <div className="px-2 pb-2">
+          <button
+            type="button"
+            onClick={() => setSearching(true)}
+            className="flex h-8.5 w-full items-center gap-2.5 rounded-md border border-line px-2.5 text-fg-3 text-sm hover:bg-surface-2 hover:text-fg"
+          >
+            <Search className="size-4" aria-hidden />
+            <span className="flex-1 text-left">{t("nav.search")}</span>
+            <kbd className="text-[11px]">{t("nav.searchKey")}</kbd>
+          </button>
         </div>
         <nav className="flex flex-col gap-0.5 px-2" aria-label={t("nav.label")}>
           <NavItem to="/" icon={<LayoutDashboard />} label={t("nav.dashboard")} />
@@ -84,6 +99,7 @@ export function Layout() {
           <Outlet />
         )}
       </main>
+      <CommandPalette open={searching} onOpenChange={setSearching} graphs={trips.data ?? []} />
     </div>
   );
 }

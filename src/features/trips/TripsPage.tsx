@@ -1,6 +1,6 @@
 import { Luggage, MapPin, Plus, Upload, Users } from "lucide-react";
-import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useTrips } from "@/api/queries";
 import type { TripStatus } from "@/domain/types";
 import { useT } from "@/i18n";
@@ -20,7 +20,15 @@ export function TripsPage() {
   const trips = useTrips();
   const models = useTripModels(trips.data);
   const navigate = useNavigate();
+  const location = useLocation();
   const [creating, setCreating] = useState(false);
+  // "New trip" from the command palette.
+  useEffect(() => {
+    if ((location.state as { create?: boolean } | null)?.create) {
+      setCreating(true);
+      navigate(".", { replace: true, state: null });
+    }
+  }, [location.state, navigate]);
   const [importing, setImporting] = useState(false);
   const [filter, setFilter] = useState<Filter>("active");
 
