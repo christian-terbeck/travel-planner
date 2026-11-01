@@ -165,6 +165,12 @@ fn create_backup(state: State<'_, AppState>, path: String) -> CmdResult<BackupMa
     with(&state, |s| s.create_backup(&PathBuf::from(path)))
 }
 
+/// Writes an automatic backup now, into the chosen folder.
+#[tauri::command]
+fn run_auto_backup(state: State<'_, AppState>) -> CmdResult<Option<String>> {
+    with(&state, |s| s.run_auto_backup(true))
+}
+
 #[tauri::command]
 fn preview_restore(state: State<'_, AppState>, path: String) -> CmdResult<RestorePreview> {
     with(&state, |s| s.preview_restore(&PathBuf::from(path)))
@@ -394,6 +400,21 @@ fn create_tray(app: &tauri::App) -> tauri::Result<()> {
     Ok(())
 }
 
+/// Checks every half hour whether the daily automatic backup is due (it also runs while the app
+/// waits in the tray). The first check comes shortly after start, not during it.
+fn start_auto_backups(app: tauri::AppHandle) {
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_secs(90));
+        loop {
+            if let Ok(mut store) = app.state::<AppState>().0.lock() {
+                // Errors are kept in the settings and shown on the settings page.
+                let _ = store.run_auto_backup(false);
+            }
+            std::thread::sleep(std::time::Duration::from_secs(30 * 60));
+        }
+    });
+}
+
 /// Marker file that switches the app to portable mode.
 const PORTABLE_MARKER: &str = "portable.txt";
 
@@ -423,6 +444,7 @@ pub fn run() {
             let store = Store::open(&data_dir)?;
             app.manage(AppState(Mutex::new(store)));
             create_tray(app)?;
+            start_auto_backups(app.handle().clone());
             // The window starts hidden (see tauri.conf.json) to avoid a flash when started in the tray.
             if !std::env::args().any(|a| a == MINIMIZED_ARG) {
                 show_main(app.handle());
@@ -463,6 +485,7 @@ pub fn run() {
             preview_import,
             import_trip,
             create_backup,
+            run_auto_backup,
             preview_restore,
             restore_backup,
             road_routes,

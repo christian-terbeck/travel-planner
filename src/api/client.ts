@@ -91,6 +91,7 @@ export const api = {
   previewImport: (path: string) => call<ImportPreview>("preview_import", { path }),
   importTrip: (path: string, mode: ImportMode) => call<string>("import_trip", { path, mode }),
   createBackup: (path: string) => call<BackupManifest>("create_backup", { path }),
+  runAutoBackup: () => call<string | null>("run_auto_backup"),
   previewRestore: (path: string) => call<RestorePreview>("preview_restore", { path }),
   restoreBackup: (path: string) => call<string>("restore_backup", { path }),
   geocode: (query: string, language: string) => call<Place[]>("geocode", { query, language }),

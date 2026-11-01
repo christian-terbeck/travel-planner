@@ -45,6 +45,8 @@ export interface Prefs {
   /** Booking confirmations may be sent to Claude for reading. */
   aiImport: boolean;
   dataDir: string;
+  /** Daily backups into a folder of the user's choice; off without a folder. */
+  autoBackup: { dir: string | null; keep: number; last: string | null; error: string | null };
   ready: boolean;
 }
 
@@ -68,6 +70,7 @@ const PrefsCtx = createContext<Prefs>({
   ecbFetchedAt: null,
   aiImport: false,
   dataDir: "",
+  autoBackup: { dir: null, keep: 10, last: null, error: null },
   ready: false,
 });
 
@@ -115,6 +118,12 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
       ecbFetchedAt: s.get("ecb_rates_fetched_at") ?? null,
       aiImport: s.get("ai_import_enabled") === "1",
       dataDir: info.data?.data_dir ?? "",
+      autoBackup: {
+        dir: s.get("auto_backup_dir")?.trim() || null,
+        keep: Number(s.get("auto_backup_keep")) || 10,
+        last: s.get("auto_backup_last") ?? null,
+        error: s.get("auto_backup_error") ?? null,
+      },
       ready: info.isSuccess,
     };
   }, [info.data, info.isSuccess]);

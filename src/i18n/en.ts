@@ -88,6 +88,7 @@ const en = {
     restored: "Restored",
   },
   errors: {
+    backup_folder_missing: "The backup folder does not exist (any more). Choose another one.",
     undo_unavailable: "This deletion can no longer be undone.",
     unknown: "Something went wrong. Your data was not changed.",
     required: "Required",
@@ -1038,6 +1039,20 @@ const en = {
     replace: "Replace the existing trip",
     confirm: "Import",
     done: "Trip imported",
+  },
+  autoBackup: {
+    title: "Automatic backup",
+    hint: "Once a day, when something changed, a backup is written to a folder of your choice, e.g. one synced by OneDrive. It also runs while the app waits in the tray. Older automatic backups beyond the limit are deleted; other files in the folder stay.",
+    folder: "Folder",
+    keep: "Keep",
+    last: "Last automatic backup: {{date}}",
+    never: "No automatic backup yet.",
+    failed: "The last automatic backup failed: {{error}}",
+    now: "Back up now",
+    done: "Backup written",
+    change: "Change folder…",
+    off: "Turn off",
+    choose: "Choose a folder…",
   },
   backup: {
     create: "Create backup",

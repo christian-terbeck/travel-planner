@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { open as openDialog, save } from "@tauri-apps/plugin-dialog";
 import { Archive, Bell, Database, Globe, Lock, Plus, RefreshCcw, Trash2, Upload } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -6,7 +7,7 @@ import { api, inDesktopApp } from "@/api/client";
 import { useAction, useRemove } from "@/api/queries";
 import type { ReminderSettings } from "@/domain/reminders";
 import type { ExchangeRate } from "@/domain/types";
-import { useErrorText, useT } from "@/i18n";
+import i18n, { useErrorText, useT } from "@/i18n";
 import { DEFAULT_ROUTING_URL, type Theme, useFormat, usePrefs } from "@/lib/prefs";
 import { newId, nil, nowIso } from "@/lib/rows";
 import { Button, Card, CardHeader, Checkbox, Field, IconButton, Input, PageHeader, Select } from "@/ui/core";
@@ -445,6 +446,7 @@ function DataCard() {
           </p>
         )}
         <p className="text-fg-3 text-xs">{t("backup.hint")}</p>
+        <AutoBackupOptions />
       </div>
       <ImportDialog open={importing} onOpenChange={setImporting} />
       {restore && (
@@ -489,6 +491,82 @@ function DataCard() {
         </Dialog>
       )}
     </Card>
+  );
+}
+
+function AutoBackupOptions() {
+  const t = useT();
+  const f = useFormat();
+  const { autoBackup } = usePrefs();
+  const run = useAction();
+  const qc = useQueryClient();
+  // Backups written in the background since the settings were loaded.
+  useEffect(() => void qc.invalidateQueries({ queryKey: ["app"] }), [qc]);
+  const set = (key: string, value: string | null) => run(() => api.setSetting(key, value));
+  const choose = async () => {
+    const dir = await openDialog({
+      directory: true,
+      multiple: false,
+      defaultPath: autoBackup.dir ?? undefined,
+    });
+    if (typeof dir === "string") await set("auto_backup_dir", dir);
+  };
+  return (
+    <div className="flex flex-col gap-3 border-line border-t pt-4">
+      <div>
+        <h3 className="font-medium text-sm">{t("autoBackup.title")}</h3>
+        <p className="text-fg-3 text-xs">{t("autoBackup.hint")}</p>
+      </div>
+      {autoBackup.dir ? (
+        <>
+          <div className="flex flex-wrap items-end gap-3">
+            <Field label={t("autoBackup.folder")} className="min-w-64 flex-1">
+              <span className="truncate py-1.5 font-mono text-xs" title={autoBackup.dir}>
+                {autoBackup.dir}
+              </span>
+            </Field>
+            <Field label={t("autoBackup.keep")} htmlFor="set-backup-keep" className="w-28">
+              <NumberInput
+                id="set-backup-keep"
+                min={1}
+                max={100}
+                value={autoBackup.keep}
+                onChange={(n) => n && n >= 1 && n <= 100 && void set("auto_backup_keep", String(n))}
+              />
+            </Field>
+          </div>
+          <p className="text-fg-2 text-sm">
+            {autoBackup.last
+              ? t("autoBackup.last", { date: f.timestamp(autoBackup.last) })
+              : t("autoBackup.never")}
+          </p>
+          {autoBackup.error && (
+            <p className="rounded-lg bg-danger-soft px-3 py-2 text-danger text-sm" role="alert">
+              {t("autoBackup.failed", {
+                error: i18n.exists(`errors.${autoBackup.error}`)
+                  ? t(`errors.${autoBackup.error}`)
+                  : autoBackup.error,
+              })}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={() => void run(() => api.runAutoBackup(), t("autoBackup.done"))}>
+              {t("autoBackup.now")}
+            </Button>
+            <Button variant="ghost" onClick={choose}>
+              {t("autoBackup.change")}
+            </Button>
+            <Button variant="ghost" onClick={() => void set("auto_backup_dir", null)}>
+              {t("autoBackup.off")}
+            </Button>
+          </div>
+        </>
+      ) : (
+        <div>
+          <Button onClick={choose}>{t("autoBackup.choose")}</Button>
+        </div>
+      )}
+    </div>
   );
 }
 

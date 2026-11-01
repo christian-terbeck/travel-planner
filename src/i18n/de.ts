@@ -92,6 +92,7 @@ const de: Translation = {
     restored: "Wiederhergestellt",
   },
   errors: {
+    backup_folder_missing: "Der Sicherungsordner existiert nicht (mehr). Wähle einen anderen.",
     undo_unavailable: "Das Löschen kann nicht mehr rückgängig gemacht werden.",
     unknown: "Etwas ist schiefgelaufen. Deine Daten wurden nicht verändert.",
     required: "Pflichtfeld",
@@ -1054,6 +1055,20 @@ const de: Translation = {
     replace: "Bestehende Reise ersetzen",
     confirm: "Importieren",
     done: "Reise importiert",
+  },
+  autoBackup: {
+    title: "Automatische Sicherung",
+    hint: "Einmal am Tag, wenn sich etwas geändert hat, wird eine Sicherung in einen Ordner deiner Wahl geschrieben, z. B. einen mit OneDrive synchronisierten. Das läuft auch, während die App im Tray wartet. Ältere automatische Sicherungen über der Anzahl werden gelöscht; andere Dateien im Ordner bleiben.",
+    folder: "Ordner",
+    keep: "Behalten",
+    last: "Letzte automatische Sicherung: {{date}}",
+    never: "Noch keine automatische Sicherung.",
+    failed: "Die letzte automatische Sicherung ist fehlgeschlagen: {{error}}",
+    now: "Jetzt sichern",
+    done: "Sicherung geschrieben",
+    change: "Ordner ändern…",
+    off: "Ausschalten",
+    choose: "Ordner wählen…",
   },
   backup: {
     create: "Sicherung erstellen",

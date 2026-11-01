@@ -124,6 +124,11 @@ impl Store {
         Ok(Self { conn: db::open_in_memory()?, data_dir: data_dir.to_path_buf(), clock: Box::new(move || now.to_string()), trash: Trash::default() })
     }
 
+    #[cfg(test)]
+    pub(crate) fn set_now(&mut self, now: &'static str) {
+        self.clock = Box::new(move || now.to_string());
+    }
+
     pub fn now(&self) -> String {
         (self.clock)()
     }
