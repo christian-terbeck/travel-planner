@@ -421,6 +421,22 @@ async fn extract_confirmation(app: tauri::AppHandle, path: String, language: Str
     .map_err(err)
 }
 
+/// Reads an offer the user pasted (copied from a website) with Claude, under the same setting and
+/// key as confirmations. Returns a proposal for a new alternative; nothing is saved here.
+#[tauri::command]
+async fn extract_offer(app: tauri::AppHandle, text: String, kind: String, language: String) -> CmdResult<ExtractedBooking> {
+    let state = app.state::<AppState>();
+    if !with(&state, |s| s.ai_import_enabled())? {
+        return Err(err(CoreError::rule("ai_disabled", "reading confirmations with Claude is turned off")));
+    }
+    let key = ai_key()?.ok_or_else(|| err(CoreError::rule("ai_no_key", "no API key stored")))?;
+    let agent = user_agent(&app);
+    tauri::async_runtime::spawn_blocking(move || confirmation::extract_offer(&key, &text, &kind, &language, &agent))
+        .await
+        .map_err(|e| err(CoreError::rule("busy", e.to_string())))?
+        .map_err(err)
+}
+
 /// Asks Claude to review a trip summary built by the UI, when the user enabled it and stored a
 /// key. Returns advice only; nothing is saved.
 #[tauri::command]
@@ -612,6 +628,7 @@ pub fn run() {
             ai_key_stored,
             set_ai_key,
             extract_confirmation,
+            extract_offer,
             review_trip,
             notify,
             autostart_enabled,

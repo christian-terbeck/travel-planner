@@ -65,3 +65,5 @@ untouched):
     planning list; type flight number “LH 1172”: the airline becomes Lufthansa with its logo.
 23. Turn on website icons: Sixt and Eurowings change from monograms to their website icons;
     “Reload icons” fetches them again.
+24. On a stay need, “Paste a link or offer”: paste a Booking.com hotel link with dates; the form opens
+    with name, dates and travelers. Optional, with a key: paste an offer text and “Read with Claude”.

@@ -21,6 +21,7 @@ export const api = {
   undoDelete: vi.fn(async (..._args: unknown[]) => null),
   attachDocument: vi.fn(async (..._args: unknown[]) => ({})),
   extractConfirmation: vi.fn(async (..._args: unknown[]): Promise<unknown> => null),
+  extractOffer: vi.fn(async (..._args: unknown[]): Promise<unknown> => null),
   setSetting: vi.fn(async (..._args: unknown[]) => null),
   openUrl: vi.fn(async (..._args: unknown[]) => null),
 };

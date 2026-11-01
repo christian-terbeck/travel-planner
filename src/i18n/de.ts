@@ -258,6 +258,7 @@ const de: Translation = {
     ai_failed:
       "Claude konnte die Bestätigung nicht lesen. Versuche es noch einmal oder trag die Buchung von Hand ein.",
     file_unsupported: "Verwende ein PDF, ein Bild, eine .eml-Mail oder eine Text-/HTML-Datei.",
+    text_too_long: "Der Text ist zu lang (mehr als 60.000 Zeichen). Füge nur das Angebot selbst ein.",
     file_too_large_ai: "Die Datei ist größer als 20 MB.",
     credential_store: "Die Windows-Anmeldeinformationsverwaltung konnte nicht verwendet werden.",
   },
@@ -1228,6 +1229,27 @@ const de: Translation = {
     review: "Prüfen und ergänzen",
     check:
       "Als Nächstes siehst du die gewohnten Formulare mit den gelesenen Werten. Vergleiche sie vor dem Speichern mit der Bestätigung.",
+  },
+  offer: {
+    button: "Link oder Angebot einfügen",
+    title: "Angebot für {{slot}} einfügen",
+    hint: "Füge einen Link von einer Buchungs- oder Suchseite oder den Text eines Angebots ein. Was sich daraus lesen lässt, steht danach im Formular; den Rest ergänzt du.",
+    text: "Link oder Angebotstext",
+    placeholder: "https://www.booking.com/hotel/…\n\noder den kopierten Angebotstext",
+    found: "Daraus gelesen",
+    nothingFound: "Daraus ließ sich nichts lesen. Link und Text kommen trotzdem ins Formular.",
+    route: "Strecke",
+    dates: "Daten",
+    people: "Reisende",
+    datesNote: "Daten des Angebots: {{dates}}",
+    dateNote: "Datum des Angebots: {{date}}",
+    use: "Formular ausfüllen",
+    readWithClaude: "Mit Claude lesen",
+    reading: "Claude liest das Angebot … das kann eine Minute dauern.",
+    pasted: "Eingefügtes Angebot",
+    privacy: "Wird auf diesem Computer gelesen; nichts wird gesendet.",
+    privacyAi:
+      "„Formular ausfüllen“ liest den Link auf diesem Computer. „Mit Claude lesen“ sendet den eingefügten Text an die API von Anthropic.",
   },
   geocode: {
     search: "Lage online suchen",

@@ -269,6 +269,44 @@ pub fn request_body(file: Value, language: &str) -> Value {
     })
 }
 
+/// Longest offer text that is sent (an offer page copied from a browser).
+pub const MAX_OFFER_CHARS: usize = 60_000;
+
+/// Asks for an offer the user copied from a website (search result, product page, quote mail)
+/// instead of a confirmation. `kind` is the slot the offer is meant for.
+pub fn offer_request_body(text: &str, kind: &str, language: &str) -> CoreResult<Value> {
+    let text = text.trim();
+    if text.is_empty() {
+        return Err(CoreError::invalid("text", "nothing to read"));
+    }
+    if text.chars().count() > MAX_OFFER_CHARS {
+        return Err(CoreError::rule("text_too_long", "the text is longer than 60,000 characters"));
+    }
+    let mut body = request_body(json!({ "type": "text", "text": format!("<offer>\n{text}\n</offer>") }), language);
+    let lang = if language == "de" { "German" } else { "English" };
+    body["messages"][0]["content"][1]["text"] = json!(format!(
+        "This is an offer copied from a website or a quote, not a confirmation: nothing is booked yet, so \
+`reference`, `booked_on` and `paid` are null. The user plans it as kind \"{kind}\". If the text lists \
+several offers, take the first complete one and mention the others in `notes`. `price` is the total for the \
+stated travellers and dates; if only a per-night or per-person price is given, leave `price` null and state \
+it in `notes`. Write `title` and `notes` in {lang}."
+    ));
+    Ok(body)
+}
+
+/// Sends pasted offer text to Claude and returns the proposal (blocking).
+pub fn extract_offer(
+    api_key: &str,
+    text: &str,
+    kind: &str,
+    language: &str,
+    user_agent: &str,
+) -> CoreResult<ExtractedBooking> {
+    let body = offer_request_body(text, kind, language)?;
+    let (status, answer) = send(api_key, &body, user_agent)?;
+    parse_response(status, &answer)
+}
+
 /// Reads the answer: the JSON text block, after checking why the model stopped.
 pub fn parse_response(status: u16, body: &str) -> CoreResult<ExtractedBooking> {
     let text = answer_text(status, body, "the model declined to read this file")?;
@@ -369,6 +407,18 @@ mod tests {
         assert_eq!(body["model"], MODEL);
         assert!(body.get("temperature").is_none());
         assert!(body["messages"][0]["content"][1]["text"].as_str().unwrap().contains("German"));
+    }
+
+    #[test]
+    fn offers_are_sent_as_text_with_the_slot_kind() {
+        let body = offer_request_body("  Casa do Alfama, 4 nights, 620 €  ", "accommodation", "en").unwrap();
+        let content = &body["messages"][0]["content"];
+        assert!(content[0]["text"].as_str().unwrap().starts_with("<offer>\nCasa do Alfama"));
+        assert!(content[1]["text"].as_str().unwrap().contains("\"accommodation\""));
+        assert_eq!(body["output_config"]["format"]["type"], "json_schema");
+        assert!(matches!(offer_request_body(" ", "flight", "en"), Err(CoreError::Validation { .. })));
+        let long = "x".repeat(MAX_OFFER_CHARS + 1);
+        assert!(matches!(offer_request_body(&long, "flight", "en"), Err(CoreError::Rule { .. })));
     }
 
     #[test]

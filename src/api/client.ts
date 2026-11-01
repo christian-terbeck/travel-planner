@@ -106,6 +106,8 @@ export const api = {
   setAiKey: (key: string | null) => call<void>("set_ai_key", { key }),
   extractConfirmation: (path: string, language: string) =>
     call<ExtractedBooking>("extract_confirmation", { path, language }),
+  extractOffer: (text: string, kind: string, language: string) =>
+    call<ExtractedBooking>("extract_offer", { text, kind, language }),
   reviewTrip: (input: string, language: string) => call<TripReview>("review_trip", { input, language }),
   notify: (title: string, body: string) => call<void>("notify", { title, body }),
   autostartEnabled: () => call<boolean>("autostart_enabled"),

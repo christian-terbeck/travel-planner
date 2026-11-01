@@ -31,6 +31,7 @@ export function OptionEditor({
   open,
   onOpenChange,
   onDraft,
+  isNew: newOverride,
 }: {
   bundle: OptionBundle | null;
   slot: Slot | null;
@@ -39,6 +40,8 @@ export function OptionEditor({
   onOpenChange: (o: boolean) => void;
   /** Returns the edited option instead of saving it (used when booking a new option directly). */
   onDraft?: (b: OptionBundle) => void;
+  /** A new option that arrives already filled in (from a pasted offer). */
+  isNew?: boolean;
 }) {
   const t = useT();
   const run = useAction();
@@ -56,7 +59,7 @@ export function OptionEditor({
   const o = b.option;
   const setO = <K extends keyof PlanOption>(k: K, v: PlanOption[K]) =>
     setB({ ...b, option: { ...o, [k]: v } });
-  const isNew = o.title === "" && !booked;
+  const isNew = newOverride ?? (o.title === "" && !booked);
 
   const save = async () => {
     if (!o.title.trim()) {

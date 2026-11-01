@@ -2,6 +2,7 @@ import {
   Ban,
   BookmarkCheck,
   CircleCheck,
+  ClipboardPaste,
   Copy,
   LineChart,
   MoreHorizontal,
@@ -28,6 +29,7 @@ import { CancellationBadge, Certainty, KindIcon, StatusBadge } from "@/ui/status
 import { BookingDialog } from "./BookingDialog";
 import { ProviderLine, useDuration, useWhen } from "./itemText";
 import { OptionEditor } from "./OptionEditor";
+import { OfferPasteDialog } from "./planning/OfferPasteDialog";
 import { PriceCheckDialog } from "./planning/PriceCheckDialog";
 import { SlotDialog } from "./planning/SlotDialog";
 import { ScenariosPanel } from "./ScenariosPanel";
@@ -81,9 +83,13 @@ function Alternatives() {
   const removeRow = useRemove();
   const confirm = useConfirm();
   const [slotEdit, setSlotEdit] = useState<{ slot: Slot; isNew: boolean } | null>(null);
-  const [optionEdit, setOptionEdit] = useState<{ bundle: OptionBundle; slot: Slot; booked: boolean } | null>(
-    null,
-  );
+  const [paste, setPaste] = useState<Slot | null>(null);
+  const [optionEdit, setOptionEdit] = useState<{
+    bundle: OptionBundle;
+    slot: Slot;
+    booked: boolean;
+    isNew?: boolean;
+  } | null>(null);
   const [booking, setBooking] = useState<PlanItem | null>(null);
   const [priceCheck, setPriceCheck] = useState<PlanItem | null>(null);
   const [showRejected, setShowRejected] = useState(false);
@@ -187,6 +193,7 @@ function Alternatives() {
                 booked: false,
               })
             }
+            onPaste={() => setPaste(slot)}
             onEdit={(item) =>
               setOptionEdit({ bundle: bundleOf(m, item), slot, booked: item.activeBookings.length > 0 })
             }
@@ -206,6 +213,16 @@ function Alternatives() {
         bundle={optionEdit?.bundle ?? null}
         slot={optionEdit?.slot ?? null}
         booked={optionEdit?.booked ?? false}
+        isNew={optionEdit?.isNew}
+      />
+      <OfferPasteDialog
+        slot={paste}
+        onClose={() => setPaste(null)}
+        onResult={(bundle) => {
+          const slot = paste;
+          setPaste(null);
+          if (slot) setOptionEdit({ bundle, slot, booked: false, isNew: true });
+        }}
       />
       <BookingDialog item={booking} onClose={() => setBooking(null)} />
       <PriceCheckDialog item={priceCheck} onClose={() => setPriceCheck(null)} />
@@ -218,6 +235,7 @@ function SlotCard({
   showRejected,
   onEditSlot,
   onAdd,
+  onPaste,
   onEdit,
   onDuplicate,
   onDelete,
@@ -229,6 +247,7 @@ function SlotCard({
   showRejected: boolean;
   onEditSlot: () => void;
   onAdd: () => void;
+  onPaste: () => void;
   onEdit: (i: PlanItem) => void;
   onDuplicate: (i: PlanItem) => void;
   onDelete: (i: PlanItem) => void;
@@ -283,6 +302,9 @@ function SlotCard({
           <Button size="sm" icon={<Plus className="size-3.5" />} onClick={onAdd}>
             {t("planning.addOption")}
           </Button>
+          <IconButton label={t("offer.button")} onClick={onPaste}>
+            <ClipboardPaste className="size-3.5" />
+          </IconButton>
           <IconButton label={t("slot.edit")} onClick={onEditSlot}>
             <Pencil className="size-3.5" />
           </IconButton>
