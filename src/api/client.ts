@@ -49,19 +49,28 @@ async function call<T>(cmd: string, args?: Record<string, unknown>): Promise<T> 
   }
 }
 
+/** Rows as typed in forms, with leading and trailing whitespace removed from every text value. */
+export function trimmed<T>(value: T): T {
+  if (typeof value === "string") return value.trim() as T;
+  if (Array.isArray(value)) return value.map(trimmed) as T;
+  if (value && typeof value === "object")
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, trimmed(v)])) as T;
+  return value;
+}
+
 export const api = {
   appInfo: () => call<AppInfo>("app_info"),
   setSetting: (key: string, value: string | null) => call<void>("set_setting", { key, value }),
   listTrips: () => call<TripGraph[]>("list_trips"),
   getTrip: (id: string) => call<TripGraph>("get_trip", { id }),
-  save: (entity: Entity) => call<void>("save", { entity }),
+  save: (entity: Entity) => call<void>("save", { entity: trimmed(entity) }),
   remove: (kind: EntityKind, ...keys: string[]) => call<void>("delete", { kind, keys }),
   saveOption: (bundle: OptionBundle, confirmBookedEdit = false) =>
-    call<void>("save_option", { bundle, confirmBookedEdit }),
+    call<void>("save_option", { bundle: trimmed(bundle), confirmBookedEdit }),
   duplicateOption: (id: string, title: string) => call<string>("duplicate_option", { id, title }),
-  createBooking: (input: BookingInput) => call<string>("create_booking", { input }),
+  createBooking: (input: BookingInput) => call<string>("create_booking", { input: trimmed(input) }),
   updateBooking: (booking: Booking, policy: CancellationPolicy | null) =>
-    call<void>("update_booking", { booking, policy }),
+    call<void>("update_booking", { booking: trimmed(booking), policy: trimmed(policy) }),
   cancelBooking: (input: CancelInput) => call<void>("cancel_booking", { input }),
   saveScenario: (scenario: Scenario, selections: ScenarioSelection[]) =>
     call<void>("save_scenario", { scenario, selections }),

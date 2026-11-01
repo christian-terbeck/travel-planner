@@ -329,10 +329,12 @@ export function newTask(tripId: string, sort: number): Task {
   };
 }
 
-/** Empty strings from inputs become null, so optional fields are stored as "not set". */
+/**
+ * Blank input becomes null, so optional fields are stored as "not set". The text itself is kept as
+ * typed (trimming here would swallow every space while typing); `api` trims rows when saving.
+ */
 export function nil(v: string | null | undefined): string | null {
-  const s = v?.trim();
-  return s ? s : null;
+  return v?.trim() ? v : null;
 }
 
 export function intOrNull(v: string): number | null {
