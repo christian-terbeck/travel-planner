@@ -62,6 +62,13 @@ export function Layout() {
 
   return (
     <div className="flex h-full">
+      <button
+        type="button"
+        className="sr-only z-[200] rounded-md bg-primary px-3 py-2 text-on-primary focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+        onClick={() => document.getElementById("main")?.focus()}
+      >
+        {t("nav.skipToContent")}
+      </button>
       <aside className="flex w-56 shrink-0 flex-col border-line border-r bg-surface">
         <div className="flex items-center gap-2 px-4 py-4">
           <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-on-primary">
@@ -100,7 +107,7 @@ export function Layout() {
           <NavItem to="/settings" icon={<Settings />} label={t("nav.settings")} />
         </div>
       </aside>
-      <main className="min-w-0 flex-1 overflow-y-auto">
+      <main id="main" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto focus:outline-none">
         {!inDesktopApp ? (
           <EmptyState title={t("app.noBackendTitle")} text={t("app.noBackendText")} className="h-full" />
         ) : trips.isPending ? (

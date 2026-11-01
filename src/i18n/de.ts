@@ -21,6 +21,7 @@ const de: Translation = {
     loadErrorTitle: "Deine Daten konnten nicht geladen werden",
   },
   nav: {
+    skipToContent: "Zum Inhalt springen",
     label: "Hauptnavigation",
     dashboard: "Übersicht",
     trips: "Reisen",
@@ -184,6 +185,7 @@ const de: Translation = {
     },
   },
   common: {
+    loading: "Wird geladen",
     back: "Zurück",
     cancel: "Abbrechen",
     close: "Schließen",

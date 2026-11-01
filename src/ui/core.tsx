@@ -11,6 +11,7 @@ import {
   type TextareaHTMLAttributes,
   useId,
 } from "react";
+import { useT } from "@/i18n";
 
 export const cn = clsx;
 
@@ -267,7 +268,10 @@ export function EmptyState({
 }
 
 export function Spinner({ className }: { className?: string }) {
-  return <Loader2 className={cn("size-5 animate-spin text-fg-3", className)} aria-label="Loading" />;
+  const t = useT();
+  return (
+    <Loader2 className={cn("size-5 animate-spin text-fg-3", className)} aria-label={t("common.loading")} />
+  );
 }
 
 export function PageHeader({

@@ -1,5 +1,6 @@
 import { CheckCircle2, CircleAlert, X } from "lucide-react";
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import { useT } from "@/i18n";
 
 interface ToastItem {
   id: number;
@@ -12,6 +13,7 @@ interface ToastItem {
 const Ctx = createContext<{ show: (t: Omit<ToastItem, "id">) => void }>({ show: () => {} });
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const closeLabel = useT()("common.close");
   const [items, setItems] = useState<ToastItem[]>([]);
   const dismiss = useCallback((id: number) => setItems((l) => l.filter((x) => x.id !== id)), []);
   const show = useCallback(
@@ -58,7 +60,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               type="button"
               className="text-fg-3 hover:text-fg"
               onClick={() => dismiss(t.id)}
-              aria-label="Close"
+              aria-label={closeLabel}
             >
               <X className="size-4" />
             </button>

@@ -19,6 +19,7 @@ const en = {
     loadErrorTitle: "Your data could not be loaded",
   },
   nav: {
+    skipToContent: "Skip to content",
     label: "Main navigation",
     dashboard: "Dashboard",
     trips: "Trips",
@@ -180,6 +181,7 @@ const en = {
     },
   },
   common: {
+    loading: "Loading",
     back: "Back",
     cancel: "Cancel",
     close: "Close",
