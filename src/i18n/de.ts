@@ -923,7 +923,7 @@ const de: Translation = {
       car: "Auto",
       total: "Gesamt",
       vsPreferred: "ggü. Plan",
-      tradeOffs: "Zeit · Bewertung · flexibel",
+      tradeOffs: "Zeit · Bewertung · flexibel · CO₂",
       check: "Prüfung",
     },
     weightsHint:
@@ -933,6 +933,7 @@ const de: Translation = {
       time: "Reisezeit & Umstiege",
       rating: "Deine Bewertungen",
       flexibility: "Kostenlos stornierbar",
+      climate: "Klima (CO₂)",
     },
     weight: { 0: "Egal", 1: "Etwas", 2: "Wichtig", 3: "Sehr wichtig" },
     byPrice: "Wieder nur nach Preis",
@@ -950,6 +951,7 @@ const de: Translation = {
     changes_other: "{{count}} Umstiege",
     avgRating: "★ {{rating}} im Schnitt",
     flexibleShare: "{{percent}} % kostenlos stornierbar",
+    co2: "≈ {{kg}} kg CO₂e pro Person",
   },
   booking: {
     title: "{{title}} buchen",
@@ -1319,6 +1321,9 @@ const de: Translation = {
     daysValue_one: "{{count}} Tag",
     daysValue_other: "{{count}} Tage",
     aroundEarth: "Einmal um die Erde",
+    co2: "CO₂ der Wege",
+    co2Value: "≈ {{tonnes}} t pro Person",
+    co2Hint: "Schätzung, siehe Karten-Tab",
     basis:
       "Gezählt: Reisen mit aktiver Buchung, die begonnen haben und nicht storniert sind, mit gebuchten Daten und Strecken. Länder ergeben sich aus den genutzten Flughäfen, ohne dein Heimatland. Ausgegeben: Buchungen, Stornokosten und tatsächliche Ausgaben, umgerechnet, soweit es einen Kurs gibt. Strecken am Boden sind Schätzungen, außer Straßenrouten sind eingeschaltet.",
   },
@@ -1586,6 +1591,13 @@ const de: Translation = {
     summary_other: "{{count}} Preisprüfungen, zuletzt {{last}}, niedrigster {{low}}",
   },
   map: {
+    co2: "CO₂-Schätzung",
+    co2Value: "≈ {{kg}} kg CO₂e pro Person",
+    co2Total_one: "{{kg}} kg für {{count}} Person",
+    co2Total_other: "{{kg}} kg für alle {{count}} Personen",
+    co2Hint:
+      "Nur die Wege, Durchschnittswerte der britischen Regierung (DESNZ 2025, Flüge inkl. Wirkung in der Höhe); ein Auto wird geteilt. Zum Vergleichen, nicht für Berichte.",
+    co2Uncounted: "{{km}} km am Boden ohne bekanntes Verkehrsmittel sind nicht enthalten.",
     title: "Routenkarte",
     subtitle: "Verbindungen und Unterkünfte des Plans, offline gezeichnet",
     distances: "Strecken",

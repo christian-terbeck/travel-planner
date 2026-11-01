@@ -1,6 +1,8 @@
 import { AlertTriangle, Plane } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { estimateCo2 } from "@/domain/co2";
 import { type LegMode, ROAD_FACTOR, type Route, type RoutePoint } from "@/domain/geo";
+import { travelerCount } from "@/domain/items";
 import { useT } from "@/i18n";
 import { useFormat } from "@/lib/prefs";
 import { useTripUi } from "@/lib/tripUi";
@@ -20,6 +22,12 @@ export function MapView() {
   const [selected, setSelected] = useState<RoutePoint | null>(null);
 
   const km = (v: number) => `${f.number(Math.round(v))} km`;
+  const people = travelerCount(m.graph) ?? 1;
+  // Segments are looked up by ID, so all items of the trip serve a previewed scenario as well.
+  const co2 = useMemo(
+    () => (route ? estimateCo2(route, [...m.ctx.items.values()], people) : null),
+    [route, m, people],
+  );
   const roadHint = (r: Route, mode: LegMode) => {
     const legs = groundLegs(r, mode);
     const routed = legs.filter((l) => !l.estimated).length;
@@ -99,6 +107,26 @@ export function MapView() {
                   </dd>
                 </div>
               </dl>
+            )}
+            {co2 && co2.perPerson > 0 && (
+              <div className="border-line border-t px-4 py-2.5 text-sm">
+                <div className="flex justify-between">
+                  <span>{t("map.co2")}</span>
+                  <span className="tabular font-semibold">
+                    {t("map.co2Value", { kg: f.number(Math.round(co2.perPerson)) })}
+                  </span>
+                </div>
+                {people > 1 && (
+                  <p className="text-fg-3 text-xs">
+                    {t("map.co2Total", { count: people, kg: f.number(Math.round(co2.total)) })}
+                  </p>
+                )}
+                <p className="mt-1 text-fg-3 text-xs">
+                  {t("map.co2Hint")}
+                  {co2.uncountedKm > 0 &&
+                    ` ${t("map.co2Uncounted", { km: f.number(Math.round(co2.uncountedKm)) })}`}
+                </p>
+              </div>
             )}
             {route && <RoadStatus route={route} roads={roads} />}
             {route &&

@@ -82,6 +82,8 @@ export interface Leg {
   path: [number, number][] | null;
   at: Instant | null;
   optionId: string | null;
+  /** The flight or transport segment this leg is; null for ground travel between places. */
+  segmentId: string | null;
 }
 
 export interface Route {
@@ -172,6 +174,7 @@ export function buildRoute(
         path: null,
         at: s.depart,
         optionId: item.option.id,
+        segmentId: s.segment.id,
       });
       if (s.depart) visits.push({ point: from, at: s.depart, segment: { id: s.segment.id, role: "dep" } });
       if (s.arrive) visits.push({ point: to, at: s.arrive, segment: { id: s.segment.id, role: "arr" } });
@@ -224,6 +227,7 @@ export function buildRoute(
       path: null,
       at: a.at,
       optionId: null,
+      segmentId: null,
     });
   }
   legs.sort((x, y) => (x.at?.epochMilliseconds ?? 0) - (y.at?.epochMilliseconds ?? 0));

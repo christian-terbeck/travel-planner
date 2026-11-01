@@ -67,9 +67,15 @@ describe("weighing scenarios", () => {
   });
 
   it("puts the direct, flexible and better rated trip first when those matter", () => {
-    expect(titles(choices(), { price: 1, time: 3, rating: 0, flexibility: 0 })[0]).toMatch(/^Direct/);
-    expect(titles(choices(), { price: 1, time: 0, rating: 0, flexibility: 3 })[0]).toMatch(/Flexible$/);
-    expect(titles(choices(), { price: 0, time: 3, rating: 3, flexibility: 3 })[0]).toBe("Direct + Flexible");
+    expect(titles(choices(), { price: 1, time: 3, rating: 0, flexibility: 0, climate: 0 })[0]).toMatch(
+      /^Direct/,
+    );
+    expect(titles(choices(), { price: 1, time: 0, rating: 0, flexibility: 3, climate: 0 })[0]).toMatch(
+      /Flexible$/,
+    );
+    expect(titles(choices(), { price: 0, time: 3, rating: 3, flexibility: 3, climate: 0 })[0]).toBe(
+      "Direct + Flexible",
+    );
   });
 
   it("measures time on the way, changes, ratings and free cancellation", () => {

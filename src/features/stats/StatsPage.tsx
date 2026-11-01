@@ -1,4 +1,4 @@
-import { BarChart3, CalendarDays, Globe2, Luggage, Moon, Plane, Route, Wallet } from "lucide-react";
+import { BarChart3, CalendarDays, Globe2, Leaf, Luggage, Moon, Plane, Route, Wallet } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { useTrips } from "@/api/queries";
@@ -162,7 +162,7 @@ function Tiles({
   const t = useT();
   const f = useFormat();
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
       <Stat icon={<Luggage />} label={t("stats.trips")} value={s.trips} />
       <Stat
         icon={<CalendarDays />}
@@ -199,6 +199,12 @@ function Tiles({
         icon={<Moon />}
         label={t("stats.avgLength")}
         value={s.trips > 0 ? t("stats.daysValue", { count: Math.round(s.days / s.trips) }) : "—"}
+      />
+      <Stat
+        icon={<Leaf />}
+        label={t("stats.co2")}
+        value={t("stats.co2Value", { tonnes: f.number(Math.round(s.co2 / 100) / 10) })}
+        sub={t("stats.co2Hint")}
       />
       <Stat
         icon={<Globe2 />}

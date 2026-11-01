@@ -9,12 +9,12 @@ import type { Evaluation } from "./scenarios";
 import { type Instant, minutesBetween, zoned } from "./time";
 import type { TripGraph } from "./types";
 
-export type Criterion = "price" | "time" | "rating" | "flexibility";
-export const CRITERIA: Criterion[] = ["price", "time", "rating", "flexibility"];
+export type Criterion = "price" | "time" | "rating" | "flexibility" | "climate";
+export const CRITERIA: Criterion[] = ["price", "time", "rating", "flexibility", "climate"];
 
 /** 0 = ignore, 3 = very important. */
 export type Weights = Record<Criterion, number>;
-export const DEFAULT_WEIGHTS: Weights = { price: 3, time: 0, rating: 0, flexibility: 0 };
+export const DEFAULT_WEIGHTS: Weights = { price: 3, time: 0, rating: 0, flexibility: 0, climate: 0 };
 
 export const isPriceOnly = (w: Weights) => CRITERIA.every((c) => (c === "price" ? w[c] > 0 : w[c] === 0));
 
@@ -29,7 +29,12 @@ export interface Metrics {
   rating: number | null;
   /** Share (0–1) of the priced items that can still be cancelled for free; null without terms at all. */
   flexible: number | null;
+  /** Estimated kg CO2e per traveler for the journeys; null when not known (e.g. no airport list). */
+  co2: number | null;
 }
+
+/** Estimated kg CO2e per traveler of a scenario, given by the caller (needs the route). */
+export type Co2Of = (e: Evaluation) => number | null;
 
 /** Free cancellation still possible: the booked terms for booked items, else the offered ones. */
 function freelyCancellable(g: TripGraph, item: PlanItem, now: Instant, tz: string): boolean | null {
@@ -46,7 +51,7 @@ function freelyCancellable(g: TripGraph, item: PlanItem, now: Instant, tz: strin
   return !deadline || minutesBetween(now, deadline) > 0;
 }
 
-export function metrics(e: Evaluation, g: TripGraph, now: Instant, tz: string): Metrics {
+export function metrics(e: Evaluation, g: TripGraph, now: Instant, tz: string, co2Of?: Co2Of): Metrics {
   const js = e.period.journeys;
   const travelMinutes =
     js.length > 0 && js.every((j) => j.depart && j.arrive)
@@ -57,7 +62,14 @@ export function metrics(e: Evaluation, g: TripGraph, now: Instant, tz: string): 
   const rating = rated.length > 0 ? rated.reduce((a, b) => a + b, 0) / rated.length : null;
   const terms = e.items.map((i) => freelyCancellable(g, i, now, tz)).filter((x): x is boolean => x !== null);
   const flexible = terms.length > 0 ? terms.filter(Boolean).length / terms.length : null;
-  return { price: e.complete ? e.converted.minor : null, travelMinutes, changes, rating, flexible };
+  return {
+    price: e.complete ? e.converted.minor : null,
+    travelMinutes,
+    changes,
+    rating,
+    flexible,
+    co2: co2Of?.(e) ?? null,
+  };
 }
 
 export interface Weighed {
@@ -78,8 +90,9 @@ export function weigh(
   weights: Weights,
   now: Instant,
   tz: string,
+  co2Of?: Co2Of,
 ): Weighed[] {
-  const ms = evals.map((e) => metrics(e, g, now, tz));
+  const ms = evals.map((e) => metrics(e, g, now, tz, co2Of));
   const scale = (values: Array<number | null>, missing: number, higherIsBetter: boolean) => {
     const known = values.filter((v): v is number => v !== null);
     const min = Math.min(...known);
@@ -109,6 +122,11 @@ export function weigh(
       ms.map((m) => m.flexible),
       0.5,
       true,
+    ),
+    climate: scale(
+      ms.map((m) => m.co2),
+      0.5,
+      false,
     ),
   };
   const total = CRITERIA.reduce((s, c) => s + weights[c], 0);

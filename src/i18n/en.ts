@@ -911,7 +911,7 @@ const en = {
       car: "Car",
       total: "Total",
       vsPreferred: "vs. plan",
-      tradeOffs: "Time · rating · flexible",
+      tradeOffs: "Time · rating · flexible · CO₂",
       check: "Check",
     },
     weightsHint:
@@ -921,6 +921,7 @@ const en = {
       time: "Time on the way & changes",
       rating: "Your ratings",
       flexibility: "Free cancellation",
+      climate: "Climate (CO₂)",
     },
     weight: { 0: "Doesn't matter", 1: "A little", 2: "Important", 3: "Very important" },
     byPrice: "Back to price only",
@@ -938,6 +939,7 @@ const en = {
     changes_other: "{{count}} changes",
     avgRating: "★ {{rating}} on average",
     flexibleShare: "{{percent}} % cancellable for free",
+    co2: "≈ {{kg}} kg CO₂e per person",
   },
   booking: {
     title: "Book {{title}}",
@@ -1303,6 +1305,9 @@ const en = {
     daysValue_one: "{{count}} day",
     daysValue_other: "{{count}} days",
     aroundEarth: "Around the earth",
+    co2: "CO₂ of the journeys",
+    co2Value: "≈ {{tonnes}} t per person",
+    co2Hint: "Estimate, see the map tab",
     basis:
       "Counted: trips with an active booking that have started and were not cancelled, with their booked dates and route. Countries come from the airports used, without your home country. Spent: bookings, cancellation costs and actual expenses, converted where a rate exists. Ground distances are estimates unless road routes are turned on.",
   },
@@ -1567,6 +1572,13 @@ const en = {
     summary_other: "{{count}} price checks, latest {{last}}, lowest {{low}}",
   },
   map: {
+    co2: "CO₂ estimate",
+    co2Value: "≈ {{kg}} kg CO₂e per person",
+    co2Total_one: "{{kg}} kg for {{count}} traveler",
+    co2Total_other: "{{kg}} kg for all {{count}} travelers",
+    co2Hint:
+      "Journeys only, average factors of the UK government (DESNZ 2025, flights incl. effects at altitude); a car is shared. For comparing, not for reporting.",
+    co2Uncounted: "{{km}} km on the ground without a known means are not included.",
     title: "Route map",
     subtitle: "Flights and stays of the plan, drawn offline",
     distances: "Distances",

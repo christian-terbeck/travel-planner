@@ -84,3 +84,5 @@ untouched):
     and spending; switch between the years.
 32. Add “Miles & More” for a traveler; book a Lufthansa (or SWISS) flight: the booking dialog shows
     the number with a copy button; the travel companion lists it under the booking.
+33. Map tab of a trip with flights: “CO₂ estimate” shows kg per person (and for all travelers); the
+    explorer lists CO₂ per combination; the statistics show the tonnes of the trips taken.

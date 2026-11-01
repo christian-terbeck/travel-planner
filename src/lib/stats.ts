@@ -3,7 +3,9 @@
 // the booked route (great circle for flights, estimates or road routes on the ground), countries
 // from the airports used, money from bookings, cancellation costs and actual expenses.
 
+import { estimateCo2 } from "@/domain/co2";
 import { buildRoute } from "@/domain/geo";
+import { travelerCount } from "@/domain/items";
 import { addTo, type Converted, convertTotals, type Totals } from "@/domain/money";
 import { compareDate, type PlainDate } from "@/domain/time";
 import type { ExchangeRate } from "@/domain/types";
@@ -23,6 +25,8 @@ export interface TripStats {
   /** ISO country codes visited (from the airports used), without the home country. */
   countries: string[];
   spent: Converted;
+  /** Estimated kg CO2e per traveler for the journeys. */
+  co2: number;
 }
 
 export interface Summary {
@@ -33,6 +37,7 @@ export interface Summary {
   flights: number;
   countries: string[];
   spent: Converted;
+  co2: number;
 }
 
 export function tripStats(
@@ -77,6 +82,7 @@ export function tripStats(
     flights: segments.length,
     countries: [...countries].sort(),
     spent: convertTotals(spent, currency, rates),
+    co2: estimateCo2(route, c.items, travelerCount(m.graph) ?? 1).perPerson,
   };
 }
 
@@ -90,6 +96,7 @@ export function summarize(list: TripStats[], currency: string): Summary {
     flights: 0,
     countries: [],
     spent: { minor: 0, currency, unconvertible: {} },
+    co2: 0,
   };
   for (const s of list) {
     out.days += s.days;
@@ -97,6 +104,7 @@ export function summarize(list: TripStats[], currency: string): Summary {
     out.km.flight += s.km.flight;
     out.km.ground += s.km.ground;
     out.flights += s.flights;
+    out.co2 += s.co2;
     out.spent.minor += s.spent.minor;
     for (const [cur, v] of Object.entries(s.spent.unconvertible))
       addTo(out.spent.unconvertible, { minor: v, currency: cur });

@@ -3,6 +3,9 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { api } from "@/api/client";
 import { useAction, useRemove } from "@/api/queries";
+import { estimateCo2 } from "@/domain/co2";
+import { buildRoute } from "@/domain/geo";
+import { travelerCount } from "@/domain/items";
 import {
   cheapest,
   type DateWindow,
@@ -24,6 +27,7 @@ import {
   weigh,
 } from "@/domain/weighting";
 import { useT } from "@/i18n";
+import { useAirports } from "@/lib/airports";
 import { useFormat } from "@/lib/prefs";
 import { newScenario, nil } from "@/lib/rows";
 import { useTripUi } from "@/lib/tripUi";
@@ -70,11 +74,20 @@ export function ScenariosPanel() {
   const bestSaved = cheapest(saved.map((s) => s.e));
   const exploration = useMemo(() => (explored ? explore(m.ctx) : null), [explored, m]);
   const bestCombo = exploration ? cheapest(exploration.results) : null;
-  const weighed = useMemo(
-    () =>
-      exploration && !exploration.tooMany ? weigh(exploration.results, m.graph, weights, m.now, m.tz) : null,
-    [exploration, m, weights],
-  );
+  const airports = useAirports();
+  const weighed = useMemo(() => {
+    if (!exploration || exploration.tooMany) return null;
+    const people = travelerCount(m.graph) ?? 1;
+    const co2Of = (e: Evaluation) =>
+      airports
+        ? estimateCo2(
+            buildRoute(e.items, (c) => airports.get(c) ?? null, m.tz),
+            e.items,
+            people,
+          ).perPerson
+        : null;
+    return weigh(exploration.results, m.graph, weights, m.now, m.tz, co2Of);
+  }, [exploration, m, weights, airports]);
   const windows = useMemo(() => (exploration ? travelWindows(exploration.results) : []), [exploration]);
   const bestWeighed =
     weighed && !isPriceOnly(weights)
@@ -574,6 +587,7 @@ function MetricsCell({ m }: { m: Metrics }) {
       {m.flexible !== null && (
         <li>{t("scenario.flexibleShare", { percent: Math.round(m.flexible * 100) })}</li>
       )}
+      {m.co2 !== null && m.co2 > 0 && <li>{t("scenario.co2", { kg: f.number(Math.round(m.co2)) })}</li>}
     </ul>
   );
 }
