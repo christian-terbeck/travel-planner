@@ -3,7 +3,7 @@
 use crate::error::CoreError;
 use crate::model::*;
 use crate::store::{BookingInput, CancelInput, Entity, EntityKind, Store, new_id};
-use crate::transfer::ImportMode;
+use crate::transfer::{CopyTripInput, ImportMode};
 
 const NOW: &str = "2026-10-31T12:00:00Z";
 
@@ -558,6 +558,55 @@ fn export_and_import_as_new_trip() {
     assert!(b.options.iter().all(|o| !a.options.iter().any(|x| x.id == o.id)));
     assert!(b.flight_segments.iter().all(|seg| b.options.iter().any(|o| o.id == seg.option_id)));
     assert!(b.flight_segments.iter().filter_map(|s| s.booking_id.as_ref()).all(|id| b.bookings.iter().any(|x| &x.id == id)));
+}
+
+#[test]
+fn copying_a_trip_moves_the_dates_and_leaves_bookings_behind() {
+    let (mut s, _dir) = store();
+    let t = populated(&mut s);
+    let mut g = s.trip_graph(&t).unwrap();
+    g.trip.earliest_departure = Some("2027-06-01".into());
+    s.save(Entity::Trip(g.trip.clone())).unwrap();
+    s.save(Entity::Task(Task {
+        id: new_id(),
+        trip_id: t.clone(),
+        option_id: Some(g.options[0].id.clone()),
+        title: "Online check-in".into(),
+        due_date: Some("2027-06-09".into()),
+        done_at: Some(NOW.into()),
+        notes: None,
+        sort: 0,
+        created_at: NOW.into(),
+    }))
+    .unwrap();
+
+    let input = |include_options| CopyTripInput {
+        trip_id: t.clone(),
+        title: "Portugal 2028".into(),
+        shift_days: 364,
+        include_options,
+        include_travelers: true,
+        include_tasks_and_notes: true,
+    };
+    let new = s.copy_trip(input(true)).unwrap();
+    let c = s.trip_graph(&new).unwrap();
+    assert_eq!(c.trip.title, "Portugal 2028");
+    assert_eq!(c.trip.earliest_departure.as_deref(), Some("2028-05-30"));
+    assert_eq!(c.options.len(), 2);
+    assert!(c.options.iter().all(|o| o.status == OptionStatus::Planned));
+    assert!(c.bookings.is_empty() && c.payments.is_empty() && c.price_observations.is_empty());
+    assert!(c.flight_segments.iter().all(|f| f.booking_id.is_none()));
+    assert_eq!(c.flight_segments[0].depart_local.as_deref(), Some("2028-06-08T07:00"));
+    let task = &c.tasks[0];
+    assert_eq!((task.due_date.as_deref(), task.done_at.as_deref()), (Some("2028-06-07"), None));
+    assert!(c.options.iter().any(|o| Some(&o.id) == task.option_id.as_ref()));
+    assert_eq!(s.trip_graph(&t).unwrap().bookings.len(), 1, "the original keeps its booking");
+
+    let bare = s.copy_trip(input(false)).unwrap();
+    let bare = s.trip_graph(&bare).unwrap();
+    assert_eq!(bare.slots.len(), 1);
+    assert!(bare.options.is_empty() && bare.scenarios.is_empty());
+    assert_eq!(bare.tasks[0].option_id, None);
 }
 
 #[test]

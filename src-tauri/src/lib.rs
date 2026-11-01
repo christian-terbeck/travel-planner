@@ -12,7 +12,7 @@ use tp_core::geocoding::{self, Place};
 use tp_core::rates;
 use tp_core::routing::{self, RoadQuery, RoadResult};
 use tp_core::store::{AppInfo, BookingInput, CancelInput, Entity, EntityKind};
-use tp_core::transfer::{self, BackupManifest, ImportMode, ImportPreview, RestorePreview};
+use tp_core::transfer::{self, BackupManifest, CopyTripInput, ImportMode, ImportPreview, RestorePreview};
 use tp_core::{CoreError, ErrorPayload, Store};
 
 struct AppState(Mutex<Store>);
@@ -133,6 +133,11 @@ fn open_url(app: tauri::AppHandle, url: String) -> CmdResult<()> {
     app.opener()
         .open_url(url, None::<&str>)
         .map_err(|e| err(CoreError::rule("open_failed", e.to_string())))
+}
+
+#[tauri::command]
+fn copy_trip(state: State<'_, AppState>, input: CopyTripInput) -> CmdResult<String> {
+    with(&state, |s| s.copy_trip(input))
 }
 
 #[tauri::command]
@@ -452,6 +457,7 @@ pub fn run() {
             update_document_notes,
             open_document,
             open_url,
+            copy_trip,
             export_trip,
             write_export,
             preview_import,

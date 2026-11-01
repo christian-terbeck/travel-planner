@@ -44,6 +44,21 @@ pub enum ImportMode {
     Replace,
 }
 
+/// What a copy of a trip takes along. Bookings, payments, actual expenses, price history,
+/// documents and the change history always stay with the original.
+#[derive(Debug, Clone, Deserialize, TS)]
+#[ts(export)]
+pub struct CopyTripInput {
+    pub trip_id: String,
+    pub title: String,
+    /// Every date and time of the copy is moved by this many days (0 keeps them).
+    pub shift_days: i32,
+    /// Alternatives with their details, fees, terms and the saved scenarios; else only the needs.
+    pub include_options: bool,
+    pub include_travelers: bool,
+    pub include_tasks_and_notes: bool,
+}
+
 #[derive(Debug, Serialize, TS)]
 #[ts(export)]
 pub struct ImportPreview {
@@ -142,6 +157,19 @@ impl Store {
         }
         tx.commit()?;
         self.remove_orphan_files()?;
+        Ok(graph.trip.id)
+    }
+
+    /// Creates a new trip from an existing one, e.g. to plan the same holiday again next year.
+    /// Returns the new trip's ID.
+    pub fn copy_trip(&mut self, input: CopyTripInput) -> CoreResult<String> {
+        let now = self.now();
+        let g = self.trip_graph(&input.trip_id)?;
+        let graph = remap_ids(copy_graph(g, &input, &now)?)?;
+        validate_graph(&graph)?;
+        let tx = self.conn.transaction()?;
+        insert_graph(&tx, &graph)?;
+        tx.commit()?;
         Ok(graph.trip.id)
     }
 
@@ -396,6 +424,180 @@ fn validate_graph(g: &TripGraph) -> CoreResult<()> {
         own_trip(&r.trip_id, "change log")?;
     }
     Ok(())
+}
+
+fn copy_graph(g: TripGraph, input: &CopyTripInput, now: &str) -> CoreResult<TripGraph> {
+    let days = chrono::Duration::days(input.shift_days.into());
+    let shift_date = |v: &mut Option<String>| {
+        if let Some(d) = v.as_deref().and_then(|d| chrono::NaiveDate::parse_from_str(d, "%Y-%m-%d").ok()) {
+            *v = Some((d + days).format("%Y-%m-%d").to_string());
+        }
+    };
+    let shift_local = |v: &mut Option<String>| {
+        if let Some(d) = v.as_deref().and_then(|d| chrono::NaiveDateTime::parse_from_str(d, "%Y-%m-%dT%H:%M").ok()) {
+            *v = Some((d + days).format("%Y-%m-%dT%H:%M").to_string());
+        }
+    };
+    let title = input.title.trim();
+    if title.is_empty() {
+        return Err(CoreError::invalid("title", "required"));
+    }
+
+    let mut t = g.trip;
+    t.title = title.to_string();
+    t.status_override = None;
+    t.created_at = now.to_string();
+    t.updated_at = now.to_string();
+    for d in [&mut t.earliest_departure, &mut t.latest_return, &mut t.preferred_start, &mut t.preferred_end] {
+        shift_date(d);
+    }
+    if let Some(m) = t.preferred_month.as_deref().and_then(|m| chrono::NaiveDate::parse_from_str(&format!("{m}-01"), "%Y-%m-%d").ok()) {
+        t.preferred_month = Some((m + days).format("%Y-%m").to_string());
+    }
+
+    let mut out = TripGraph {
+        trip: t,
+        travelers: if input.include_travelers { g.travelers } else { vec![] },
+        stations: g.stations,
+        slots: g.slots,
+        options: vec![],
+        flight_segments: vec![],
+        accommodation_details: vec![],
+        rental_car_details: vec![],
+        activity_details: vec![],
+        option_fees: vec![],
+        cancellation_policies: vec![],
+        bookings: vec![],
+        payments: vec![],
+        expenses: vec![],
+        cost_shares: vec![],
+        scenarios: vec![],
+        scenario_selections: vec![],
+        price_observations: vec![],
+        tasks: vec![],
+        dismissed_warnings: vec![],
+        open_nights: vec![],
+        documents: vec![],
+        notes: vec![],
+        change_log: vec![],
+    };
+    for s in &mut out.stations {
+        shift_date(&mut s.arrive_date);
+        shift_date(&mut s.depart_date);
+    }
+    for s in &mut out.slots {
+        s.created_at = now.to_string();
+    }
+
+    if input.include_options {
+        // Alternatives start over as plans; archived and rejected ones are left behind.
+        let keep: HashSet<String> = g
+            .options
+            .iter()
+            .filter(|o| o.status != OptionStatus::Archived && o.decision != Decision::Rejected)
+            .map(|o| o.id.clone())
+            .collect();
+        for mut o in g.options.into_iter().filter(|o| keep.contains(&o.id)) {
+            if matches!(o.status, OptionStatus::Booked | OptionStatus::Cancelled | OptionStatus::Completed) {
+                o.status = OptionStatus::Planned;
+            }
+            o.price_verified_at = None;
+            o.created_at = now.to_string();
+            o.updated_at = now.to_string();
+            out.options.push(o);
+        }
+        let kept = |id: &str| keep.contains(id);
+        for mut s in g.flight_segments.into_iter().filter(|s| kept(&s.option_id)) {
+            s.booking_id = None;
+            shift_local(&mut s.depart_local);
+            shift_local(&mut s.arrive_local);
+            out.flight_segments.push(s);
+        }
+        for mut a in g.accommodation_details.into_iter().filter(|a| kept(&a.option_id)) {
+            shift_date(&mut a.check_in);
+            shift_date(&mut a.check_out);
+            out.accommodation_details.push(a);
+        }
+        for mut r in g.rental_car_details.into_iter().filter(|r| kept(&r.option_id)) {
+            shift_local(&mut r.pickup_local);
+            shift_local(&mut r.return_local);
+            out.rental_car_details.push(r);
+        }
+        for mut a in g.activity_details.into_iter().filter(|a| kept(&a.option_id)) {
+            shift_date(&mut a.start_date);
+            shift_date(&mut a.end_date);
+            out.activity_details.push(a);
+        }
+        out.option_fees = g.option_fees.into_iter().filter(|f| kept(&f.option_id)).collect();
+        for mut p in g.cancellation_policies.into_iter().filter(|p| p.option_id.as_deref().is_some_and(kept)) {
+            shift_local(&mut p.deadline_local);
+            p.checked_at = None;
+            p.updated_at = now.to_string();
+            out.cancellation_policies.push(p);
+        }
+        for mut s in g.scenarios {
+            s.created_at = now.to_string();
+            s.updated_at = now.to_string();
+            out.scenarios.push(s);
+        }
+        out.scenario_selections = g
+            .scenario_selections
+            .into_iter()
+            .map(|mut s| {
+                if s.option_id.as_deref().is_some_and(|o| !kept(o)) {
+                    s.option_id = None;
+                }
+                s
+            })
+            .collect();
+        // Dismissed warnings are left behind: their keys name rows of the original.
+        for mut n in g.open_nights {
+            let mut night = Some(n.night);
+            shift_date(&mut night);
+            n.night = night.unwrap_or_default();
+            out.open_nights.push(n);
+        }
+    }
+    let options: HashSet<String> = out.options.iter().map(|o| o.id.clone()).collect();
+    let option_ref = |v: &mut Option<String>| {
+        if v.as_deref().is_some_and(|o| !options.contains(o)) {
+            *v = None;
+        }
+    };
+
+    if input.include_tasks_and_notes {
+        for mut t in g.tasks {
+            t.done_at = None;
+            shift_date(&mut t.due_date);
+            option_ref(&mut t.option_id);
+            t.created_at = now.to_string();
+            out.tasks.push(t);
+        }
+        for mut n in g.notes {
+            option_ref(&mut n.option_id);
+            n.created_at = now.to_string();
+            n.updated_at = now.to_string();
+            out.notes.push(n);
+        }
+    }
+
+    // Planned expenses are part of the plan; actual ones and refunds belong to the original trip.
+    let travelers: HashSet<String> = out.travelers.iter().map(|t| t.id.clone()).collect();
+    for mut e in g.expenses.into_iter().filter(|e| e.kind == ExpenseKind::Planned && e.booking_id.is_none()) {
+        shift_date(&mut e.spent_on);
+        if e.paid_by.as_deref().is_some_and(|p| !travelers.contains(p)) {
+            e.paid_by = None;
+        }
+        e.created_at = now.to_string();
+        out.expenses.push(e);
+    }
+    let expenses: HashSet<String> = out.expenses.iter().map(|e| e.id.clone()).collect();
+    out.cost_shares = g
+        .cost_shares
+        .into_iter()
+        .filter(|c| c.expense_id.as_deref().is_some_and(|e| expenses.contains(e)) && travelers.contains(&c.traveler_id))
+        .collect();
+    Ok(out)
 }
 
 /// Gives every row of the graph a fresh ID and rewrites all references to it. Booking

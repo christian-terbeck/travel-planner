@@ -105,6 +105,11 @@ ExchangeRate* (explicit rate + date + source), Setting*, ChangeLog*
 - **Currencies** are never summed directly. Totals per display currency use explicit exchange
   rates; amounts without a rate are reported separately as "not convertible".
 - **Duplicating an option** deep-copies details, fees and policy; bookings and observations are not copied.
+- **Copying a trip** (plan it again) takes the needs, stops and planned expenses, and optionally the
+  alternatives with details, fees, terms and scenarios (archived and rejected ones are left
+  behind), the travelers, and the tasks (reopened) and notes. Every date moves by the chosen
+  number of days. Bookings, payments, actual expenses, price history, documents and history stay
+  with the original.
 - **Deletion:** a trip deletes all its rows (FK `ON DELETE CASCADE`). Document files are removed
   only when no row references them any more. Options with bookings cannot be deleted, only archived.
 - **Undo:** before a delete the core captures every row it removes and every reference it clears,

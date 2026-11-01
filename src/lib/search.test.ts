@@ -32,7 +32,11 @@ describe("search", () => {
 
   it("ignores accents and needs every word", () => {
     const { index, stay } = trips();
-    expect(search(index, "sao bento")[0]).toMatchObject({ kind: "option", optionId: stay.id, view: "planning" });
+    expect(search(index, "sao bento")[0]).toMatchObject({
+      kind: "option",
+      optionId: stay.id,
+      view: "planning",
+    });
     expect(search(index, "sao iceland")).toEqual([]);
     expect(search(index, "pasteis")[0]).toMatchObject({ kind: "note", view: "documents" });
   });

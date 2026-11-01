@@ -52,6 +52,25 @@ const de: Translation = {
       document: "Dokument",
     },
   },
+  copyTrip: {
+    menu: "Reise kopieren…",
+    title: "Reise kopieren",
+    description:
+      "Plane diese Reise noch einmal, z. B. im nächsten Jahr. Deine Buchungen bleiben bei der ursprünglichen Reise.",
+    defaultTitle: "{{title}} (Kopie)",
+    name: "Name",
+    newStart: "Neues Startdatum",
+    sameDates: "Die Daten bleiben unverändert.",
+    shiftHint_one: "Alle Daten verschieben sich um {{count}} Tag (ab {{from}}).",
+    shiftHint_other: "Alle Daten verschieben sich um {{count}} Tage (ab {{from}}).",
+    includeOptions: "Alternativen, Preise, Bedingungen und gespeicherte Szenarien",
+    includeTravelers: "Reisende",
+    includeTasks: "Aufgaben und Notizen (Aufgaben werden wieder offen)",
+    leftBehind:
+      "Nicht kopiert werden Buchungen, Zahlungen, tatsächliche Ausgaben, Preisverlauf, Dokumente und Verlauf.",
+    save: "Kopie erstellen",
+    done: "Reise kopiert",
+  },
   common: {
     back: "Zurück",
     cancel: "Abbrechen",

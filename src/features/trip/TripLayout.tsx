@@ -1,4 +1,4 @@
-import { ChevronLeft, Download, MoreHorizontal, Pencil, Trash2, Users } from "lucide-react";
+import { ChevronLeft, Copy, Download, MoreHorizontal, Pencil, Trash2, Users } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate, useOutletContext, useParams } from "react-router";
@@ -12,6 +12,7 @@ import { Button, cn, EmptyState, Spinner } from "@/ui/core";
 import { useConfirm } from "@/ui/dialog";
 import { TripStatusBadge } from "@/ui/status";
 import { TripForm } from "../trips/TripForm";
+import { CopyTripDialog } from "./CopyTripDialog";
 import { ExportDialog } from "./ExportDialog";
 
 export function useTrip(): TripModel {
@@ -42,6 +43,7 @@ export function TripLayout() {
   const confirm = useConfirm();
   const [editing, setEditing] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [copying, setCopying] = useState(false);
 
   if (query.isPending) {
     return (
@@ -131,6 +133,13 @@ export function TripLayout() {
                 ))}
                 <DropdownMenu.Separator className="my-1 h-px bg-line" />
                 <DropdownMenu.Item
+                  onSelect={() => setCopying(true)}
+                  className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 outline-none data-[highlighted]:bg-surface-2"
+                >
+                  <Copy className="size-4" aria-hidden />
+                  {t("copyTrip.menu")}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item
                   onSelect={() => void remove()}
                   className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-danger outline-none data-[highlighted]:bg-danger-soft"
                 >
@@ -164,6 +173,7 @@ export function TripLayout() {
       </div>
       <TripForm open={editing} onOpenChange={setEditing} graph={model.graph} />
       <ExportDialog open={exporting} onOpenChange={setExporting} model={model} />
+      {copying && <CopyTripDialog model={model} onClose={() => setCopying(false)} />}
     </div>
   );
 }

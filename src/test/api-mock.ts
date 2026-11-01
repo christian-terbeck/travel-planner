@@ -17,6 +17,7 @@ export const api = {
   createBooking: vi.fn(async (..._args: unknown[]) => "booking-1"),
   cancelBooking: vi.fn(async (..._args: unknown[]) => null),
   remove: vi.fn(async (..._args: unknown[]) => "undo-1"),
+  copyTrip: vi.fn(async (..._args: unknown[]) => "trip-copy"),
   undoDelete: vi.fn(async (..._args: unknown[]) => null),
   attachDocument: vi.fn(async (..._args: unknown[]) => ({})),
   extractConfirmation: vi.fn(async (..._args: unknown[]): Promise<unknown> => null),

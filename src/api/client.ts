@@ -7,6 +7,7 @@ import type { Booking } from "./bindings/Booking";
 import type { BookingInput } from "./bindings/BookingInput";
 import type { CancelInput } from "./bindings/CancelInput";
 import type { CancellationPolicy } from "./bindings/CancellationPolicy";
+import type { CopyTripInput } from "./bindings/CopyTripInput";
 import type { Document } from "./bindings/Document";
 import type { Entity } from "./bindings/Entity";
 import type { EntityKind } from "./bindings/EntityKind";
@@ -84,6 +85,7 @@ export const api = {
     call<void>("update_document_notes", { id, notes }),
   openDocument: (id: string) => call<void>("open_document", { id }),
   openUrl: (url: string) => call<void>("open_url", { url }),
+  copyTrip: (input: CopyTripInput) => call<string>("copy_trip", { input }),
   exportTrip: (tripId: string, path: string) => call<void>("export_trip", { tripId, path }),
   writeExport: (path: string, contents: string) => call<void>("write_export", { path, contents }),
   previewImport: (path: string) => call<ImportPreview>("preview_import", { path }),
