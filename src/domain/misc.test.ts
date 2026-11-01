@@ -115,6 +115,24 @@ describe("cost splitting", () => {
       balance: 25000,
     });
     expect(s.transfers).toEqual([{ from: "ben", to: "anna", minor: 25000 }]);
+
+    // Ben pays part of it back; the rest is still open, the trip costs stay the same.
+    g.settlements.push({
+      id: "s1",
+      trip_id: "trip",
+      from_traveler_id: "ben",
+      to_traveler_id: "anna",
+      amount_minor: 20000,
+      currency: "EUR",
+      paid_on: "2027-06-20",
+      notes: null,
+      created_at: "x",
+    });
+    const after = settle(g, "EUR", []);
+    expect(after.transfers).toEqual([{ from: "ben", to: "anna", minor: 5000 }]);
+    expect(after.balances.find((x) => x.travelerId === "anna")?.share).toBe(35000);
+    g.settlements[0] = { ...g.settlements[0], amount_minor: 25000 } as (typeof g.settlements)[0];
+    expect(settle(g, "EUR", []).transfers).toEqual([]);
   });
 });
 

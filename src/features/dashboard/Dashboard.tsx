@@ -1,12 +1,15 @@
 import {
   AlertTriangle,
   Bell,
+  BookOpen,
   CalendarClock,
   Luggage,
+  MapPin,
   Plus,
   ShieldAlert,
   TrendingDown,
   Wallet,
+  Zap,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
@@ -19,6 +22,7 @@ import { useFormat, usePrefs } from "@/lib/prefs";
 import { setTripUi } from "@/lib/tripUi";
 import { Button, Card, CardHeader, EmptyState, PageHeader, Stat } from "@/ui/core";
 import { CancellationBadge, Certainty, SeverityIcon, TripStatusBadge } from "@/ui/status";
+import { QuickExpenseDialog } from "../trip/budget/QuickExpenseDialog";
 import { useReminderText, useWarningText } from "../trip/warnings";
 import { TripForm } from "../trips/TripForm";
 
@@ -42,6 +46,8 @@ export function Dashboard() {
         .localeCompare((b.plan.period.start as Temporal.PlainDate).toString()),
     );
   const planning = active.filter((m) => m.status === "planning" || m.status === "idea");
+  const ongoing = active.filter((m) => m.status === "ongoing");
+  const [quick, setQuick] = useState<TripModel | null>(null);
 
   const outstanding = useMemo(() => {
     const t: Totals = {};
@@ -106,6 +112,45 @@ export function Dashboard() {
         }
       />
       <div className="flex flex-col gap-6 p-6">
+        {ongoing.length > 0 && (
+          <Card>
+            <CardHeader icon={<MapPin className="size-4" />} title={t("dashboard.onTheWay")} />
+            <ul>
+              {ongoing.map((m) => {
+                const start = m.plan.period.start;
+                const end = m.plan.period.end;
+                return (
+                  <li
+                    key={m.graph.trip.id}
+                    className="flex flex-wrap items-center gap-3 border-line border-t px-4 py-3 first:border-0"
+                  >
+                    <Link to={`/trips/${m.graph.trip.id}`} className="min-w-0 flex-1 hover:underline">
+                      <span className="font-medium">{m.graph.trip.title}</span>
+                      {start && end && (
+                        <span className="ml-2 text-fg-3 text-sm">
+                          {t("dashboard.dayOf", {
+                            day: daysBetween(start, today) + 1,
+                            days: daysBetween(start, end) + 1,
+                          })}
+                        </span>
+                      )}
+                    </Link>
+                    <Button size="sm" icon={<Zap className="size-3.5" />} onClick={() => setQuick(m)}>
+                      {t("quickExpense.button")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      icon={<BookOpen className="size-3.5" />}
+                      onClick={() => navigate(`/trips/${m.graph.trip.id}/journal`)}
+                    >
+                      {t("trip.tab.journal")}
+                    </Button>
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+        )}
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           <Stat
             icon={<Luggage />}
@@ -217,6 +262,7 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+      {quick && <QuickExpenseDialog model={quick} onClose={() => setQuick(null)} />}
       <TripForm open={creating} onOpenChange={setCreating} onCreated={(id) => navigate(`/trips/${id}`)} />
     </div>
   );

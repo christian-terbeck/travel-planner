@@ -71,3 +71,6 @@ untouched):
     import on, drop a confirmation and choose “Read as booking”.
 26. Journal: write two lines for day 2 and leave the field; add two phone photos (JPEG) and one
     HEIC; the JPEGs show as thumbnails, the HEIC as a tile that opens. Delete the entry and undo.
+27. During a trip (dates around today): the dashboard shows “On the way”; record two expenses with
+    “Save and next”, one only for two of three travelers. Budget → “Mark as paid” on a transfer:
+    the balances become even; delete the settlement and undo.

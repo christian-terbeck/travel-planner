@@ -13,6 +13,7 @@ import type {
   PlanOption,
   RentalCarDetails,
   Scenario,
+  Settlement,
   Slot,
   SlotKind,
   Station,
@@ -280,6 +281,24 @@ export function newPayment(bookingId: string, currency: string): Payment {
     paid_on: nowIso().slice(0, 10),
     method: null,
     traveler_id: null,
+    notes: null,
+    created_at: nowIso(),
+  };
+}
+
+export function newSettlement(
+  tripId: string,
+  transfer: { from: string; to: string; minor: number },
+  currency: string,
+): Settlement {
+  return {
+    id: newId(),
+    trip_id: tripId,
+    from_traveler_id: transfer.from,
+    to_traveler_id: transfer.to,
+    amount_minor: transfer.minor,
+    currency,
+    paid_on: nowIso().slice(0, 10),
     notes: null,
     created_at: nowIso(),
   };

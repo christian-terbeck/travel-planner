@@ -34,6 +34,7 @@ export type { PriceObservation } from "@/api/bindings/PriceObservation";
 export type { RentalCarDetails } from "@/api/bindings/RentalCarDetails";
 export type { Scenario } from "@/api/bindings/Scenario";
 export type { ScenarioSelection } from "@/api/bindings/ScenarioSelection";
+export type { Settlement } from "@/api/bindings/Settlement";
 export type { Slot } from "@/api/bindings/Slot";
 export type { SlotKind } from "@/api/bindings/SlotKind";
 export type { Station } from "@/api/bindings/Station";

@@ -1,9 +1,12 @@
-import { ArrowRight, Split } from "lucide-react";
+import { ArrowRight, HandCoins, Split, Trash2 } from "lucide-react";
+import { api } from "@/api/client";
+import { useAction, useRemove } from "@/api/queries";
 import { convertTotals } from "@/domain/money";
 import { settle } from "@/domain/splits";
 import { useT } from "@/i18n";
 import { useFormat, usePrefs } from "@/lib/prefs";
-import { Card, CardHeader, cn, EmptyState, IconButton } from "@/ui/core";
+import { newSettlement } from "@/lib/rows";
+import { Button, Card, CardHeader, cn, EmptyState, IconButton } from "@/ui/core";
 import { useTrip } from "../TripLayout";
 
 export function BudgetBars() {
@@ -102,6 +105,8 @@ export function SettlementCard({
   const f = useFormat();
   const { rates } = usePrefs();
   const m = useTrip();
+  const run = useAction();
+  const remove = useRemove();
   const travelers = m.graph.travelers;
   if (travelers.length < 2) {
     return (
@@ -152,6 +157,19 @@ export function SettlementCard({
               <li key={`${x.from}-${x.to}`} className="flex items-center gap-2">
                 {name(x.from)} <ArrowRight className="size-3.5 text-fg-3" aria-hidden /> {name(x.to)}
                 <span className="tabular ml-auto font-medium">{f.minor(x.minor, s.currency)}</span>
+                <Button
+                  size="sm"
+                  icon={<HandCoins className="size-3.5" />}
+                  onClick={() =>
+                    run(
+                      () =>
+                        api.save({ type: "settlement", row: newSettlement(m.graph.trip.id, x, s.currency) }),
+                      t("split.recorded", { from: name(x.from), to: name(x.to) }),
+                    )
+                  }
+                >
+                  {t("split.markPaid")}
+                </Button>
               </li>
             ))}
           </ul>
@@ -167,6 +185,29 @@ export function SettlementCard({
           </p>
         )}
       </div>
+      {m.graph.settlements.length > 0 && (
+        <details className="border-line border-t px-4 py-2 text-sm">
+          <summary className="cursor-pointer text-fg-2">
+            {t("split.done", { count: m.graph.settlements.length })}
+          </summary>
+          <ul className="mt-1">
+            {m.graph.settlements.map((x) => (
+              <li key={x.id} className="flex items-center gap-2 py-1">
+                <span className="text-fg-3 text-xs">{f.date(x.paid_on)}</span>
+                {name(x.from_traveler_id)} <ArrowRight className="size-3.5 text-fg-3" aria-hidden />{" "}
+                {name(x.to_traveler_id)}
+                <span className="tabular ml-auto">{f.minor(x.amount_minor, x.currency)}</span>
+                <IconButton
+                  label={t("split.deleteSettlement")}
+                  onClick={() => void remove("settlement", [x.id], t("split.settlementDeleted"))}
+                >
+                  <Trash2 className="size-3.5" />
+                </IconButton>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       {m.graph.bookings.length > 0 && (
         <details className="border-line border-t px-4 py-2 text-sm">
           <summary className="cursor-pointer text-fg-2">{t("split.bookingShares")}</summary>

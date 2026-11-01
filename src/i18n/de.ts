@@ -40,6 +40,7 @@ const de: Translation = {
     pages: "Gehe zu",
     recentTrips: "Zuletzt geänderte Reisen",
     results: "Treffer",
+    actions: "Aktionen",
     kind: {
       trip: "Reise",
       slot: "Bedarf",
@@ -1078,6 +1079,26 @@ const de: Translation = {
     equal: "gleich",
     dialogTitle: "„{{title}}“ aufteilen",
     dialogHint: "Anteile nach Gewicht, z. B. 2 : 1. Gleiche Gewichte bedeuten gleiche Teile.",
+    markPaid: "Als bezahlt markieren",
+    recorded: "{{from}} hat {{to}} bezahlt; die Salden sind aktualisiert",
+    done_one: "{{count}} Ausgleich erfolgt",
+    done_other: "{{count}} Ausgleiche erfolgt",
+    deleteSettlement: "Ausgleich löschen",
+    settlementDeleted: "Ausgleich gelöscht",
+  },
+  quickExpense: {
+    button: "Schnell erfassen",
+    palette: "Ausgabe erfassen – {{trip}}",
+    title: "Ausgabe – {{trip}}",
+    hint: "Betrag, wofür, wer bezahlt hat und für wen. Wird als tatsächliche Ausgabe gespeichert.",
+    savedCount_one: "{{count}} Ausgabe gespeichert. Die nächste:",
+    savedCount_other: "{{count}} Ausgaben gespeichert. Die nächste:",
+    what: "Wofür",
+    forWhom: "Für wen",
+    nobody: "Wähle mindestens eine Person.",
+    amountMissing: "Gib den Betrag ein.",
+    saveNext: "Speichern und weiter",
+    saved: "{{amount}} für {{title}} gespeichert",
   },
   documents: {
     title: "Dokumente",
@@ -1400,6 +1421,8 @@ const de: Translation = {
     version: "Travel Planner {{version}}",
   },
   dashboard: {
+    onTheWay: "Unterwegs",
+    dayOf: "Tag {{day}} von {{days}}",
     welcomeTitle: "Willkommen bei Travel Planner",
     welcomeText:
       "Plane, vergleiche und verwalte komplette Reisen – von der ersten Idee bis zur Heimreise. Alles bleibt auf diesem Computer.",

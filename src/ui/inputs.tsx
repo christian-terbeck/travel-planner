@@ -80,6 +80,7 @@ export function MoneyInput({
   id,
   placeholder,
   invalid,
+  autoFocus,
 }: {
   value: number | null;
   currency: string;
@@ -88,6 +89,7 @@ export function MoneyInput({
   id?: string;
   placeholder?: string;
   invalid?: boolean;
+  autoFocus?: boolean;
 }) {
   const t = useT();
   const [text, setText] = useState(value === null ? "" : toMajorString(value, currency));
@@ -114,6 +116,7 @@ export function MoneyInput({
     <div className="flex gap-1.5">
       <Input
         id={id}
+        autoFocus={autoFocus}
         inputMode="decimal"
         value={text}
         placeholder={placeholder ?? t("common.unknownPrice")}

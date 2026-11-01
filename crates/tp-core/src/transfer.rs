@@ -381,6 +381,12 @@ fn validate_graph(g: &TripGraph) -> CoreResult<()> {
         check_opt(&bookings, &r.booking_id, "expense")?;
         check_opt(&travelers, &r.paid_by, "expense")?;
     }
+    for r in &g.settlements {
+        r.validate()?;
+        own_trip(&r.trip_id, "settlement")?;
+        check(&travelers, &r.from_traveler_id, "settlement")?;
+        check(&travelers, &r.to_traveler_id, "settlement")?;
+    }
     for r in &g.cost_shares {
         r.validate()?;
         check_opt(&bookings, &r.booking_id, "cost share")?;
@@ -504,6 +510,8 @@ fn copy_graph(g: TripGraph, input: &CopyTripInput, now: &str) -> CoreResult<Trip
         documents: vec![],
         // The journal tells what happened on the original trip.
         journal_entries: vec![],
+        // Money already passed between travelers belongs to the original trip.
+        settlements: vec![],
         notes: vec![],
         change_log: vec![],
     };
@@ -696,6 +704,7 @@ fn insert_graph(conn: &Connection, g: &TripGraph) -> CoreResult<()> {
     all(conn, &g.cancellation_policies)?;
     all(conn, &g.payments)?;
     all(conn, &g.expenses)?;
+    all(conn, &g.settlements)?;
     all(conn, &g.cost_shares)?;
     all(conn, &g.scenarios)?;
     all(conn, &g.scenario_selections)?;

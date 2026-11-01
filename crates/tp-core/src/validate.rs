@@ -398,6 +398,25 @@ impl Validate for Payment {
     }
 }
 
+impl Validate for Settlement {
+    fn validate(&self) -> CoreResult<()> {
+        id("id", &self.id)?;
+        id("trip_id", &self.trip_id)?;
+        id("from_traveler_id", &self.from_traveler_id)?;
+        id("to_traveler_id", &self.to_traveler_id)?;
+        if self.from_traveler_id == self.to_traveler_id {
+            return Err(CoreError::invalid("to_traveler_id", "must be someone else"));
+        }
+        if self.amount_minor <= 0 {
+            return Err(CoreError::invalid("amount_minor", "must be positive"));
+        }
+        currency("currency", &self.currency)?;
+        date("paid_on", &self.paid_on)?;
+        opt_text("notes", &self.notes)?;
+        timestamp("created_at", &self.created_at)
+    }
+}
+
 impl Validate for Expense {
     fn validate(&self) -> CoreResult<()> {
         id("id", &self.id)?;

@@ -293,6 +293,22 @@ pub struct Payment {
     pub created_at: String,
 }
 
+/// Money one traveler gave another to even out shared costs. Moves the balances between them;
+/// the trip's costs stay the same.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct Settlement {
+    pub id: String,
+    pub trip_id: String,
+    pub from_traveler_id: String,
+    pub to_traveler_id: String,
+    pub amount_minor: i64,
+    pub currency: String,
+    pub paid_on: String,
+    pub notes: Option<String>,
+    pub created_at: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct Expense {
@@ -552,6 +568,9 @@ pub struct TripGraph {
     /// Missing in exports made before the journal existed.
     #[serde(default)]
     pub journal_entries: Vec<JournalEntry>,
+    /// Missing in exports made before settlements existed.
+    #[serde(default)]
+    pub settlements: Vec<Settlement>,
     pub notes: Vec<Note>,
     pub change_log: Vec<ChangeLogEntry>,
 }

@@ -18,6 +18,7 @@ import {
   Ticket,
   TrendingDown,
   User,
+  Zap,
 } from "lucide-react";
 import { Dialog as D } from "radix-ui";
 import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -126,7 +127,19 @@ export function CommandPalette({
         }));
       return [...recent, ...pages];
     }
-    const matchingPages = pages.filter((c) => words.every((w) => normalize(c.title).includes(w)));
+    // Actions per trip are found by typing, e.g. "expense lisbon".
+    const actions = [...graphs]
+      .sort((a, b) => b.trip.updated_at.localeCompare(a.trip.updated_at))
+      .map<Command>((g) => ({
+        id: `qe:${g.trip.id}`,
+        icon: <Zap />,
+        title: t("quickExpense.palette", { trip: g.trip.title }),
+        group: t("search.actions"),
+        run: () => navigate(`/trips/${g.trip.id}/budget`, { state: { quickExpense: true } }),
+      }));
+    const matchingPages = [...pages, ...actions]
+      .filter((c) => words.every((w) => normalize(c.title).includes(w)))
+      .slice(0, 10);
     const results = search(index, query).map<Command>((e) => ({
       id: `${e.kind}:${e.id}`,
       icon: KIND_ICON[e.kind],

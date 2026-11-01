@@ -918,3 +918,45 @@ fn journal_has_one_entry_per_day_and_keeps_photos_when_an_entry_goes() {
         .unwrap();
     assert!(s.trip_graph(&copy).unwrap().journal_entries.is_empty(), "a new trip starts a new journal");
 }
+
+#[test]
+fn settlements_stay_between_travelers_of_the_trip_and_survive_an_import() {
+    let (mut s, dir) = store();
+    let t = trip(&mut s, "Portugal");
+    let other = trip(&mut s, "Iceland");
+    let anna = traveler(&mut s, &t, "Anna");
+    let ben = traveler(&mut s, &t, "Ben");
+    let stranger = traveler(&mut s, &other, "Cleo");
+    let settlement = |from: &str, to: &str, amount: i64| Settlement {
+        id: new_id(),
+        trip_id: t.clone(),
+        from_traveler_id: from.into(),
+        to_traveler_id: to.into(),
+        amount_minor: amount,
+        currency: "EUR".into(),
+        paid_on: "2027-06-20".into(),
+        notes: None,
+        created_at: NOW.into(),
+    };
+    s.save(Entity::Settlement(settlement(&ben, &anna, 4_300))).unwrap();
+    assert!(matches!(s.save(Entity::Settlement(settlement(&ben, &ben, 100))), Err(CoreError::Validation { .. })));
+    assert!(matches!(s.save(Entity::Settlement(settlement(&ben, &anna, 0))), Err(CoreError::Validation { .. })));
+    assert!(matches!(
+        s.save(Entity::Settlement(settlement(&ben, &stranger, 100))),
+        Err(CoreError::Validation { .. })
+    ));
+
+    let file = dir.path().join("trip.json");
+    s.export_trip(&t, &file).unwrap();
+    let copy = s.import_trip(&file, ImportMode::AsNew).unwrap();
+    let g = s.trip_graph(&copy).unwrap();
+    assert_eq!(g.settlements.len(), 1);
+    let names: Vec<_> = [&g.settlements[0].from_traveler_id, &g.settlements[0].to_traveler_id]
+        .iter()
+        .map(|id| g.travelers.iter().find(|x| &&x.id == id).map(|x| x.name.clone()))
+        .collect();
+    assert_eq!(names, [Some("Ben".to_string()), Some("Anna".to_string())], "references follow the new IDs");
+
+    s.delete(EntityKind::Traveler, &[ben]).unwrap();
+    assert!(s.trip_graph(&t).unwrap().settlements.is_empty(), "no settlement without its traveler");
+}

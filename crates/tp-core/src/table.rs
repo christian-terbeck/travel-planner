@@ -51,6 +51,7 @@ rows! {
     OpenNight => "open_nights" key "trip_id", "night";
     Document => "documents";
     JournalEntry => "journal_entries";
+    Settlement => "settlements";
     Note => "notes";
     ExchangeRate => "exchange_rates";
     ChangeLogEntry => "change_log";

@@ -1,6 +1,6 @@
-import { Pencil, Plus, Split, Trash2 } from "lucide-react";
-import { useState } from "react";
-import { Link } from "react-router";
+import { Pencil, Plus, Split, Trash2, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useRemove } from "@/api/queries";
 import type { Converted } from "@/domain/money";
 import type { Expense } from "@/domain/types";
@@ -12,6 +12,7 @@ import { useConfirm } from "@/ui/dialog";
 import { Certainty } from "@/ui/status";
 import { BudgetBars, SettlementCard } from "./budget/BudgetCards";
 import { ExpenseDialog, SplitDialog } from "./budget/ExpenseDialogs";
+import { QuickExpenseDialog } from "./budget/QuickExpenseDialog";
 import { useTrip } from "./TripLayout";
 
 export function BudgetView() {
@@ -28,6 +29,15 @@ export function BudgetView() {
   } | null>(null);
   const remove = useRemove();
   const confirm = useConfirm();
+  // Opened from the dashboard or the command palette with { quickExpense: true }.
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [quick, setQuick] = useState(false);
+  useEffect(() => {
+    if (!(location.state as { quickExpense?: boolean } | null)?.quickExpense) return;
+    setQuick(true);
+    navigate(".", { replace: true, state: null });
+  }, [location.state, navigate]);
 
   const money = (c: Converted) => (
     <span>
@@ -121,13 +131,18 @@ export function BudgetView() {
           title={t("budget.expenses")}
           subtitle={t("budget.expensesHint")}
           actions={
-            <Button
-              size="sm"
-              icon={<Plus className="size-3.5" />}
-              onClick={() => setExpense(newExpense(m.graph.trip.id, cur))}
-            >
-              {t("budget.addExpense")}
-            </Button>
+            <div className="flex gap-1.5">
+              <Button size="sm" icon={<Zap className="size-3.5" />} onClick={() => setQuick(true)}>
+                {t("quickExpense.button")}
+              </Button>
+              <Button
+                size="sm"
+                icon={<Plus className="size-3.5" />}
+                onClick={() => setExpense(newExpense(m.graph.trip.id, cur))}
+              >
+                {t("budget.addExpense")}
+              </Button>
+            </div>
           }
         />
         {m.graph.expenses.length === 0 ? (
@@ -209,6 +224,7 @@ export function BudgetView() {
       </p>
       {expense && <ExpenseDialog expense={expense} onClose={() => setExpense(null)} />}
       {split && <SplitDialog target={split} onClose={() => setSplit(null)} />}
+      {quick && <QuickExpenseDialog model={m} onClose={() => setQuick(false)} />}
     </div>
   );
 }

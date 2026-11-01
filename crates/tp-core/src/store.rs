@@ -37,6 +37,7 @@ pub enum Entity {
     Slot(Slot),
     Payment(Payment),
     Expense(Expense),
+    Settlement(Settlement),
     CostShare(CostShare),
     Task(Task),
     PackingItem(PackingItem),
@@ -62,6 +63,7 @@ pub enum EntityKind {
     Booking,
     Payment,
     Expense,
+    Settlement,
     CostShare,
     Scenario,
     Task,
@@ -248,6 +250,16 @@ impl Store {
                 table::upsert(&tx, &e)?;
                 e.trip_id
             }
+            Entity::Settlement(x) => {
+                x.validate()?;
+                same_trip(&x.trip_id, trip_of(&tx, "traveler", &x.from_traveler_id)?, "from_traveler_id")?;
+                same_trip(&x.trip_id, trip_of(&tx, "traveler", &x.to_traveler_id)?, "to_traveler_id")?;
+                if let Some(old) = table::find::<Settlement>(&tx, &x.id)? {
+                    same_trip(&x.trip_id, old.trip_id, "trip_id")?;
+                }
+                table::upsert(&tx, &x)?;
+                x.trip_id
+            }
             Entity::CostShare(c) => {
                 c.validate()?;
                 let trip = match (&c.booking_id, &c.expense_id) {
@@ -405,6 +417,7 @@ impl Store {
             EntityKind::Station => Some(del::<Station>(&tx, "station", key)?),
             EntityKind::Payment => Some(del::<Payment>(&tx, "payment", key)?),
             EntityKind::Expense => Some(del::<Expense>(&tx, "expense", key)?),
+            EntityKind::Settlement => Some(del::<Settlement>(&tx, "settlement", key)?),
             EntityKind::CostShare => Some(del::<CostShare>(&tx, "cost_share", key)?),
             EntityKind::Scenario => Some(del::<Scenario>(&tx, "scenario", key)?),
             EntityKind::Task => Some(del::<Task>(&tx, "task", key)?),
@@ -926,6 +939,7 @@ pub(crate) fn load_graph(conn: &Connection, trip: Trip) -> CoreResult<TripGraph>
         bookings: table::select(conn, &format!("id IN {BOOKINGS} ORDER BY created_at"), &id)?,
         payments: table::select(conn, &format!("booking_id IN {BOOKINGS} ORDER BY paid_on"), &id)?,
         expenses: table::select(conn, "trip_id = ? ORDER BY spent_on, created_at", &id)?,
+        settlements: table::select(conn, "trip_id = ? ORDER BY paid_on, created_at", &id)?,
         cost_shares: table::select(
             conn,
             &format!("booking_id IN {BOOKINGS} OR expense_id IN (SELECT id FROM expenses WHERE trip_id = ?)"),
@@ -957,6 +971,7 @@ fn table_of(kind: EntityKind) -> &'static str {
         EntityKind::Booking => Booking::TABLE,
         EntityKind::Payment => Payment::TABLE,
         EntityKind::Expense => Expense::TABLE,
+        EntityKind::Settlement => Settlement::TABLE,
         EntityKind::CostShare => CostShare::TABLE,
         EntityKind::Scenario => Scenario::TABLE,
         EntityKind::Task => Task::TABLE,
@@ -988,6 +1003,7 @@ pub(crate) fn trip_of(conn: &Connection, what: &str, id: &str) -> CoreResult<Str
             "SELECT t.trip_id FROM traveler_documents d JOIN travelers t ON t.id = d.traveler_id WHERE d.id = ?1"
         }
         "expense" => "SELECT trip_id FROM expenses WHERE id = ?1",
+        "settlement" => "SELECT trip_id FROM settlements WHERE id = ?1",
         "scenario" => "SELECT trip_id FROM scenarios WHERE id = ?1",
         "task" => "SELECT trip_id FROM tasks WHERE id = ?1",
         "note" => "SELECT trip_id FROM notes WHERE id = ?1",

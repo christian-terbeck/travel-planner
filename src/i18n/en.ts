@@ -38,6 +38,7 @@ const en = {
     pages: "Go to",
     recentTrips: "Recently changed trips",
     results: "Results",
+    actions: "Actions",
     kind: {
       trip: "Trip",
       slot: "Need",
@@ -1064,6 +1065,26 @@ const en = {
     equal: "equal",
     dialogTitle: "Split “{{title}}”",
     dialogHint: "Shares by weight, e.g. 2 : 1. Equal weights mean an equal split.",
+    markPaid: "Mark as paid",
+    recorded: "{{from}} paid {{to}}; the balances are updated",
+    done_one: "{{count}} settlement made",
+    done_other: "{{count}} settlements made",
+    deleteSettlement: "Delete settlement",
+    settlementDeleted: "Settlement deleted",
+  },
+  quickExpense: {
+    button: "Quick expense",
+    palette: "Record an expense – {{trip}}",
+    title: "Expense – {{trip}}",
+    hint: "Amount, what for, who paid and for whom. Saved as an actual expense.",
+    savedCount_one: "{{count}} expense saved. Next one:",
+    savedCount_other: "{{count}} expenses saved. Next one:",
+    what: "What for",
+    forWhom: "For whom",
+    nobody: "Choose at least one person.",
+    amountMissing: "Enter the amount.",
+    saveNext: "Save and next",
+    saved: "{{amount}} for {{title}} saved",
   },
   documents: {
     title: "Documents",
@@ -1382,6 +1403,8 @@ const en = {
     version: "Travel Planner {{version}}",
   },
   dashboard: {
+    onTheWay: "On the way",
+    dayOf: "Day {{day}} of {{days}}",
     welcomeTitle: "Welcome to Travel Planner",
     welcomeText:
       "Plan, compare and manage complete trips — from the first idea to the journey home. Everything stays on this computer.",

@@ -20,6 +20,7 @@ import type { PriceObservation } from "./PriceObservation";
 import type { RentalCarDetails } from "./RentalCarDetails";
 import type { Scenario } from "./Scenario";
 import type { ScenarioSelection } from "./ScenarioSelection";
+import type { Settlement } from "./Settlement";
 import type { Slot } from "./Slot";
 import type { Station } from "./Station";
 import type { Task } from "./Task";
@@ -42,4 +43,8 @@ packing_items: Array<PackingItem>, dismissed_warnings: Array<DismissedWarning>, 
 /**
  * Missing in exports made before the journal existed.
  */
-journal_entries: Array<JournalEntry>, notes: Array<Note>, change_log: Array<ChangeLogEntry>, };
+journal_entries: Array<JournalEntry>, 
+/**
+ * Missing in exports made before settlements existed.
+ */
+settlements: Array<Settlement>, notes: Array<Note>, change_log: Array<ChangeLogEntry>, };

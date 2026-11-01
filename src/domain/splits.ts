@@ -1,5 +1,6 @@
 // Cost splitting between travelers: who carries which share of the costs, who paid what, and
-// the transfers that settle the difference. Kept per currency unless rates allow conversion.
+// the transfers that settle the difference. Settlements already made count as paid by the giver
+// and as money back for the receiver. Kept per currency unless rates allow conversion.
 
 import { convert } from "./money";
 import type { CostShare, ExchangeRate, TripGraph } from "./types";
@@ -94,6 +95,13 @@ export function settle(g: TripGraph, currency: string, rates: ExchangeRate[]): S
     if (v === null) continue;
     if (e.paid_by && paid.has(e.paid_by)) paid.set(e.paid_by, (paid.get(e.paid_by) ?? 0) + v);
     else unattributed += v;
+  }
+  // Money handed over between travelers: the giver has paid more, the receiver less.
+  for (const x of g.settlements) {
+    const v = inCurrency(x.amount_minor, x.currency);
+    if (v === null) continue;
+    if (paid.has(x.from_traveler_id)) paid.set(x.from_traveler_id, (paid.get(x.from_traveler_id) ?? 0) + v);
+    if (paid.has(x.to_traveler_id)) paid.set(x.to_traveler_id, (paid.get(x.to_traveler_id) ?? 0) - v);
   }
   for (const c of costs) {
     const v = inCurrency(c.minor, c.currency);
