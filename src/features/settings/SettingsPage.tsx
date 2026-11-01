@@ -44,7 +44,18 @@ function GeneralCard() {
   return (
     <Card>
       <CardHeader icon={<Globe className="size-4" />} title={t("settings.general")} />
-      <div className="grid grid-cols-3 gap-4 p-4">
+      <div className="grid grid-cols-4 gap-4 p-4">
+        <Field label={t("settings.language")} htmlFor="set-lang">
+          <Select
+            id="set-lang"
+            value={prefs.languageSetting}
+            onChange={(e) => set("language", nil(e.target.value))}
+          >
+            <option value="">{t("settings.languageAuto")}</option>
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+          </Select>
+        </Field>
         <Field label={t("settings.locale")} hint={t("settings.localeHint")} htmlFor="set-locale">
           <Select id="set-locale" value={prefs.locale} onChange={(e) => set("locale", e.target.value)}>
             {[...new Set([prefs.locale, ...LOCALES])].map((l) => (
@@ -70,7 +81,6 @@ function GeneralCard() {
           />
         </Field>
       </div>
-      <p className="px-4 pb-4 text-fg-3 text-xs">{t("settings.languageNote")}</p>
     </Card>
   );
 }

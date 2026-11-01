@@ -3,7 +3,9 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SLOT_KINDS } from "@/lib/rows";
+import de from "./de";
 import en from "./en";
+import { uiLanguage } from "./index";
 
 function files(dir: string): string[] {
   return readdirSync(dir).flatMap((f) => {
@@ -102,5 +104,30 @@ describe("translations", () => {
       .flatMap(([g, vs]) => vs.map((v) => `${g}.${v}`))
       .filter((k) => !has(k));
     expect(missing).toEqual([]);
+  });
+});
+
+describe("german", () => {
+  function leaves(node: unknown, prefix = ""): [string, string][] {
+    if (typeof node === "string") return [[prefix, node]];
+    return Object.entries(node as Record<string, unknown>).flatMap(([k, v]) =>
+      leaves(v, prefix ? `${prefix}.${k}` : k),
+    );
+  }
+  const vars = (s: string) => [...s.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]).sort();
+
+  it("uses the same placeholders as the English texts", () => {
+    const german = new Map(leaves(de));
+    const wrong = leaves(en)
+      .filter(([k, v]) => JSON.stringify(vars(v)) !== JSON.stringify(vars(german.get(k) ?? "")))
+      .map(([k]) => k);
+    expect(wrong).toEqual([]);
+  });
+
+  it("is chosen for German formats unless set otherwise", () => {
+    expect(uiLanguage(null, "de-AT")).toBe("de");
+    expect(uiLanguage("", "en-GB")).toBe("en");
+    expect(uiLanguage("en", "de-DE")).toBe("en");
+    expect(uiLanguage("de", "fr-FR")).toBe("de");
   });
 });

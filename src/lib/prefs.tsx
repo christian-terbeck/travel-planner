@@ -6,6 +6,7 @@ import { type CostSum, convertTotals, formatMoney, type Money, type Totals } fro
 import { defaultReminderSettings, type ReminderSettings } from "@/domain/reminders";
 import { type Instant, type PlainDate, parseDate, systemTimeZone, Temporal, zoned } from "@/domain/time";
 import type { ExchangeRate } from "@/domain/types";
+import i18n, { type Language, uiLanguage } from "@/i18n";
 
 export type Theme = "system" | "light" | "dark";
 
@@ -20,6 +21,9 @@ export interface RoutingPrefs {
 
 export interface Prefs {
   locale: string;
+  /** UI language in use, and the stored choice ("" = follow the formats). */
+  language: Language;
+  languageSetting: string;
   theme: Theme;
   /** Default currency for new trips and cross-trip summaries. */
   currency: string;
@@ -35,6 +39,8 @@ const defaultLocale = typeof navigator !== "undefined" ? navigator.language || "
 
 const PrefsCtx = createContext<Prefs>({
   locale: defaultLocale,
+  language: uiLanguage(null, defaultLocale),
+  languageSetting: "",
   theme: "system",
   currency: "EUR",
   reminders: defaultReminderSettings,
@@ -58,8 +64,11 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
   const info = useAppInfo();
   const prefs = useMemo<Prefs>(() => {
     const s = new Map(info.data?.settings ?? []);
+    const locale = s.get("locale") || defaultLocale;
     return {
-      locale: s.get("locale") || defaultLocale,
+      locale,
+      language: uiLanguage(s.get("language"), locale),
+      languageSetting: s.get("language") ?? "",
       theme: (s.get("theme") as Theme) || "system",
       currency: s.get("currency") || "EUR",
       reminders: parseReminders(s.get("reminders")),
@@ -86,8 +95,9 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
   }, [prefs.theme]);
 
   useEffect(() => {
-    document.documentElement.lang = prefs.locale;
-  }, [prefs.locale]);
+    document.documentElement.lang = prefs.language;
+    void i18n.changeLanguage(prefs.language);
+  }, [prefs.language]);
 
   return <PrefsCtx.Provider value={prefs}>{children}</PrefsCtx.Provider>;
 }

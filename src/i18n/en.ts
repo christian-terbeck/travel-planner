@@ -210,7 +210,7 @@ const en = {
   },
   period: {
     source: {
-      transport: "from flights",
+      transport: "from transport",
       accommodation: "from stays",
       items: "from planned items",
       preferred: "preferred dates",
@@ -1006,7 +1006,8 @@ const en = {
     themeDark: "Dark",
     currency: "Default currency",
     currencyHint: "For new trips and cross-trip totals",
-    languageNote: "The interface is in English for now; German is planned.",
+    language: "Language",
+    languageAuto: "Like the formats",
     reminders: "Reminders",
     remindersHint: "How many days in advance reminders appear in the app",
     reminder: {
@@ -1159,5 +1160,9 @@ const en = {
     legend: { airport: "Airport", stay: "Stay", activity: "Activity" },
   },
 };
+
+/** Shape every translation must have: the same keys as the English texts. */
+type Texts<T> = { [K in keyof T]: T[K] extends string ? string : Texts<T[K]> };
+export type Translation = Texts<typeof en>;
 
 export default en;

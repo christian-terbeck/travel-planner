@@ -21,7 +21,7 @@ these decisions.
 | Road routes | Optional, **off by default**: ground legs are routed by an OSRM server (default: free FOSSGIS server `routing.openstreetmap.de`, OpenStreetMap data; URL configurable). Only the leg's coordinates are sent, by the Rust core (CSP unchanged), ≤ 1 request/s, own User-Agent; answers (incl. "no road") are cached in `road_routes`, failures are retried. OSM attribution and "fix the map" link on the map | Exact road km, driving time and road lines without an API key; offline after the first fetch |
 | Stay locations | Optional lat/lon, parsed offline from pasted coordinates or Google Maps/OSM links | Address geocoding needs an online service |
 | Linting | Biome (lint + format) | typescript-eslint does not support TypeScript 7 |
-| UI language | English, every string through i18next keys | German later is translation work only |
+| UI language | English and German, every string through i18next keys; the language follows the formats (`de-*` → German) unless chosen in Settings. German texts are typed against the English ones and tested for matching placeholders | Translations cannot miss keys or variables |
 
 ## 2. Technology
 
