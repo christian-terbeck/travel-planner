@@ -174,8 +174,18 @@ ExchangeRate* (explicit rate + date + source), PackingTemplate* (reusable lists)
 | M19 | Travel companion export | One offline HTML file for the phone |
 | M20 | Optional confirmation import with Claude | A confirmation pre-fills the booking forms |
 | M21 | UI tests | Booking lifecycle runs in the real screens (jsdom) |
+| M22 | Undo deletions | Every delete can be undone from its toast during the session |
+| M23 | Command palette and search | Ctrl+K finds trips, bookings, references, places, notes and opens pages |
+| M24 | Copy a trip | A trip is planned again with moved dates, without bookings |
+| M25 | Automatic backups | A daily backup lands in a chosen folder, the oldest are pruned |
+| M26 | Packing lists | Lists per trip and traveler, from suggested or saved lists |
+| M27 | Travel documents | Expiring passports, IDs and visas show as warnings and reminders |
+| M28 | Weather | Forecast, last year's or measured weather at the stays (optional) |
+| M29 | Update check | A newer GitHub release is announced (optional) |
+| M30 | Trip review | Claude points out gaps, costs, timing and risks (optional) |
+| M31 | Smaller screens, accessibility | Settings, map and budget split; labels translated; skip link |
 
 ## 5. Status
 
-M0–M10 and M12–M21 are implemented. For M11, every acceptance criterion is covered by automated
+M0–M10 and M12–M31 are implemented. For M11, every acceptance criterion is covered by automated
 tests ([ACCEPTANCE.md](ACCEPTANCE.md)); the manual run on Windows listed there is still pending.

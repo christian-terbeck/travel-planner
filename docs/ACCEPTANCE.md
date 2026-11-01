@@ -51,3 +51,13 @@ untouched):
     values before saving.
 11. Export the trip (JSON, ICS, HTML, travel companion, CSV); open the companion file on a phone.
 12. Create a backup, change something, restore the backup; close and reopen the app.
+13. Delete an alternative, an expense and a whole trip; undo each from the toast.
+14. Press Ctrl+K: find a booking by its reference and a stay by part of its name; open “New trip”.
+15. Copy a trip one year ahead: dates moved, no bookings, packing list unpacked.
+16. Settings → Data: choose a backup folder, “Back up now”; restart the next day and check that a
+    new automatic backup appears.
+17. Packing list: add the beach list for one traveler, pack items, “Unpack all”, save as own list.
+18. Add a passport that expires a month after the trip: the six-month hint appears in the overview.
+19. Turn on the weather: a stay with coordinates shows forecast or last year's weather.
+20. Turn on the update check; “Check now” reports the installed version as the latest (or the release).
+21. Optional, with an Anthropic API key: turn on trip reviews, look at “Show what is sent”, review a trip.
