@@ -291,7 +291,8 @@ function RemindersCard() {
 
 function AiImportOptions() {
   const t = useT();
-  const { aiImport } = usePrefs();
+  const { aiImport, aiReview } = usePrefs();
+  const anyAi = aiImport || aiReview;
   const run = useAction();
   const [stored, setStored] = useState<boolean | null>(null);
   const [key, setKey] = useState("");
@@ -313,6 +314,12 @@ function AiImportOptions() {
         onChange={(e) => run(() => api.setSetting("ai_import_enabled", e.target.checked ? "1" : null))}
       />
       <p className="pl-6 text-fg-3 text-xs">{t("settings.ai.hint")}</p>
+      <Checkbox
+        label={<span className="font-medium">{t("settings.ai.reviewEnable")}</span>}
+        checked={aiReview}
+        onChange={(e) => run(() => api.setSetting("ai_review_enabled", e.target.checked ? "1" : null))}
+      />
+      <p className="pl-6 text-fg-3 text-xs">{t("settings.ai.reviewHint")}</p>
       <div className="grid grid-cols-[1fr_auto_auto] items-end gap-2 pl-6">
         <Field
           label={t("settings.ai.key")}
@@ -324,12 +331,12 @@ function AiImportOptions() {
             type="password"
             autoComplete="off"
             value={key}
-            disabled={!aiImport}
+            disabled={!anyAi}
             placeholder={stored ? "••••••••" : "sk-ant-…"}
             onChange={(e) => setKey(e.target.value)}
           />
         </Field>
-        <Button disabled={!aiImport || !key.trim()} onClick={() => saveKey(key.trim())}>
+        <Button disabled={!anyAi || !key.trim()} onClick={() => saveKey(key.trim())}>
           {t("common.save")}
         </Button>
         <Button variant="ghost" disabled={!stored} onClick={() => saveKey(null)}>

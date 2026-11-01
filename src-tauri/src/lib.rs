@@ -10,6 +10,7 @@ use tp_core::model::{Booking, CancellationPolicy, Document, OptionBundle, Scenar
 use tp_core::confirmation::{self, ExtractedBooking};
 use tp_core::geocoding::{self, Place};
 use tp_core::rates;
+use tp_core::review::{self, TripReview};
 use tp_core::routing::{self, RoadQuery, RoadResult};
 use tp_core::store::{AppInfo, BookingInput, CancelInput, Entity, EntityKind};
 use tp_core::updates::{self, UpdateCheck};
@@ -389,6 +390,22 @@ async fn extract_confirmation(app: tauri::AppHandle, path: String, language: Str
     .map_err(err)
 }
 
+/// Asks Claude to review a trip summary built by the UI, when the user enabled it and stored a
+/// key. Returns advice only; nothing is saved.
+#[tauri::command]
+async fn review_trip(app: tauri::AppHandle, input: String, language: String) -> CmdResult<TripReview> {
+    let state = app.state::<AppState>();
+    if !with(&state, |s| s.ai_review_enabled())? {
+        return Err(err(CoreError::rule("ai_review_disabled", "reviewing trips with Claude is turned off")));
+    }
+    let key = ai_key()?.ok_or_else(|| err(CoreError::rule("ai_no_key", "no API key stored")))?;
+    let agent = user_agent(&app);
+    tauri::async_runtime::spawn_blocking(move || review::review(&key, &input, &language, &agent))
+        .await
+        .map_err(|e| err(CoreError::rule("busy", e.to_string())))?
+        .map_err(err)
+}
+
 #[tauri::command]
 fn clear_road_cache(state: State<'_, AppState>) -> CmdResult<usize> {
     with(&state, |s| s.clear_road_cache())
@@ -562,6 +579,7 @@ pub fn run() {
             ai_key_stored,
             set_ai_key,
             extract_confirmation,
+            review_trip,
             notify,
             autostart_enabled,
             set_autostart,

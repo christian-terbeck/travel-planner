@@ -9,6 +9,7 @@ pub mod error;
 pub mod geocoding;
 pub mod model;
 pub mod rates;
+pub mod review;
 pub mod routing;
 pub mod store;
 pub mod table;

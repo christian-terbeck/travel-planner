@@ -158,6 +158,31 @@ const de: Translation = {
     skip: "Diese Version überspringen",
     available: "Version {{version}} verfügbar",
   },
+  review: {
+    title: "Reise-Check mit Claude",
+    hint: "Zeigt, was im aktuellen Plan fehlt, teuer, ungünstig getaktet oder riskant ist.",
+    start: "Reise prüfen",
+    again: "Erneut prüfen",
+    busy: "Claude prüft den Plan. Das kann eine Minute dauern.",
+    nothing: "Nichts anzumerken.",
+    assumptions: "Grundlage:",
+    privacy:
+      "Wird beim Start an die API von Anthropic gesendet: der Plan mit Titeln, Orten, Daten, Preisen und Bedingungen; Personen nur als „Person 1, 2 …“; keine Buchungsnummern, Notizen, Kontakte oder Dateien. Kostet ein paar Cent auf deinem API-Konto.",
+    showInput: "Gesendete Daten zeigen",
+    hideInput: "Ausblenden",
+    kind: {
+      missing: "Fehlt",
+      cost: "Kosten",
+      timing: "Zeitplan",
+      risk: "Risiko",
+      idea: "Idee",
+    },
+    importance: {
+      high: "Wichtig",
+      medium: "Ansehen",
+      low: "Nebensache",
+    },
+  },
   common: {
     back: "Zurück",
     cancel: "Abbrechen",
@@ -225,6 +250,7 @@ const de: Translation = {
     autostart_failed: "Der Start mit Windows konnte nicht geändert werden.",
     ai_disabled: "Das Einlesen von Bestätigungen mit Claude ist in den Einstellungen ausgeschaltet.",
     ai_no_key: "Hinterlege zuerst einen Anthropic-API-Schlüssel in den Einstellungen.",
+    ai_review_disabled: "Das Prüfen von Reisen mit Claude ist in den Einstellungen ausgeschaltet.",
     ai_auth: "Der Anthropic-API-Schlüssel wurde nicht akzeptiert. Prüfe ihn in den Einstellungen.",
     ai_refused: "Claude hat das Lesen dieser Datei abgelehnt. Trag die Buchung bitte von Hand ein.",
     ai_failed:
@@ -1283,6 +1309,9 @@ const de: Translation = {
     ai: {
       enable: "Buchungsbestätigungen mit Claude einlesen",
       hint: "Fügt bei den Buchungen „Bestätigung importieren“ hinzu. Nur die gewählte Datei wird an die API von Anthropic (Claude Opus 5.5) gesendet, und nur wenn du einen Import startest. Das kostet ein paar Cent pro Datei über dein eigenes API-Konto. Lehnt Claude eine Datei ab, wird die Anfrage mit dem von Anthropic empfohlenen Ersatzmodell wiederholt.",
+      reviewEnable: "Reisen mit Claude prüfen",
+      reviewHint:
+        "Fügt in der Übersicht einer Reise „Reise prüfen“ hinzu. Eine Zusammenfassung des Plans (ohne Namen von Personen, Buchungsnummern, Notizen oder Dateien) wird nur beim Start einer Prüfung an die API von Anthropic (Claude Opus 5.5) gesendet; das kostet ein paar Cent pro Prüfung auf deinem eigenen API-Konto. Nutzt den Schlüssel unten.",
       key: "Anthropic-API-Schlüssel",
       keyHint:
         "Wird in der Windows-Anmeldeinformationsverwaltung gespeichert, nicht in den App-Daten oder Sicherungen.",

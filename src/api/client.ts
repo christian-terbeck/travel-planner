@@ -23,6 +23,7 @@ import type { RoadResult } from "./bindings/RoadResult";
 import type { Scenario } from "./bindings/Scenario";
 import type { ScenarioSelection } from "./bindings/ScenarioSelection";
 import type { TripGraph } from "./bindings/TripGraph";
+import type { TripReview } from "./bindings/TripReview";
 import type { UpdateCheck } from "./bindings/UpdateCheck";
 import type { WeatherQuery } from "./bindings/WeatherQuery";
 import type { WeatherResult } from "./bindings/WeatherResult";
@@ -105,6 +106,7 @@ export const api = {
   setAiKey: (key: string | null) => call<void>("set_ai_key", { key }),
   extractConfirmation: (path: string, language: string) =>
     call<ExtractedBooking>("extract_confirmation", { path, language }),
+  reviewTrip: (input: string, language: string) => call<TripReview>("review_trip", { input, language }),
   notify: (title: string, body: string) => call<void>("notify", { title, body }),
   autostartEnabled: () => call<boolean>("autostart_enabled"),
   setAutostart: (enabled: boolean) => call<void>("set_autostart", { enabled }),

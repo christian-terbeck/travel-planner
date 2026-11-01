@@ -23,6 +23,7 @@ import { Dialog } from "@/ui/dialog";
 import { DateInput } from "@/ui/inputs";
 import { Certainty, SeverityIcon } from "@/ui/status";
 import { useRoute } from "./MapView";
+import { ReviewCard } from "./ReviewCard";
 import { TravelersCard } from "./TravelersCard";
 import { useTrip } from "./TripLayout";
 import { WeatherCard } from "./WeatherCard";
@@ -117,6 +118,7 @@ export function OverviewView() {
             <WarningList model={m} warnings={plan.warnings} />
             <DismissedList model={m} />
           </Card>
+          <ReviewCard />
         </div>
         <div className="flex flex-col gap-6">
           <Card>

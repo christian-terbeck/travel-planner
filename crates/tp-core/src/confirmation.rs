@@ -128,7 +128,7 @@ fn nullable(t: &str) -> Value {
     json!({ "anyOf": [{ "type": t }, { "type": "null" }] })
 }
 
-fn object(fields: &[(&str, Value)]) -> Value {
+pub(crate) fn object(fields: &[(&str, Value)]) -> Value {
     let props: serde_json::Map<String, Value> = fields.iter().map(|(k, v)| ((*k).to_string(), v.clone())).collect();
     let required: Vec<&str> = fields.iter().map(|(k, _)| *k).collect();
     json!({ "type": "object", "properties": props, "required": required, "additionalProperties": false })
@@ -271,6 +271,13 @@ pub fn request_body(file: Value, language: &str) -> Value {
 
 /// Reads the answer: the JSON text block, after checking why the model stopped.
 pub fn parse_response(status: u16, body: &str) -> CoreResult<ExtractedBooking> {
+    let text = answer_text(status, body, "the model declined to read this file")?;
+    serde_json::from_str(&text).map_err(|_| CoreError::rule("ai_failed", "the answer did not match the expected format"))
+}
+
+/// The final text block of a Messages API answer, after checking the status and why the model
+/// stopped. Shared by every feature that asks Claude.
+pub(crate) fn answer_text(status: u16, body: &str, refusal: &str) -> CoreResult<String> {
     let v: Value = serde_json::from_str(body).map_err(|_| CoreError::rule("ai_failed", "unexpected answer"))?;
     if status == 401 || status == 403 {
         return Err(CoreError::rule("ai_auth", "the API key was not accepted"));
@@ -280,29 +287,27 @@ pub fn parse_response(status: u16, body: &str) -> CoreResult<ExtractedBooking> {
         return Err(CoreError::rule("ai_failed", format!("HTTP {status}: {msg}")));
     }
     match v.get("stop_reason").and_then(Value::as_str) {
-        Some("refusal") => return Err(CoreError::rule("ai_refused", "the model declined to read this file")),
+        Some("refusal") => return Err(CoreError::rule("ai_refused", refusal.to_string())),
         Some("max_tokens") => return Err(CoreError::rule("ai_failed", "the answer was cut off")),
         _ => {}
     }
-    let text = v
-        .get("content")
+    v.get("content")
         .and_then(Value::as_array)
         .and_then(|blocks| blocks.iter().rev().find(|b| b.get("type").and_then(Value::as_str) == Some("text")))
         .and_then(|b| b.get("text").and_then(Value::as_str))
-        .ok_or_else(|| CoreError::rule("ai_failed", "no answer text"))?;
-    serde_json::from_str(text).map_err(|_| CoreError::rule("ai_failed", "the answer did not match the expected format"))
+        .map(str::to_string)
+        .ok_or_else(|| CoreError::rule("ai_failed", "no answer text"))
 }
 
-/// Sends the file to Claude and returns the proposal (blocking).
-pub fn extract(api_key: &str, path: &Path, language: &str, user_agent: &str) -> CoreResult<ExtractedBooking> {
-    let body = request_body(content_block(path)?, language);
+/// Posts a request to the Messages API (blocking) and returns status and body.
+pub(crate) fn send(api_key: &str, body: &Value, user_agent: &str) -> CoreResult<(u16, String)> {
     let agent: ureq::Agent = ureq::Agent::config_builder()
         .timeout_global(Some(TIMEOUT))
         .user_agent(user_agent)
         .http_status_as_error(false)
         .build()
         .into();
-    let (status, text) = agent
+    agent
         .post(API_URL)
         .header("x-api-key", api_key)
         .header("anthropic-version", API_VERSION)
@@ -313,7 +318,13 @@ pub fn extract(api_key: &str, path: &Path, language: &str, user_agent: &str) -> 
             let status = r.status().as_u16();
             r.body_mut().read_to_string().map(|t| (status, t))
         })
-        .map_err(|e| CoreError::rule("online_failed", e.to_string()))?;
+        .map_err(|e| CoreError::rule("online_failed", e.to_string()))
+}
+
+/// Sends the file to Claude and returns the proposal (blocking).
+pub fn extract(api_key: &str, path: &Path, language: &str, user_agent: &str) -> CoreResult<ExtractedBooking> {
+    let body = request_body(content_block(path)?, language);
+    let (status, text) = send(api_key, &body, user_agent)?;
     parse_response(status, &text)
 }
 

@@ -48,6 +48,8 @@ export interface Prefs {
   ecbFetchedAt: string | null;
   /** Booking confirmations may be sent to Claude for reading. */
   aiImport: boolean;
+  /** Trip reviews with Claude (same API key as the import). */
+  aiReview: boolean;
   dataDir: string;
   /** Daily backups into a folder of the user's choice; off without a folder. */
   autoBackup: { dir: string | null; keep: number; last: string | null; error: string | null };
@@ -75,6 +77,7 @@ const PrefsCtx = createContext<Prefs>({
   ecbRates: false,
   ecbFetchedAt: null,
   aiImport: false,
+  aiReview: false,
   dataDir: "",
   autoBackup: { dir: null, keep: 10, last: null, error: null },
   ready: false,
@@ -129,6 +132,7 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
       ecbRates: s.get("ecb_rates_enabled") === "1",
       ecbFetchedAt: s.get("ecb_rates_fetched_at") ?? null,
       aiImport: s.get("ai_import_enabled") === "1",
+      aiReview: s.get("ai_review_enabled") === "1",
       dataDir: info.data?.data_dir ?? "",
       autoBackup: {
         dir: s.get("auto_backup_dir")?.trim() || null,

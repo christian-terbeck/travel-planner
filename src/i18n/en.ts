@@ -154,6 +154,31 @@ const en = {
     skip: "Skip this version",
     available: "Version {{version}} available",
   },
+  review: {
+    title: "Trip review by Claude",
+    hint: "Points out what is missing, costly, badly timed or risky in the current plan.",
+    start: "Review trip",
+    again: "Review again",
+    busy: "Claude is reviewing the plan. This can take a minute.",
+    nothing: "Nothing to point out.",
+    assumptions: "Based on:",
+    privacy:
+      "Sent to Anthropic's API when you start a review: the plan with titles, places, dates, prices and terms; people only as “Person 1, 2 …”; no booking references, notes, contacts or files. Costs a few cents on your API account.",
+    showInput: "Show what is sent",
+    hideInput: "Hide",
+    kind: {
+      missing: "Missing",
+      cost: "Cost",
+      timing: "Timing",
+      risk: "Risk",
+      idea: "Idea",
+    },
+    importance: {
+      high: "Important",
+      medium: "Worth a look",
+      low: "Minor",
+    },
+  },
   common: {
     back: "Back",
     cancel: "Cancel",
@@ -218,6 +243,7 @@ const en = {
     autostart_failed: "Starting with Windows could not be changed.",
     ai_disabled: "Reading confirmations with Claude is turned off in Settings.",
     ai_no_key: "Store an Anthropic API key in Settings first.",
+    ai_review_disabled: "Reviewing trips with Claude is turned off in Settings.",
     ai_auth: "The Anthropic API key was not accepted. Check it in Settings.",
     ai_refused: "Claude declined to read this file. Enter the booking by hand instead.",
     ai_failed: "Claude could not read the confirmation. Try again or enter the booking by hand.",
@@ -1267,6 +1293,9 @@ const en = {
     ai: {
       enable: "Read booking confirmations with Claude",
       hint: "Adds “Import confirmation” to the bookings. Only the file you pick is sent to Anthropic's API (Claude Opus 5.5), and only when you start an import. It costs a few cents per file on your own API account. If Claude declines a file, the request is retried on Anthropic's recommended fallback model.",
+      reviewEnable: "Review trips with Claude",
+      reviewHint:
+        "Adds “Review trip” to a trip's overview. A summary of the plan (without names of people, booking references, notes or files) is sent to Anthropic's API (Claude Opus 5.5) only when you start a review; it costs a few cents per review on your own API account. Uses the key below.",
       key: "Anthropic API key",
       keyHint: "Kept in the Windows Credential Manager, not in the app's data or backups.",
       keyStored: "A key is stored in the Windows Credential Manager.",
