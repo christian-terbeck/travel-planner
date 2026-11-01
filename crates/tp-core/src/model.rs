@@ -412,6 +412,20 @@ pub struct TravelerDocument {
     pub notes: Option<String>,
 }
 
+/// A traveler's membership in a loyalty or frequent flyer programme.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct LoyaltyMembership {
+    pub id: String,
+    pub traveler_id: String,
+    pub program: String,
+    /// Airline, hotel chain or company the programme belongs to, for matching bookings.
+    pub provider: Option<String>,
+    pub number: String,
+    pub tier: Option<String>,
+    pub notes: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct PackingItem {
@@ -556,6 +570,9 @@ pub struct TripGraph {
     /// Missing in exports made before travel documents existed.
     #[serde(default)]
     pub traveler_documents: Vec<TravelerDocument>,
+    /// Missing in exports made before loyalty programmes existed.
+    #[serde(default)]
+    pub loyalty_memberships: Vec<LoyaltyMembership>,
     pub stations: Vec<Station>,
     pub slots: Vec<Slot>,
     pub options: Vec<PlanOption>,

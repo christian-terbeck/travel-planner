@@ -6,6 +6,7 @@ import type { TFunction } from "i18next";
 import { itemPosition } from "@/domain/geo";
 import { MODE_SYMBOL, type PlanItem, segmentFrom, segmentTo } from "@/domain/items";
 import { compareDate, dateRange, type PlainDate } from "@/domain/time";
+import { brandSource, membershipsFor } from "./loyalty";
 import type { TripModel } from "./model";
 import type { makeFormat } from "./prefs";
 
@@ -161,7 +162,13 @@ ${stay ? `<div class="night">🌙 ${esc(stay.option.title)}</div>` : gap ? `<div
     .map(({ i, b }) => {
       const c = m.cancellation(b);
       const deadline = c.deadline && c.minutesLeft !== null && c.minutesLeft > 0;
-      return `<li><b>${esc(i.option.title)}</b><br>${[`<span class="ref">${esc(b.reference ?? "—")}</span>`, ...[b.provider ?? i.option.provider, b.platform].filter(Boolean).map(esc)].join(" · ")}${b.contact ? `<br>☎ ${esc(b.contact)}` : ""}${deadline ? `<br><small>${esc(t("cancellation.state.free"))} ${esc(t("cancellation.until", { date: f.dateTime(c.deadline, c.policy?.deadline_tz ?? m.tz) }))}</small>` : ""}</li>`;
+      const loyalty = membershipsFor(brandSource(i), g)
+        .map(
+          ({ membership: l, travelerName }) =>
+            `${esc(travelerName)} · ${esc(l.program)} <span class="ref">${esc(l.number)}</span>`,
+        )
+        .join("<br>");
+      return `<li><b>${esc(i.option.title)}</b><br>${[`<span class="ref">${esc(b.reference ?? "—")}</span>`, ...[b.provider ?? i.option.provider, b.platform].filter(Boolean).map(esc)].join(" · ")}${b.contact ? `<br>☎ ${esc(b.contact)}` : ""}${loyalty ? `<br><small>${loyalty}</small>` : ""}${deadline ? `<br><small>${esc(t("cancellation.state.free"))} ${esc(t("cancellation.until", { date: f.dateTime(c.deadline, c.policy?.deadline_tz ?? m.tz) }))}</small>` : ""}</li>`;
     })
     .join("");
   const tasks = g.tasks

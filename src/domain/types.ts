@@ -18,6 +18,7 @@ export type { ExpenseCategory } from "@/api/bindings/ExpenseCategory";
 export type { ExpenseKind } from "@/api/bindings/ExpenseKind";
 export type { FlightSegment } from "@/api/bindings/FlightSegment";
 export type { JournalEntry } from "@/api/bindings/JournalEntry";
+export type { LoyaltyMembership } from "@/api/bindings/LoyaltyMembership";
 export type { Note } from "@/api/bindings/Note";
 export type { ObservationKind } from "@/api/bindings/ObservationKind";
 export type { OpenNight } from "@/api/bindings/OpenNight";

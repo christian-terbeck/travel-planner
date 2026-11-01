@@ -13,6 +13,7 @@ import { Button, Checkbox, Field, Input, Select, Textarea } from "@/ui/core";
 import { Dialog } from "@/ui/dialog";
 import { DateInput, MoneyInput } from "@/ui/inputs";
 import { ProviderInput } from "@/ui/provider";
+import { LoyaltyHint } from "./LoyaltyHint";
 import { PolicyEditor } from "./PolicyEditor";
 import { useTrip } from "./TripLayout";
 
@@ -166,6 +167,14 @@ export function BookingDialog({
           </div>
         )}
 
+        <LoyaltyHint
+          src={{
+            provider: booking.provider,
+            platform: booking.platform,
+            url: booking.url,
+            segments: source?.segments ?? [],
+          }}
+        />
         <div className="grid grid-cols-3 gap-3">
           <Field label={t("booking.price")} hint={t("booking.priceHint")} htmlFor="bk-price">
             <MoneyInput

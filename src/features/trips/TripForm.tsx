@@ -2,7 +2,14 @@ import { Plus, Trash2 } from "lucide-react";
 import { useEffect, useId, useMemo, useState } from "react";
 import { api } from "@/api/client";
 import { useAction, useTrips } from "@/api/queries";
-import type { Traveler, TravelerCategory, TravelerDocument, Trip, TripGraph } from "@/domain/types";
+import type {
+  LoyaltyMembership,
+  Traveler,
+  TravelerCategory,
+  TravelerDocument,
+  Trip,
+  TripGraph,
+} from "@/domain/types";
 import { useT } from "@/i18n";
 import { usePrefs } from "@/lib/prefs";
 import { newId, newTraveler, newTrip, nil } from "@/lib/rows";
@@ -66,9 +73,11 @@ export function TripForm({
               birth_date: tr.birth_date ?? same?.traveler.birth_date ?? null,
             },
           });
-          // Someone who travelled before brings their documents along.
+          // Someone who travelled before brings their documents and loyalty numbers along.
           for (const d of same?.documents ?? [])
             await api.save({ type: "traveler_document", row: { ...d, id: newId(), traveler_id: tr.id } });
+          for (const l of same?.loyalty ?? [])
+            await api.save({ type: "loyalty_membership", row: { ...l, id: newId(), traveler_id: tr.id } });
         }
         for (const old of graph?.travelers ?? []) {
           if (!keep.some((k) => k.id === old.id)) await api.remove("traveler", old.id);
@@ -372,7 +381,10 @@ export function TripForm({
 function useKnownTravelers(tripId: string) {
   const trips = useTrips();
   return useMemo(() => {
-    const out = new Map<string, { traveler: Traveler; documents: TravelerDocument[] }>();
+    const out = new Map<
+      string,
+      { traveler: Traveler; documents: TravelerDocument[]; loyalty: LoyaltyMembership[] }
+    >();
     const graphs = [...(trips.data ?? [])].sort((a, b) => b.trip.updated_at.localeCompare(a.trip.updated_at));
     for (const g of graphs) {
       if (g.trip.id === tripId) continue;
@@ -382,6 +394,7 @@ function useKnownTravelers(tripId: string) {
           out.set(key, {
             traveler: p,
             documents: g.traveler_documents.filter((d) => d.traveler_id === p.id),
+            loyalty: g.loyalty_memberships.filter((l) => l.traveler_id === p.id),
           });
       }
     }

@@ -23,6 +23,25 @@ function trip() {
     ["LIS", "FRA", "2027-06-14T18:00", "2027-06-14T22:00"],
   ]);
   addBooking(g, flight, 30_000, { reference: "ABC<123>" });
+  for (const seg of g.flight_segments) seg.flight_number = "TP 571";
+  g.travelers.push({
+    id: "anna",
+    trip_id: g.trip.id,
+    name: "Anna",
+    category: "adult",
+    birth_date: null,
+    notes: null,
+    sort: 0,
+  });
+  g.loyalty_memberships.push({
+    id: "l1",
+    traveler_id: "anna",
+    program: "TAP Miles&Go",
+    provider: null,
+    number: "TP 123 456",
+    tier: null,
+    notes: null,
+  });
   const stay = addStay(g, addSlot(g, "accommodation"), 40_000, "2027-06-10", "2027-06-14");
   const a = g.accommodation_details.find((d) => d.option_id === stay.id);
   if (a) Object.assign(a, { address: "Rua & Co 1", lat: 38.71, lon: -9.13 });
@@ -57,6 +76,7 @@ describe("travel companion", () => {
     expect(out).toContain("geo:38.71,-9.13");
     expect(out).toContain('id="d2027-06-12"');
     expect(out).toContain('class="day today"');
+    expect(out).toContain('Anna · TAP Miles&amp;Go <span class="ref">TP 123 456</span>');
   });
 
   it("gives parking before the flight day its own day and needs nothing external", () => {

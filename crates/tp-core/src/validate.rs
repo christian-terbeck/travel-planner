@@ -494,6 +494,18 @@ impl Validate for Task {
     }
 }
 
+impl Validate for LoyaltyMembership {
+    fn validate(&self) -> CoreResult<()> {
+        id("id", &self.id)?;
+        id("traveler_id", &self.traveler_id)?;
+        title("program", &self.program)?;
+        opt_line("provider", &self.provider)?;
+        title("number", &self.number)?;
+        opt_line("tier", &self.tier)?;
+        opt_text("notes", &self.notes)
+    }
+}
+
 impl Validate for TravelerDocument {
     fn validate(&self) -> CoreResult<()> {
         id("id", &self.id)?;

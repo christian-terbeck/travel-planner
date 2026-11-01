@@ -10,6 +10,7 @@ import type { Document } from "./Document";
 import type { Expense } from "./Expense";
 import type { FlightSegment } from "./FlightSegment";
 import type { JournalEntry } from "./JournalEntry";
+import type { LoyaltyMembership } from "./LoyaltyMembership";
 import type { Note } from "./Note";
 import type { OpenNight } from "./OpenNight";
 import type { OptionFee } from "./OptionFee";
@@ -35,7 +36,11 @@ export type TripGraph = { trip: Trip, travelers: Array<Traveler>,
 /**
  * Missing in exports made before travel documents existed.
  */
-traveler_documents: Array<TravelerDocument>, stations: Array<Station>, slots: Array<Slot>, options: Array<PlanOption>, flight_segments: Array<FlightSegment>, accommodation_details: Array<AccommodationDetails>, rental_car_details: Array<RentalCarDetails>, activity_details: Array<ActivityDetails>, option_fees: Array<OptionFee>, cancellation_policies: Array<CancellationPolicy>, bookings: Array<Booking>, payments: Array<Payment>, expenses: Array<Expense>, cost_shares: Array<CostShare>, scenarios: Array<Scenario>, scenario_selections: Array<ScenarioSelection>, price_observations: Array<PriceObservation>, tasks: Array<Task>, 
+traveler_documents: Array<TravelerDocument>, 
+/**
+ * Missing in exports made before loyalty programmes existed.
+ */
+loyalty_memberships: Array<LoyaltyMembership>, stations: Array<Station>, slots: Array<Slot>, options: Array<PlanOption>, flight_segments: Array<FlightSegment>, accommodation_details: Array<AccommodationDetails>, rental_car_details: Array<RentalCarDetails>, activity_details: Array<ActivityDetails>, option_fees: Array<OptionFee>, cancellation_policies: Array<CancellationPolicy>, bookings: Array<Booking>, payments: Array<Payment>, expenses: Array<Expense>, cost_shares: Array<CostShare>, scenarios: Array<Scenario>, scenario_selections: Array<ScenarioSelection>, price_observations: Array<PriceObservation>, tasks: Array<Task>, 
 /**
  * Missing in exports made before packing lists existed.
  */

@@ -27,6 +27,7 @@ these decisions.
 | Expenses on the way | “Quick expense” (budget tab, the dashboard's “On the way” card for ongoing trips, Ctrl+K “Record an expense – trip”) asks for amount, what for (defaults to the category name), category, who paid and for whom; currency and payer default to the trip's last actual expense, “Save and next” keeps the dialog open. A split other than everyone is stored as equal cost shares. Suggested transfers can be marked as paid: a `settlements` row (from, to, amount, date) counts as paid by the giver and as money back for the receiver in the settlement, and does not change the trip's costs. Trip copies leave settlements behind | Recording costs right when they happen is the only way the settlement stays right; settling up in the app closes the loop instead of leaving an open balance forever |
 | Weighing scenarios | The explorer orders combinations by weights 0–3 (default: price only, the old order) for price, time on the way (journeys door to door, each change counted as an hour), the average of the user's own ratings of the chosen alternatives, and the share of items that can still be cancelled for free (booked terms for booked items, offered terms otherwise; deadlines respected). Each measure is scaled between the best and worst combination shown; missing price or time counts as worst, missing ratings or terms as the middle. Weights live in the per-trip UI state for the session. The top combination gets “Best by your weights”; “Cheapest saved” stays as it was. Below the list, “Travel dates compared” groups compatible, complete combinations by travel period (only those with the fewest uncovered nights, so a stay for other dates does not make a window look cheap) and shows the cheapest per period and its difference to the cheapest dates | README Phase 2/5: compare trade-offs between cost, duration, convenience and flexibility, relative to the saved options only and without claiming an optimum |
 | Statistics | Own page over the trips actually taken: an active booking, started (period start ≤ today) and not cancelled, measured on the bookings only (`confirmed` evaluation), not the plan. Per trip and per year: days, nights, flights, km (flights great circle; ground estimates or road routes), countries from the airports used without the home country (the first departure's), spent = bookings + cancellation costs + actual expenses − expense refunds, converted to the display currency where a rate exists (the rest shown separately). The basis is stated on the page | A look back that needs no extra input: everything comes from records the user keeps anyway |
+| Loyalty programmes | Per traveler (`loyalty_memberships`: programme, optional company, number, status). Unlike travel documents the number is stored, because it is what the user needs at booking time. A built-in list of about 30 well-known programmes knows which registry companies earn in them (e.g. Miles & More → Lufthansa group); other programmes match by the company typed in or named in the programme. The booking and booking-edit dialogs show the matching numbers of the trip's travelers with a copy button (matched against provider, platform, link and every segment's airline); the travel companion lists them under the booking. Known travelers bring them into new trips; trip copies with travelers keep them. Not sent to Claude (the review summary names people only as “Person n”) | Frequent flyer and hotel numbers are typed again at every booking; having them next to the booking saves the search |
 | Calendar export | ICS export of a trip's itinerary | Offline, works with Outlook/Google Calendar |
 | Travelers | Travelers are entities; payments record who paid, costs can be split | Cost splitting and per-traveler settlement |
 | Calendar rendering | Own month/week/agenda/itinerary views | Needs plan/booking/preview semantics, stays and time zones; FullCalendar 7 is a new headless API with v6 plugins |
@@ -76,7 +77,8 @@ code. Times for travel events are stored as **local date-time + IANA time zone**
 ticket says); instants are derived. Record timestamps (`created_at`, `checked_at`, …) are UTC.
 
 ```
-Trip ─┬─ Traveler ── TravelerDocument* (kind + validity, no numbers)
+Trip ─┬─ Traveler ─┬─ TravelerDocument* (kind + validity, no numbers)
+      │            └─ LoyaltyMembership* (programme, number)
       ├─ Station (ordered stops)
       ├─ Slot (a need: "Flights", "Stay Lisbon", "Rental car", "Boat tour")
       │    └─ Option (an alternative; kind-specific details)
@@ -200,8 +202,9 @@ ExchangeRate* (explicit rate + date + source), PackingTemplate* (reusable lists)
 | M36 | Configurable buffers | Change times per trip; tight activities and long waits at the stay are flagged |
 | M37 | Weighing scenarios, travel dates | Combinations are ordered by price, time, ratings and flexibility as weighted; the possible travel dates are compared by price |
 | M38 | Statistics | Days, km, countries and spending of the trips taken, per year |
+| M39 | Loyalty programmes | Members' numbers per traveler appear with matching bookings and in the companion |
 
 ## 5. Status
 
-M0–M10 and M12–M38 are implemented. For M11, every acceptance criterion is covered by automated
+M0–M10 and M12–M39 are implemented. For M11, every acceptance criterion is covered by automated
 tests ([ACCEPTANCE.md](ACCEPTANCE.md)); the manual run on Windows listed there is still pending.

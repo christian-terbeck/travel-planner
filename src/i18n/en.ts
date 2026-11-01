@@ -1306,6 +1306,20 @@ const en = {
     basis:
       "Counted: trips with an active booking that have started and were not cancelled, with their booked dates and route. Countries come from the airports used, without your home country. Spent: bookings, cancellation costs and actual expenses, converted where a rate exists. Ground distances are estimates unless road routes are turned on.",
   },
+  loyalty: {
+    add: "Add loyalty programme for {{name}}",
+    edit: "Loyalty programme of {{name}}",
+    hint: "Frequent flyer, hotel and rental programmes. The number is shown when you book with that company.",
+    program: "Programme",
+    number: "Member number",
+    tier: "Status",
+    provider: "Company",
+    providerHint: "Only needed for programmes the app does not know, e.g. “Sixt” for a Sixt card.",
+    forBooking: "Loyalty numbers for this booking",
+    copy: "Copy {{program}} number",
+    copied: "{{number}} copied",
+    copyFailed: "Could not copy to the clipboard.",
+  },
   journal: {
     hint: "One page per day of the trip: what you did, saw and ate. Text is saved when you leave a field.",
     tooLong: "The trip is too long to list every day; add days with the date field.",

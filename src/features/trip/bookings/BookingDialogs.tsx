@@ -13,6 +13,7 @@ import { Dialog } from "@/ui/dialog";
 import { DateInput, DateTimeInput, MoneyInput } from "@/ui/inputs";
 import { ProviderInput } from "@/ui/provider";
 import { PAYMENT_STATUSES, PaymentFields } from "../BookingDialog";
+import { LoyaltyHint } from "../LoyaltyHint";
 import { PolicyEditor } from "../PolicyEditor";
 import { useTrip } from "../TripLayout";
 import { CancellationCell } from "./CancellationCell";
@@ -70,6 +71,14 @@ export function BookingEditDialog({ booking, onClose }: { booking: Booking; onCl
             })}
           </p>
         )}
+        <LoyaltyHint
+          src={{
+            provider: b.provider,
+            platform: b.platform,
+            url: b.url,
+            segments: m.item(b.option_id)?.segments.map((x) => x.segment) ?? [],
+          }}
+        />
         <div className="grid grid-cols-3 gap-3">
           <Field label={t("booking.price")} htmlFor="be-price">
             <MoneyInput

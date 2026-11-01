@@ -962,3 +962,42 @@ fn settlements_stay_between_travelers_of_the_trip_and_survive_an_import() {
     s.delete(EntityKind::Traveler, &[ben]).unwrap();
     assert!(s.trip_graph(&t).unwrap().settlements.is_empty(), "no settlement without its traveler");
 }
+
+#[test]
+fn loyalty_memberships_follow_their_traveler() {
+    let (mut s, _dir) = store();
+    let t = trip(&mut s, "Portugal");
+    let anna = traveler(&mut s, &t, "Anna");
+    let membership = |traveler_id: &str, number: &str| LoyaltyMembership {
+        id: new_id(),
+        traveler_id: traveler_id.into(),
+        program: "Miles & More".into(),
+        provider: Some("Lufthansa".into()),
+        number: number.into(),
+        tier: Some("Frequent Traveller".into()),
+        notes: None,
+    };
+    s.save(Entity::LoyaltyMembership(membership(&anna, "992 000 111 222"))).unwrap();
+    assert!(matches!(s.save(Entity::LoyaltyMembership(membership(&anna, " "))), Err(CoreError::Validation { .. })));
+
+    let copy_with = |s: &mut Store, include_travelers: bool| {
+        let id = s
+            .copy_trip(CopyTripInput {
+                trip_id: t.clone(),
+                title: "Again".into(),
+                shift_days: 0,
+                include_options: false,
+                include_travelers,
+                include_tasks_and_notes: false,
+            })
+            .unwrap();
+        s.trip_graph(&id).unwrap()
+    };
+    let with = copy_with(&mut s, true);
+    assert_eq!(with.loyalty_memberships.len(), 1);
+    assert_eq!(with.loyalty_memberships[0].traveler_id, with.travelers[0].id);
+    assert!(copy_with(&mut s, false).loyalty_memberships.is_empty());
+
+    s.delete(EntityKind::Traveler, &[anna]).unwrap();
+    assert!(s.trip_graph(&t).unwrap().loyalty_memberships.is_empty());
+}

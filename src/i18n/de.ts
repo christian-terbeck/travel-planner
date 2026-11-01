@@ -1322,6 +1322,20 @@ const de: Translation = {
     basis:
       "Gezählt: Reisen mit aktiver Buchung, die begonnen haben und nicht storniert sind, mit gebuchten Daten und Strecken. Länder ergeben sich aus den genutzten Flughäfen, ohne dein Heimatland. Ausgegeben: Buchungen, Stornokosten und tatsächliche Ausgaben, umgerechnet, soweit es einen Kurs gibt. Strecken am Boden sind Schätzungen, außer Straßenrouten sind eingeschaltet.",
   },
+  loyalty: {
+    add: "Bonusprogramm für {{name}} hinzufügen",
+    edit: "Bonusprogramm von {{name}}",
+    hint: "Vielflieger-, Hotel- und Mietwagenprogramme. Die Nummer wird angezeigt, wenn du bei dieser Firma buchst.",
+    program: "Programm",
+    number: "Mitgliedsnummer",
+    tier: "Status",
+    provider: "Firma",
+    providerHint: "Nur für Programme nötig, die die App nicht kennt, z. B. „Sixt“ für eine Sixt-Karte.",
+    forBooking: "Bonusnummern für diese Buchung",
+    copy: "{{program}}-Nummer kopieren",
+    copied: "{{number}} kopiert",
+    copyFailed: "Konnte nicht in die Zwischenablage kopieren.",
+  },
   journal: {
     hint: "Eine Seite pro Reisetag: was ihr erlebt, gesehen und gegessen habt. Text wird gespeichert, sobald du ein Feld verlässt.",
     tooLong: "Die Reise ist zu lang, um jeden Tag aufzulisten; füge Tage über das Datumsfeld hinzu.",

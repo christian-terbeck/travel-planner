@@ -28,6 +28,7 @@ rows! {
     Trip => "trips";
     Traveler => "travelers";
     TravelerDocument => "traveler_documents";
+    LoyaltyMembership => "loyalty_memberships";
     Station => "stations";
     Slot => "slots";
     PlanOption => "options";

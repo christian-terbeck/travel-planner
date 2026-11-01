@@ -82,3 +82,5 @@ untouched):
     dates marked; “Save” stores that combination as a scenario.
 31. Statistics: a past trip with booked flights and stay appears with its days, flight km, country
     and spending; switch between the years.
+32. Add “Miles & More” for a traveler; book a Lufthansa (or SWISS) flight: the booking dialog shows
+    the number with a copy button; the travel companion lists it under the booking.

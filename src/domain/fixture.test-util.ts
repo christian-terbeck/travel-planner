@@ -78,6 +78,7 @@ export function graph(t: Trip = trip()): TripGraph {
     documents: [],
     journal_entries: [],
     settlements: [],
+    loyalty_memberships: [],
     notes: [],
     change_log: [],
   };

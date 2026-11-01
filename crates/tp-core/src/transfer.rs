@@ -326,6 +326,10 @@ fn validate_graph(g: &TripGraph) -> CoreResult<()> {
         r.validate()?;
         check(&travelers, &r.traveler_id, "travel document")?;
     }
+    for r in &g.loyalty_memberships {
+        r.validate()?;
+        check(&travelers, &r.traveler_id, "loyalty membership")?;
+    }
     for r in &g.stations {
         r.validate()?;
         own_trip(&r.trip_id, "station")?;
@@ -487,6 +491,7 @@ fn copy_graph(g: TripGraph, input: &CopyTripInput, now: &str) -> CoreResult<Trip
         trip: t,
         travelers: if input.include_travelers { g.travelers } else { vec![] },
         traveler_documents: if input.include_travelers { g.traveler_documents } else { vec![] },
+        loyalty_memberships: if input.include_travelers { g.loyalty_memberships } else { vec![] },
         stations: g.stations,
         slots: g.slots,
         options: vec![],
@@ -692,6 +697,7 @@ fn insert_graph(conn: &Connection, g: &TripGraph) -> CoreResult<()> {
     table::insert(conn, &g.trip)?;
     all(conn, &g.travelers)?;
     all(conn, &g.traveler_documents)?;
+    all(conn, &g.loyalty_memberships)?;
     all(conn, &g.stations)?;
     all(conn, &g.slots)?;
     all(conn, &g.options)?;
