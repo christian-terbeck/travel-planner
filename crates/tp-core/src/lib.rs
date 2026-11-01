@@ -11,6 +11,7 @@ pub mod model;
 pub mod rates;
 pub mod review;
 pub mod routing;
+pub mod site_icons;
 pub mod store;
 pub mod table;
 pub mod transfer;

@@ -1295,6 +1295,13 @@ const en = {
       enable: "Weather at the stays",
       hint: "Shows the daily weather for stays with coordinates: the forecast for the next two weeks, last year's weather on the same days for trips further ahead. The coordinates (rounded to about 1 km) and dates are sent to Open-Meteo when a trip's overview opens. Answers are kept on this computer.",
     },
+    siteIcons: {
+      enable: "Website icons of providers",
+      hint: "For providers without a built-in logo (such as Sixt or Europcar), the icon of their website is fetched once and kept on this computer. Only the provider's own website is contacted, when its logo first appears; your trips are not sent.",
+      reload: "Reload icons",
+      cleared_one: "{{count}} icon removed; it is fetched again when needed.",
+      cleared_other: "{{count}} icons removed; they are fetched again when needed.",
+    },
     ai: {
       enable: "Read booking confirmations with Claude",
       hint: "Adds “Import confirmation” to the bookings. Only the file you pick is sent to Anthropic's API (Claude Opus 5.5), and only when you start an import. It costs a few cents per file on your own API account. If Claude declines a file, the request is retried on Anthropic's recommended fallback model.",

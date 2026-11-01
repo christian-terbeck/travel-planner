@@ -1,7 +1,7 @@
 import { Lock, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api, inDesktopApp } from "@/api/client";
-import { useAction } from "@/api/queries";
+import { queryClient, useAction } from "@/api/queries";
 import { useT } from "@/i18n";
 import { DEFAULT_ROUTING_URL, usePrefs } from "@/lib/prefs";
 import { Button, Card, CardHeader, Checkbox, Field, Input } from "@/ui/core";
@@ -9,7 +9,7 @@ import { useToast } from "@/ui/toast";
 
 export function IntegrationsCard() {
   const t = useT();
-  const { routing, geocoding, weather, ecbRates } = usePrefs();
+  const { routing, geocoding, weather, siteIcons, ecbRates } = usePrefs();
   const run = useAction();
   const toast = useToast();
   const set = (key: string, value: string | null) => run(() => api.setSetting(key, value));
@@ -18,6 +18,12 @@ export function IntegrationsCard() {
   const saveUrl = () => {
     const v = url.trim();
     if (v !== routing.url) void set("routing_url", v && v !== DEFAULT_ROUTING_URL ? v : null);
+  };
+  const reloadIcons = async () => {
+    const n = await run(() => api.clearSiteIcons());
+    if (n === undefined) return;
+    queryClient.removeQueries({ queryKey: ["siteIcon"] });
+    toast.show({ kind: "success", text: t("settings.siteIcons.cleared", { count: n }) });
   };
   const clear = async () => {
     const n = await run(() => api.clearRoadCache());
@@ -78,6 +84,19 @@ export function IntegrationsCard() {
             onChange={(e) => set("weather_enabled", e.target.checked ? "1" : null)}
           />
           <p className="pl-6 text-fg-3 text-xs">{t("settings.weather.hint")}</p>
+        </div>
+        <div className="flex flex-col gap-1 border-line border-t pt-3">
+          <div className="flex items-center justify-between gap-2">
+            <Checkbox
+              label={<span className="font-medium">{t("settings.siteIcons.enable")}</span>}
+              checked={siteIcons}
+              onChange={(e) => set("site_icons_enabled", e.target.checked ? "1" : null)}
+            />
+            <Button variant="ghost" size="sm" disabled={!siteIcons} onClick={reloadIcons}>
+              {t("settings.siteIcons.reload")}
+            </Button>
+          </div>
+          <p className="pl-6 text-fg-3 text-xs">{t("settings.siteIcons.hint")}</p>
         </div>
         <div className="flex flex-col gap-1 border-line border-t pt-3">
           <Checkbox

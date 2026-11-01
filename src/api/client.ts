@@ -112,4 +112,6 @@ export const api = {
   setAutostart: (enabled: boolean) => call<void>("set_autostart", { enabled }),
   roadRoutes: (queries: RoadQuery[]) => call<RoadResult[]>("road_routes", { queries }),
   clearRoadCache: () => call<number>("clear_road_cache"),
+  siteIcon: (url: string) => call<string | null>("site_icon", { url }),
+  clearSiteIcons: () => call<number>("clear_site_icons"),
 };

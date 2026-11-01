@@ -12,6 +12,7 @@ use tp_core::geocoding::{self, Place};
 use tp_core::rates;
 use tp_core::review::{self, TripReview};
 use tp_core::routing::{self, RoadQuery, RoadResult};
+use tp_core::site_icons;
 use tp_core::store::{AppInfo, BookingInput, CancelInput, Entity, EntityKind};
 use tp_core::updates::{self, UpdateCheck};
 use tp_core::weather::{self, WeatherQuery, WeatherResult};
@@ -260,6 +261,36 @@ async fn geocode(app: tauri::AppHandle, query: String, language: String) -> CmdR
         .map_err(err)?;
     with(&state, |s| s.cache_places(&service, &query, language, &places))?;
     Ok(places)
+}
+
+/// Icon of a provider website as a data URI, when the user enabled it: from the cache, else fetched
+/// once. `null` when the site has none that can be shown.
+#[tauri::command]
+async fn site_icon(app: tauri::AppHandle, url: String) -> CmdResult<Option<String>> {
+    let state = app.state::<AppState>();
+    let cached = with(&state, |s| {
+        if !s.site_icons_enabled()? {
+            return Err(CoreError::rule("site_icons_disabled", "website icons are turned off"));
+        }
+        tp_core::validate::url("url", &url)?;
+        s.cached_site_icon(&url)
+    })?;
+    if let Some(icon) = cached {
+        return Ok(icon);
+    }
+    let agent = user_agent(&app);
+    let site = url.clone();
+    let icon = tauri::async_runtime::spawn_blocking(move || site_icons::fetch(&site, &agent))
+        .await
+        .map_err(|e| err(CoreError::rule("busy", e.to_string())))?
+        .map_err(err)?;
+    with(&state, |s| s.cache_site_icon(&url, icon.as_deref()))?;
+    Ok(icon)
+}
+
+#[tauri::command]
+fn clear_site_icons(state: State<'_, AppState>) -> CmdResult<usize> {
+    with(&state, |s| s.clear_site_icons())
 }
 
 /// Daily weather per place and dates, when the user enabled it: answers from the cache, the rest
@@ -575,6 +606,8 @@ pub fn run() {
             geocode,
             fetch_reference_rates,
             weather,
+            site_icon,
+            clear_site_icons,
             check_update,
             ai_key_stored,
             set_ai_key,

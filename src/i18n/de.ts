@@ -1311,6 +1311,13 @@ const de: Translation = {
       enable: "Wetter an den Unterkünften",
       hint: "Zeigt das tägliche Wetter für Unterkünfte mit Koordinaten: die Vorhersage für die nächsten zwei Wochen, für spätere Reisen das Wetter derselben Tage im Vorjahr. Die Koordinaten (auf etwa 1 km gerundet) und Daten werden an Open-Meteo gesendet, wenn die Übersicht einer Reise geöffnet wird. Antworten bleiben auf diesem Computer.",
     },
+    siteIcons: {
+      enable: "Website-Icons der Anbieter",
+      hint: "Für Anbieter ohne eingebautes Logo (etwa Sixt oder Europcar) wird das Icon ihrer Website einmal abgerufen und auf diesem Computer gespeichert. Kontaktiert wird nur die Website des Anbieters selbst, wenn sein Logo zum ersten Mal erscheint; deine Reisen werden nicht gesendet.",
+      reload: "Icons neu laden",
+      cleared_one: "{{count}} Icon entfernt; es wird bei Bedarf neu abgerufen.",
+      cleared_other: "{{count}} Icons entfernt; sie werden bei Bedarf neu abgerufen.",
+    },
     ai: {
       enable: "Buchungsbestätigungen mit Claude einlesen",
       hint: "Fügt bei den Buchungen „Bestätigung importieren“ hinzu. Nur die gewählte Datei wird an die API von Anthropic (Claude Opus 5.5) gesendet, und nur wenn du einen Import startest. Das kostet ein paar Cent pro Datei über dein eigenes API-Konto. Lehnt Claude eine Datei ab, wird die Anfrage mit dem von Anthropic empfohlenen Ersatzmodell wiederholt.",

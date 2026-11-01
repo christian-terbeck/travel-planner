@@ -61,3 +61,7 @@ untouched):
 19. Turn on the weather: a stay with coordinates shows forecast or last year's weather.
 20. Turn on the update check; “Check now” reports the installed version as the latest (or the release).
 21. Optional, with an Anthropic API key: turn on trip reviews, look at “Show what is sent”, review a trip.
+22. Paste a Booking.com link into an alternative: the platform fills in and its logo appears in the
+    planning list; type flight number “LH 1172”: the airline becomes Lufthansa with its logo.
+23. Turn on website icons: Sixt and Eurowings change from monograms to their website icons;
+    “Reload icons” fetches them again.
