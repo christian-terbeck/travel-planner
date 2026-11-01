@@ -1,5 +1,5 @@
 import { save } from "@tauri-apps/plugin-dialog";
-import { CalendarDays, FileCode, FileJson, FileSpreadsheet } from "lucide-react";
+import { CalendarDays, FileCode, FileJson, FileSpreadsheet, Smartphone } from "lucide-react";
 import type { ReactNode } from "react";
 import { api } from "@/api/client";
 import { useAction } from "@/api/queries";
@@ -7,6 +7,7 @@ import { buildIcs } from "@/domain/ics";
 import { toMajorString } from "@/domain/money";
 import { Temporal } from "@/domain/time";
 import { useT } from "@/i18n";
+import { companionHtml } from "@/lib/companion";
 import { financesCsv, itineraryHtml, safeFileName } from "@/lib/exports";
 import type { TripModel } from "@/lib/model";
 import { useFormat } from "@/lib/prefs";
@@ -45,6 +46,14 @@ export function ExportDialog({
     const path = await pick("html", "HTML");
     if (path) await run(() => api.writeExport(path, itineraryHtml(model, f, t)), t("export.done"));
   };
+  const exportCompanion = async () => {
+    const path = await save({
+      defaultPath: `${base}-${t("companion.fileSuffix")}.html`,
+      filters: [{ name: "HTML", extensions: ["html"] }],
+    });
+    const today = Temporal.Now.plainDateISO(model.tz);
+    if (path) await run(() => api.writeExport(path, companionHtml(model, f, t, today)), t("export.done"));
+  };
   const exportCsv = async () => {
     const path = await pick("csv", "CSV");
     if (path) await run(() => api.writeExport(path, financesCsv(model, t, toMajorString)), t("export.done"));
@@ -70,6 +79,12 @@ export function ExportDialog({
           title={t("export.html")}
           text={t("export.htmlHint")}
           onClick={exportHtml}
+        />
+        <ExportCard
+          icon={<Smartphone />}
+          title={t("export.companion")}
+          text={t("export.companionHint")}
+          onClick={exportCompanion}
         />
         <ExportCard
           icon={<FileSpreadsheet />}

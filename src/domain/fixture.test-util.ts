@@ -388,3 +388,20 @@ export function deepFreeze<T>(o: T): T {
   }
   return o;
 }
+
+/** A preferred scenario that selects every option, one per slot (the last one wins). */
+export function preferAll(g: TripGraph): void {
+  const scenario = id("sc");
+  g.scenarios.push({
+    id: scenario,
+    trip_id: g.trip.id,
+    name: "Plan",
+    preferred: true,
+    notes: null,
+    created_at: NOW,
+    updated_at: NOW,
+  });
+  const bySlot = new Map(g.options.map((o) => [o.slot_id, o.id]));
+  for (const [slot_id, option_id] of bySlot)
+    g.scenario_selections.push({ scenario_id: scenario, slot_id, option_id });
+}

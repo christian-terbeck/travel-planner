@@ -4,9 +4,9 @@ import type { TFunction } from "i18next";
 import { isJourney, MODE_SYMBOL, type PlanItem, segmentFrom, segmentTo } from "@/domain/items";
 import { compareInstant, dateRange, Temporal } from "@/domain/time";
 import type { TripModel } from "./model";
-import type { useFormat } from "./prefs";
+import type { makeFormat } from "./prefs";
 
-type Fmt = ReturnType<typeof useFormat>;
+type Fmt = ReturnType<typeof makeFormat>;
 
 const esc = (s: string | null | undefined) =>
   (s ?? "").replace(

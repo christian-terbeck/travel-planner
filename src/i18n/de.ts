@@ -952,6 +952,9 @@ const de: Translation = {
     htmlHint: "Lesbare Übersicht zum Drucken oder Weitergeben",
     csv: "Finanzen (CSV)",
     csvHint: "Buchungen, Zahlungen und Ausgaben",
+    companion: "Reisebegleiter (Handy)",
+    companionHint:
+      "Eine Offline-Datei für die Reise: Tage, Zeiten, Buchungsnummern, Kartenlinks. Schick sie dir aufs Handy oder drucke sie als PDF.",
     doc: {
       itinerary: "Reiseverlauf",
       bookings: "Buchungen",
@@ -959,6 +962,16 @@ const de: Translation = {
       generated:
         "Erstellt mit Travel Planner am {{date}}. Schätzungen sind gekennzeichnet; gebuchte Werte stammen aus deinen Aufzeichnungen.",
     },
+  },
+  companion: {
+    fileSuffix: "reisebegleiter",
+    map: "Karte",
+    navigate: "Navigation",
+    from: "ab {{time}}",
+    until: "bis {{time}}",
+    arrivesOn: "Ankunft {{date}}",
+    notBooked: "nicht gebucht",
+    footer: "Erstellt mit Travel Planner am {{date}}. Alle Zeiten sind Ortszeiten.",
   },
   import: {
     title: "Reise importieren",
