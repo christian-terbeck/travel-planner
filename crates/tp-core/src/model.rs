@@ -446,6 +446,23 @@ pub struct Document {
     pub sha256: String,
     pub notes: Option<String>,
     pub created_at: String,
+    /// A photo of this journal entry. Missing in exports made before the journal existed.
+    #[serde(default)]
+    pub journal_entry_id: Option<String>,
+}
+
+/// What happened on one day of the trip, in the traveller's words.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct JournalEntry {
+    pub id: String,
+    pub trip_id: String,
+    /// Local date (YYYY-MM-DD).
+    pub day: String,
+    pub title: Option<String>,
+    pub body: String,
+    pub created_at: String,
+    pub updated_at: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -532,6 +549,9 @@ pub struct TripGraph {
     pub dismissed_warnings: Vec<DismissedWarning>,
     pub open_nights: Vec<OpenNight>,
     pub documents: Vec<Document>,
+    /// Missing in exports made before the journal existed.
+    #[serde(default)]
+    pub journal_entries: Vec<JournalEntry>,
     pub notes: Vec<Note>,
     pub change_log: Vec<ChangeLogEntry>,
 }

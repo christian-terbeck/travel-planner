@@ -69,3 +69,5 @@ untouched):
     with name, dates and travelers. Optional, with a key: paste an offer text and “Read with Claude”.
 25. Drag a PDF from Explorer onto a trip: the drop overlay appears; attach it to a booking. With the
     import on, drop a confirmation and choose “Read as booking”.
+26. Journal: write two lines for day 2 and leave the field; add two phone photos (JPEG) and one
+    HEIC; the JPEGs show as thumbnails, the HEIC as a tile that opens. Delete the entry and undo.

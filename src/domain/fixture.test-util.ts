@@ -74,6 +74,7 @@ export function graph(t: Trip = trip()): TripGraph {
     dismissed_warnings: [],
     open_nights: [],
     documents: [],
+    journal_entries: [],
     notes: [],
     change_log: [],
   };

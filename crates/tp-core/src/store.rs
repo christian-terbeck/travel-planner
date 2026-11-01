@@ -42,6 +42,7 @@ pub enum Entity {
     PackingItem(PackingItem),
     PackingTemplate(PackingTemplate),
     Note(Note),
+    JournalEntry(JournalEntry),
     DismissedWarning(DismissedWarning),
     OpenNight(OpenNight),
     ExchangeRate(ExchangeRate),
@@ -67,6 +68,7 @@ pub enum EntityKind {
     PackingItem,
     PackingTemplate,
     Note,
+    JournalEntry,
     Document,
     DismissedWarning,
     OpenNight,
@@ -290,6 +292,25 @@ impl Store {
                 table::upsert(&tx, &n)?;
                 n.trip_id
             }
+            Entity::JournalEntry(mut j) => {
+                j.updated_at = now.clone();
+                j.validate()?;
+                if let Some(old) = table::find::<JournalEntry>(&tx, &j.id)? {
+                    same_trip(&j.trip_id, old.trip_id, "trip_id")?;
+                }
+                let taken: Option<String> = tx
+                    .query_row(
+                        "SELECT id FROM journal_entries WHERE trip_id = ?1 AND day = ?2 AND id <> ?3",
+                        (&j.trip_id, &j.day, &j.id),
+                        |r| r.get(0),
+                    )
+                    .optional()?;
+                if taken.is_some() {
+                    return Err(CoreError::rule("journal_day_taken", "this day already has an entry"));
+                }
+                table::upsert(&tx, &j)?;
+                j.trip_id
+            }
             Entity::DismissedWarning(d) => {
                 d.validate()?;
                 table::upsert(&tx, &d)?;
@@ -388,6 +409,7 @@ impl Store {
             EntityKind::Scenario => Some(del::<Scenario>(&tx, "scenario", key)?),
             EntityKind::Task => Some(del::<Task>(&tx, "task", key)?),
             EntityKind::Note => Some(del::<Note>(&tx, "note", key)?),
+            EntityKind::JournalEntry => Some(del::<JournalEntry>(&tx, "journal_entry", key)?),
             EntityKind::PackingItem => Some(del::<PackingItem>(&tx, "packing_item", key)?),
             EntityKind::PackingTemplate => {
                 table::delete_by::<PackingTemplate>(&tx, "id = ?", &[&key])?;
@@ -640,6 +662,7 @@ impl Store {
         source: &Path,
         option_id: Option<String>,
         booking_id: Option<String>,
+        journal_entry_id: Option<String>,
     ) -> CoreResult<Document> {
         let now = self.now();
         table::get::<Trip>(&self.conn, trip_id)?;
@@ -648,6 +671,9 @@ impl Store {
         }
         if let Some(b) = &booking_id {
             same_trip(trip_id, trip_of(&self.conn, "booking", b)?, "booking_id")?;
+        }
+        if let Some(j) = &journal_entry_id {
+            same_trip(trip_id, trip_of(&self.conn, "journal_entry", j)?, "journal_entry_id")?;
         }
         let stored = documents::store_file(&self.data_dir, source)?;
         let doc = Document {
@@ -662,6 +688,7 @@ impl Store {
             sha256: stored.sha256,
             notes: None,
             created_at: now.clone(),
+            journal_entry_id,
         };
         doc.validate()?;
         let tx = self.conn.transaction()?;
@@ -677,6 +704,19 @@ impl Store {
         }
         self.conn.execute("UPDATE documents SET notes = ?1 WHERE id = ?2", (notes, id))?;
         Ok(())
+    }
+
+    /// The bytes of a stored picture, for previews (journal photos). Other files are opened with
+    /// their own app instead.
+    pub fn document_image(&self, id: &str) -> CoreResult<Vec<u8>> {
+        let doc: Document = table::get(&self.conn, id)?;
+        if !doc.mime.as_deref().is_some_and(|m| m.starts_with("image/")) {
+            return Err(CoreError::rule("not_an_image", "only pictures can be shown here"));
+        }
+        if doc.size_bytes > 40 * 1024 * 1024 {
+            return Err(CoreError::rule("file_too_large", "the picture is too large to show"));
+        }
+        Ok(std::fs::read(documents::existing_path(&self.data_dir, &doc.stored_name)?)?)
     }
 
     /// Path of a stored document, or `file_missing` if the file is gone.
@@ -899,6 +939,7 @@ pub(crate) fn load_graph(conn: &Connection, trip: Trip) -> CoreResult<TripGraph>
         dismissed_warnings: table::select(conn, "trip_id = ?", &id)?,
         open_nights: table::select(conn, "trip_id = ? ORDER BY night", &id)?,
         documents: table::select(conn, "trip_id = ? ORDER BY created_at", &id)?,
+        journal_entries: table::select(conn, "trip_id = ? ORDER BY day", &id)?,
         notes: table::select(conn, "trip_id = ? ORDER BY updated_at DESC", &id)?,
         change_log: table::select(conn, "trip_id = ? ORDER BY id", &id)?,
         trip,
@@ -920,6 +961,7 @@ fn table_of(kind: EntityKind) -> &'static str {
         EntityKind::Scenario => Scenario::TABLE,
         EntityKind::Task => Task::TABLE,
         EntityKind::Note => Note::TABLE,
+        EntityKind::JournalEntry => JournalEntry::TABLE,
         EntityKind::PackingItem => PackingItem::TABLE,
         EntityKind::PackingTemplate => PackingTemplate::TABLE,
         EntityKind::Document => Document::TABLE,
@@ -949,6 +991,7 @@ pub(crate) fn trip_of(conn: &Connection, what: &str, id: &str) -> CoreResult<Str
         "scenario" => "SELECT trip_id FROM scenarios WHERE id = ?1",
         "task" => "SELECT trip_id FROM tasks WHERE id = ?1",
         "note" => "SELECT trip_id FROM notes WHERE id = ?1",
+        "journal_entry" => "SELECT trip_id FROM journal_entries WHERE id = ?1",
         "packing_item" => "SELECT trip_id FROM packing_items WHERE id = ?1",
         "document" => "SELECT trip_id FROM documents WHERE id = ?1",
         "option" => "SELECT s.trip_id FROM options o JOIN slots s ON s.id = o.slot_id WHERE o.id = ?1",

@@ -83,8 +83,15 @@ export const api = {
     call<void>("save_scenario", { scenario, selections }),
   setPreferredScenario: (tripId: string, scenarioId: string | null) =>
     call<void>("set_preferred_scenario", { tripId, scenarioId }),
-  attachDocument: (tripId: string, path: string, optionId: string | null, bookingId: string | null) =>
-    call<Document>("attach_document", { tripId, path, optionId, bookingId }),
+  attachDocument: (
+    tripId: string,
+    path: string,
+    optionId: string | null,
+    bookingId: string | null,
+    journalEntryId: string | null = null,
+  ) => call<Document>("attach_document", { tripId, path, optionId, bookingId, journalEntryId }),
+  /** A stored picture's bytes, for previews. */
+  documentImage: (id: string) => call<ArrayBuffer>("document_image", { id }),
   updateDocumentNotes: (id: string, notes: string | null) =>
     call<void>("update_document_notes", { id, notes }),
   openDocument: (id: string) => call<void>("open_document", { id }),

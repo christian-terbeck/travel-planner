@@ -543,7 +543,20 @@ impl Validate for Document {
             return Err(CoreError::invalid("sha256", "invalid checksum"));
         }
         opt_text("notes", &self.notes)?;
+        opt_id("journal_entry_id", &self.journal_entry_id)?;
         timestamp("created_at", &self.created_at)
+    }
+}
+
+impl Validate for JournalEntry {
+    fn validate(&self) -> CoreResult<()> {
+        id("id", &self.id)?;
+        id("trip_id", &self.trip_id)?;
+        date("day", &self.day)?;
+        opt_line("title", &self.title)?;
+        opt_text("body", &Some(self.body.clone()))?;
+        timestamp("created_at", &self.created_at)?;
+        timestamp("updated_at", &self.updated_at)
     }
 }
 

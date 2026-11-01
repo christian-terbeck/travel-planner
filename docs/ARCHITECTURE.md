@@ -23,6 +23,7 @@ these decisions.
 | Trip review | Optional, **off by default**, same key as the import: on request the UI builds a compact JSON summary of one trip (plan, alternatives, dates, prices, terms, computed warnings, budget; people only as "Person n"; no references, notes, contacts, links or files; viewable before sending) and the Rust core asks Claude Opus 5.5 (structured output, effort high, `fallbacks: "default"`) for findings (missing, cost, timing, risk, idea) with importance and the assumptions they rest on. Advice only, kept for the session; nothing is changed | README Phase 5: recommendations based on available data with stated assumptions, never claiming global optimality |
 | Pasted offers | Each need has “Paste a link or offer”. Links are read offline (`src/lib/offerLink.ts`): dates and travelers from the query of booking, rental and search links (Booking.com incl. split dates, Airbnb, Expedia, generic `checkin`/`arrival`/`pickup…` keys; ISO, compact, German and US date forms), airports and dates from flight search paths (Kayak, momondo, Skyscanner), a name from hotel page slugs, and a price only when the text states one clearly (next to “total”/“Gesamt”, or the only amount named). The result opens in the normal option form; the pasted text goes into the notes, dates the form cannot hold (no times) are named there. Optional, with the confirmation import turned on: “Read with Claude” sends only the pasted text (≤ 60,000 characters) with the need's kind; the answer passes the same checks as an imported confirmation, and what the link says for sure (URL, platform) wins | Collecting alternatives from browser tabs is the most frequent input; most sites put dates and travelers in the link, so the common case needs no service |
 | Dropped files | `dragDropEnabled` is on (no screen uses HTML5 drag and drop; the map pans with pointer events). Files dropped on a trip page open a dialog: attach them as documents to the trip, an active booking or an alternative, or — one file Claude can read, with the confirmation import on — “Read as booking”, which opens the bookings page and starts the normal import with that file | Confirmations arrive as mail attachments and downloads; dragging them in saves the file dialog. Nothing is sent without the explicit button |
+| Travel journal | Own rows `journal_entries` (one per trip day, unique per trip; headline and text), not notes: the journal is ordered by day and listed for every day of the plan's period (up to 120 days) with that day's stays and starting items as a reminder; days outside the period can be added. Photos are ordinary documents with `journal_entry_id` (deleting an entry keeps them as trip documents). Pictures are shown from a `document_image` command that returns raw bytes (`tauri::ipc::Response`) turned into blob URLs (CSP `img-src blob:`), only for JPEG/PNG/GIF/WebP up to 40 MB; HEIC shows a tile that opens the file. Exports, backups, search and undo include the journal; trip copies start without one | The trip's memories stay next to its plan and bookings, offline and in the same backups |
 | Calendar export | ICS export of a trip's itinerary | Offline, works with Outlook/Google Calendar |
 | Travelers | Travelers are entities; payments record who paid, costs can be split | Cost splitting and per-traveler settlement |
 | Calendar rendering | Own month/week/agenda/itinerary views | Needs plan/booking/preview semantics, stays and time zones; FullCalendar 7 is a new headless API with v6 plugins |
@@ -88,6 +89,7 @@ Trip ─┬─ Traveler ── TravelerDocument* (kind + validity, no numbers)
       ├─ Expense* (planned or actual, category, optional booking) ── CostShare*
       ├─ Task*, DismissedWarning*, OpenNight* (nights intentionally left unbooked)
       ├─ PackingItem* (optionally per traveler)
+      ├─ JournalEntry* (one per day) ── Document* (photos)
       ├─ Document* (local file reference), Note*
 ExchangeRate* (explicit rate + date + source), PackingTemplate* (reusable lists), Setting*, ChangeLog*
 ```
@@ -189,8 +191,9 @@ ExchangeRate* (explicit rate + date + source), PackingTemplate* (reusable lists)
 | M31 | Smaller screens, accessibility | Settings, map and budget split; labels translated; skip link |
 | M32 | Alternatives from links and offer texts | A pasted booking/search link or offer fills in the option form (offline; Claude optional) |
 | M33 | Drop files on a trip | Dropped files are attached as documents or read as a booking |
+| M34 | Travel journal | Text and photos per trip day, with the day's plan as a reminder |
 
 ## 5. Status
 
-M0–M10 and M12–M33 are implemented. For M11, every acceptance criterion is covered by automated
+M0–M10 and M12–M34 are implemented. For M11, every acceptance criterion is covered by automated
 tests ([ACCEPTANCE.md](ACCEPTANCE.md)); the manual run on Windows listed there is still pending.

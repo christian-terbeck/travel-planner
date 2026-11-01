@@ -14,7 +14,8 @@ export type SearchKind =
   | "task"
   | "note"
   | "document"
-  | "packing";
+  | "packing"
+  | "journal";
 
 export interface SearchEntry {
   kind: SearchKind;
@@ -25,7 +26,7 @@ export interface SearchEntry {
   /** Second line, e.g. the booking reference or the start of a note. */
   detail: string | null;
   /** Route inside the trip ("" for the overview). */
-  view: "" | "planning" | "bookings" | "budget" | "documents" | "packing";
+  view: "" | "planning" | "bookings" | "budget" | "documents" | "packing" | "journal";
   /** Option to select in the planning view. */
   optionId?: string;
   text: string;
@@ -112,6 +113,13 @@ export function buildIndex(graphs: TripGraph[]): SearchEntry[] {
         entry(g, "note", n.id, n.title, n.body.slice(0, 80).replace(/\s+/g, " "), "documents", [n.body]),
       );
     for (const p of g.packing_items) out.push(entry(g, "packing", p.id, p.title, p.category, "packing"));
+    for (const j of g.journal_entries)
+      out.push(
+        entry(g, "journal", j.id, j.title ?? j.day, j.body.slice(0, 80).replace(/\s+/g, " "), "journal", [
+          j.day,
+          j.body,
+        ]),
+      );
     for (const d of g.documents)
       out.push(entry(g, "document", d.id, d.filename, null, "documents", [d.notes]));
   }
@@ -130,6 +138,7 @@ const RANK: Record<SearchKind, number> = {
   document: 8,
   expense: 9,
   packing: 10,
+  journal: 11,
 };
 
 /** Entries containing every word of the query; title matches first, then by kind. */

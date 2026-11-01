@@ -30,6 +30,7 @@ const TABS = [
   { to: "budget", key: "budget" },
   { to: "documents", key: "documents" },
   { to: "packing", key: "packing" },
+  { to: "journal", key: "journal" },
 ] as const;
 
 const OVERRIDES: Array<TripStatus | null> = [null, "cancelled", "archived", "completed"];

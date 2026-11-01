@@ -52,6 +52,7 @@ const de: Translation = {
       note: "Notiz",
       document: "Dokument",
       packing: "Packliste",
+      journal: "Tagebuch",
     },
   },
   copyTrip: {
@@ -258,6 +259,8 @@ const de: Translation = {
     ai_failed:
       "Claude konnte die Bestätigung nicht lesen. Versuche es noch einmal oder trag die Buchung von Hand ein.",
     file_unsupported: "Verwende ein PDF, ein Bild, eine .eml-Mail oder eine Text-/HTML-Datei.",
+    journal_day_taken: "Für diesen Tag gibt es schon einen Tagebucheintrag.",
+    not_an_image: "Hier lassen sich nur Bilder anzeigen.",
     text_too_long: "Der Text ist zu lang (mehr als 60.000 Zeichen). Füge nur das Angebot selbst ein.",
     file_too_large_ai: "Die Datei ist größer als 20 MB.",
     credential_store: "Die Windows-Anmeldeinformationsverwaltung konnte nicht verwendet werden.",
@@ -487,6 +490,7 @@ const de: Translation = {
       budget: "Budget",
       documents: "Dokumente & Notizen",
       packing: "Packliste",
+      journal: "Tagebuch",
     },
   },
   overview: {
@@ -1170,6 +1174,8 @@ const de: Translation = {
       scenarios: "Szenarien",
       documents: "Dokumente",
       notes: "Notizen",
+      packing_items: "Packlisteneinträge",
+      journal_entries: "Tagebuchtage",
     },
     missingDocs_one: "{{count}} angehängte Datei ist nicht Teil des Exports und wird als fehlend angezeigt.",
     missingDocs_other:
@@ -1229,6 +1235,29 @@ const de: Translation = {
     review: "Prüfen und ergänzen",
     check:
       "Als Nächstes siehst du die gewohnten Formulare mit den gelesenen Werten. Vergleiche sie vor dem Speichern mit der Bestätigung.",
+  },
+  journal: {
+    hint: "Eine Seite pro Reisetag: was ihr erlebt, gesehen und gegessen habt. Text wird gespeichert, sobald du ein Feld verlässt.",
+    tooLong: "Die Reise ist zu lang, um jeden Tag aufzulisten; füge Tage über das Datumsfeld hinzu.",
+    onlyWritten: "Nur Tage mit Eintrag",
+    otherDay: "Weiterer Tag",
+    addDay: "Tag hinzufügen",
+    emptyTitle: "Noch keine Tage",
+    emptyText:
+      "Sobald die Reise Daten hat, erscheint hier jeder Tag. Du kannst auch einen Tag über sein Datum hinzufügen.",
+    emptyWritten: "Noch nichts geschrieben.",
+    dayN: "Tag {{n}}",
+    title: "Überschrift",
+    titlePlaceholder: "z. B. Tram 28 und Sardinen",
+    text: "Was passiert ist",
+    textPlaceholder: "Ein paar Zeilen reichen …",
+    photos: "Fotos",
+    addPhotos: "Fotos hinzufügen",
+    openPhoto: "{{name}} öffnen",
+    deletePhoto: "Foto entfernen",
+    photoDeleted: "Foto entfernt",
+    delete: "Eintrag löschen",
+    deleted: "Eintrag gelöscht; seine Fotos bleiben unter Dokumente",
   },
   drop: {
     overlay: "Ablegen, um es zu „{{title}}“ hinzuzufügen",

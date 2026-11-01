@@ -1,5 +1,6 @@
 import {
   Backpack,
+  BookOpen,
   CalendarDays,
   CheckSquare,
   CircleDollarSign,
@@ -48,6 +49,7 @@ const KIND_ICON: Record<SearchKind, ReactNode> = {
   note: <StickyNote />,
   document: <FileText />,
   packing: <Backpack />,
+  journal: <BookOpen />,
 };
 
 /** Opens with Ctrl+K (⌘K) anywhere, or with "/" outside of text fields. */

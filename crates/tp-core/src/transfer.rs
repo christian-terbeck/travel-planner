@@ -129,6 +129,7 @@ impl Store {
                 ("documents".into(), g.documents.len()),
                 ("notes".into(), g.notes.len()),
                 ("packing_items".into(), g.packing_items.len()),
+                ("journal_entries".into(), g.journal_entries.len()),
             ],
             missing_documents: missing,
             new_exchange_rates: export.exchange_rates.iter().filter(|r| !rates.iter().any(|x| x.id == r.id)).count(),
@@ -307,6 +308,7 @@ fn validate_graph(g: &TripGraph) -> CoreResult<()> {
     let bookings = ids(g.bookings.iter().map(|r| r.id.as_str()).collect());
     let expenses = ids(g.expenses.iter().map(|r| r.id.as_str()).collect());
     let scenarios = ids(g.scenarios.iter().map(|r| r.id.as_str()).collect());
+    let journal = ids(g.journal_entries.iter().map(|r| r.id.as_str()).collect());
 
     let bad = |what: &str| CoreError::rule("import_broken_reference", format!("{what} refers to a missing row"));
     let check = |set: &HashSet<String>, v: &str, what: &str| if set.contains(v) { Ok(()) } else { Err(bad(what)) };
@@ -420,11 +422,20 @@ fn validate_graph(g: &TripGraph) -> CoreResult<()> {
         r.validate()?;
         own_trip(&r.trip_id, "open night")?;
     }
+    let mut days = HashSet::new();
+    for r in &g.journal_entries {
+        r.validate()?;
+        own_trip(&r.trip_id, "journal entry")?;
+        if !days.insert(r.day.as_str()) {
+            return Err(CoreError::rule("import_invalid", "two journal entries for one day"));
+        }
+    }
     for r in &g.documents {
         r.validate()?;
         own_trip(&r.trip_id, "document")?;
         check_opt(&options, &r.option_id, "document")?;
         check_opt(&bookings, &r.booking_id, "document")?;
+        check_opt(&journal, &r.journal_entry_id, "document")?;
     }
     for r in &g.notes {
         r.validate()?;
@@ -491,6 +502,8 @@ fn copy_graph(g: TripGraph, input: &CopyTripInput, now: &str) -> CoreResult<Trip
         dismissed_warnings: vec![],
         open_nights: vec![],
         documents: vec![],
+        // The journal tells what happened on the original trip.
+        journal_entries: vec![],
         notes: vec![],
         change_log: vec![],
     };
@@ -691,6 +704,7 @@ fn insert_graph(conn: &Connection, g: &TripGraph) -> CoreResult<()> {
     all(conn, &g.packing_items)?;
     all(conn, &g.dismissed_warnings)?;
     all(conn, &g.open_nights)?;
+    all(conn, &g.journal_entries)?;
     all(conn, &g.documents)?;
     all(conn, &g.notes)?;
     for c in &g.change_log {

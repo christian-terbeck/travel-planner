@@ -3,6 +3,7 @@ import type { CostShare } from "./CostShare";
 import type { DismissedWarning } from "./DismissedWarning";
 import type { ExchangeRate } from "./ExchangeRate";
 import type { Expense } from "./Expense";
+import type { JournalEntry } from "./JournalEntry";
 import type { Note } from "./Note";
 import type { OpenNight } from "./OpenNight";
 import type { PackingItem } from "./PackingItem";
@@ -19,4 +20,4 @@ import type { Trip } from "./Trip";
 /**
  * Rows that are saved as they are (after validation and ownership checks).
  */
-export type Entity = { "type": "trip", "row": Trip } | { "type": "traveler", "row": Traveler } | { "type": "traveler_document", "row": TravelerDocument } | { "type": "station", "row": Station } | { "type": "slot", "row": Slot } | { "type": "payment", "row": Payment } | { "type": "expense", "row": Expense } | { "type": "cost_share", "row": CostShare } | { "type": "task", "row": Task } | { "type": "packing_item", "row": PackingItem } | { "type": "packing_template", "row": PackingTemplate } | { "type": "note", "row": Note } | { "type": "dismissed_warning", "row": DismissedWarning } | { "type": "open_night", "row": OpenNight } | { "type": "exchange_rate", "row": ExchangeRate } | { "type": "price_observation", "row": PriceObservation };
+export type Entity = { "type": "trip", "row": Trip } | { "type": "traveler", "row": Traveler } | { "type": "traveler_document", "row": TravelerDocument } | { "type": "station", "row": Station } | { "type": "slot", "row": Slot } | { "type": "payment", "row": Payment } | { "type": "expense", "row": Expense } | { "type": "cost_share", "row": CostShare } | { "type": "task", "row": Task } | { "type": "packing_item", "row": PackingItem } | { "type": "packing_template", "row": PackingTemplate } | { "type": "note", "row": Note } | { "type": "journal_entry", "row": JournalEntry } | { "type": "dismissed_warning", "row": DismissedWarning } | { "type": "open_night", "row": OpenNight } | { "type": "exchange_rate", "row": ExchangeRate } | { "type": "price_observation", "row": PriceObservation };

@@ -110,8 +110,15 @@ fn attach_document(
     path: String,
     option_id: Option<String>,
     booking_id: Option<String>,
+    journal_entry_id: Option<String>,
 ) -> CmdResult<Document> {
-    with(&state, |s| s.attach_document(&trip_id, &PathBuf::from(path), option_id, booking_id))
+    with(&state, |s| s.attach_document(&trip_id, &PathBuf::from(path), option_id, booking_id, journal_entry_id))
+}
+
+/// A stored picture as raw bytes (no JSON encoding), shown in the journal.
+#[tauri::command]
+fn document_image(state: State<'_, AppState>, id: String) -> CmdResult<tauri::ipc::Response> {
+    with(&state, |s| s.document_image(&id)).map(tauri::ipc::Response::new)
 }
 
 #[tauri::command]
@@ -607,6 +614,7 @@ pub fn run() {
             attach_document,
             update_document_notes,
             open_document,
+            document_image,
             open_url,
             copy_trip,
             export_trip,

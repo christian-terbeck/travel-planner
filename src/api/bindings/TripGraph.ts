@@ -9,6 +9,7 @@ import type { DismissedWarning } from "./DismissedWarning";
 import type { Document } from "./Document";
 import type { Expense } from "./Expense";
 import type { FlightSegment } from "./FlightSegment";
+import type { JournalEntry } from "./JournalEntry";
 import type { Note } from "./Note";
 import type { OpenNight } from "./OpenNight";
 import type { OptionFee } from "./OptionFee";
@@ -37,4 +38,8 @@ traveler_documents: Array<TravelerDocument>, stations: Array<Station>, slots: Ar
 /**
  * Missing in exports made before packing lists existed.
  */
-packing_items: Array<PackingItem>, dismissed_warnings: Array<DismissedWarning>, open_nights: Array<OpenNight>, documents: Array<Document>, notes: Array<Note>, change_log: Array<ChangeLogEntry>, };
+packing_items: Array<PackingItem>, dismissed_warnings: Array<DismissedWarning>, open_nights: Array<OpenNight>, documents: Array<Document>, 
+/**
+ * Missing in exports made before the journal existed.
+ */
+journal_entries: Array<JournalEntry>, notes: Array<Note>, change_log: Array<ChangeLogEntry>, };

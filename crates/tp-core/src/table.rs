@@ -50,6 +50,7 @@ rows! {
     DismissedWarning => "dismissed_warnings" key "trip_id", "key";
     OpenNight => "open_nights" key "trip_id", "night";
     Document => "documents";
+    JournalEntry => "journal_entries";
     Note => "notes";
     ExchangeRate => "exchange_rates";
     ChangeLogEntry => "change_log";

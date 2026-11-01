@@ -8,6 +8,7 @@ import { BookingsView } from "@/features/trip/BookingsView";
 import { BudgetView } from "@/features/trip/BudgetView";
 import { DocumentsView } from "@/features/trip/DocumentsView";
 import { ItineraryView } from "@/features/trip/ItineraryView";
+import { JournalView } from "@/features/trip/JournalView";
 import { MapView } from "@/features/trip/MapView";
 import { OverviewView } from "@/features/trip/OverviewView";
 import { PackingView } from "@/features/trip/PackingView";
@@ -34,6 +35,7 @@ export const router = createHashRouter([
           { path: "budget", element: <BudgetView /> },
           { path: "documents", element: <DocumentsView /> },
           { path: "packing", element: <PackingView /> },
+          { path: "journal", element: <JournalView /> },
         ],
       },
       { path: "calendar", element: <CalendarPage /> },

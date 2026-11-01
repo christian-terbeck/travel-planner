@@ -424,7 +424,7 @@ fn deleting_a_trip_removes_everything_and_unreferenced_files() {
     book(&mut s, &oid, 1, vec![]);
     let src = dir.path().join("ticket.pdf");
     std::fs::write(&src, b"%PDF-1.7 test").unwrap();
-    let doc = s.attach_document(&t, &src, Some(oid), None).unwrap();
+    let doc = s.attach_document(&t, &src, Some(oid), None, None).unwrap();
     assert!(s.document_path(&doc.id).unwrap().is_file());
 
     s.delete(EntityKind::Trip, &[t.clone()]).unwrap();
@@ -443,7 +443,7 @@ fn undo_puts_back_a_deleted_trip_with_bookings_and_files() {
     let t = populated(&mut s);
     let src = dir.path().join("ticket.pdf");
     std::fs::write(&src, b"%PDF").unwrap();
-    let doc = s.attach_document(&t, &src, None, None).unwrap();
+    let doc = s.attach_document(&t, &src, None, None, None).unwrap();
     let before = serde_json::to_value(s.trip_graph(&t).unwrap()).unwrap();
 
     let undo = s.delete(EntityKind::Trip, &[t.clone()]).unwrap();
@@ -498,7 +498,7 @@ fn missing_document_files_are_reported() {
     let t = trip(&mut s, "Portugal");
     let src = dir.path().join("voucher.png");
     std::fs::write(&src, b"png").unwrap();
-    let doc = s.attach_document(&t, &src, None, None).unwrap();
+    let doc = s.attach_document(&t, &src, None, None, None).unwrap();
     std::fs::remove_file(s.document_path(&doc.id).unwrap()).unwrap();
     assert_eq!(rule_code(s.document_path(&doc.id).unwrap_err()), "file_missing");
 }
@@ -750,7 +750,7 @@ fn backup_and_restore_round_trip() {
     let t = populated(&mut s);
     let src = dir.path().join("ticket.pdf");
     std::fs::write(&src, b"%PDF").unwrap();
-    let doc = s.attach_document(&t, &src, None, None).unwrap();
+    let doc = s.attach_document(&t, &src, None, None, None).unwrap();
     let backup = dir.path().join("backup.zip");
     let manifest = s.create_backup(&backup).unwrap();
     assert_eq!(manifest.trips, 1);
@@ -851,4 +851,70 @@ fn data_survives_closing_and_reopening_the_app() {
     assert_eq!(g.flight_segments.len(), 2);
     assert_eq!(s.setting("locale").unwrap().as_deref(), Some("de-DE"));
     assert_eq!(s.app_info().unwrap().schema_version, crate::db::SCHEMA_VERSION);
+}
+
+fn journal_entry(trip_id: &str, day: &str) -> JournalEntry {
+    JournalEntry {
+        id: new_id(),
+        trip_id: trip_id.into(),
+        day: day.into(),
+        title: Some("Alfama".into()),
+        body: "Tram 28, then sardines.".into(),
+        created_at: NOW.into(),
+        updated_at: NOW.into(),
+    }
+}
+
+#[test]
+fn journal_has_one_entry_per_day_and_keeps_photos_when_an_entry_goes() {
+    let (mut s, dir) = store();
+    let t = trip(&mut s, "Portugal");
+    let other = trip(&mut s, "Iceland");
+    let entry = journal_entry(&t, "2027-06-11");
+    s.save(Entity::JournalEntry(entry.clone())).unwrap();
+    let twice = s.save(Entity::JournalEntry(journal_entry(&t, "2027-06-11")));
+    assert_eq!(rule_code(twice.unwrap_err()), "journal_day_taken");
+    s.save(Entity::JournalEntry(journal_entry(&other, "2027-06-11"))).unwrap();
+    let mut bad = journal_entry(&t, "11.06.2027");
+    assert!(matches!(s.save(Entity::JournalEntry(bad.clone())), Err(CoreError::Validation { .. })));
+    bad.day = "2027-06-12".into();
+    bad.trip_id = other.clone();
+    bad.id = entry.id.clone();
+    assert!(s.save(Entity::JournalEntry(bad)).is_err(), "entries do not move between trips");
+
+    let photo = dir.path().join("tram.jpg");
+    std::fs::write(&photo, b"\xFF\xD8\xFF\xE0 jpeg").unwrap();
+    let wrong = s.attach_document(&other, &photo, None, None, Some(entry.id.clone()));
+    assert!(matches!(wrong, Err(CoreError::Validation { .. })));
+    let doc = s.attach_document(&t, &photo, None, None, Some(entry.id.clone())).unwrap();
+    assert_eq!(doc.journal_entry_id.as_deref(), Some(entry.id.as_str()));
+
+    let file = dir.path().join("trip.json");
+    s.export_trip(&t, &file).unwrap();
+    let imported = s.import_trip(&file, ImportMode::AsNew).unwrap();
+    let imported = s.trip_graph(&imported).unwrap();
+    assert_eq!(imported.journal_entries.len(), 1);
+    assert_eq!(imported.documents[0].journal_entry_id.as_deref(), Some(imported.journal_entries[0].id.as_str()));
+
+    let undo = s.delete(EntityKind::JournalEntry, &[entry.id.clone()]).unwrap();
+    let g = s.trip_graph(&t).unwrap();
+    assert!(g.journal_entries.is_empty());
+    assert_eq!(g.documents.len(), 1, "the photo stays with the trip");
+    assert_eq!(g.documents[0].journal_entry_id, None);
+    s.undo_delete(&undo).unwrap();
+    let g = s.trip_graph(&t).unwrap();
+    assert_eq!(g.journal_entries.len(), 1);
+    assert_eq!(g.documents[0].journal_entry_id.as_deref(), Some(entry.id.as_str()));
+
+    let copy = s
+        .copy_trip(CopyTripInput {
+            trip_id: t.clone(),
+            title: "Again".into(),
+            shift_days: 365,
+            include_options: true,
+            include_travelers: true,
+            include_tasks_and_notes: true,
+        })
+        .unwrap();
+    assert!(s.trip_graph(&copy).unwrap().journal_entries.is_empty(), "a new trip starts a new journal");
 }
