@@ -14,7 +14,7 @@ import {
   planContext,
 } from "@/domain/scenarios";
 import { type Instant, Temporal } from "@/domain/time";
-import type { Booking, ExchangeRate, Scenario, TripGraph, TripStatus } from "@/domain/types";
+import type { Booking, ExchangeRate, OptionBundle, Scenario, TripGraph, TripStatus } from "@/domain/types";
 import { type Prefs, usePrefs } from "./prefs";
 
 export type EffectiveStatus =
@@ -98,4 +98,17 @@ export function useTripModels(gs: TripGraph[] | undefined): TripModel[] {
     const now = Temporal.Now.instant();
     return (gs ?? []).map((g) => buildModel(g, prefs.rates, prefs, now));
   }, [gs, prefs]);
+}
+
+/** An item as the editable bundle of rows it was built from. */
+export function bundleOf(m: TripModel, item: PlanItem): OptionBundle {
+  return {
+    option: item.option,
+    segments: item.segments.map((s) => s.segment),
+    accommodation: item.accommodation,
+    rental_car: item.rentalCar,
+    activity: item.activity,
+    fees: item.fees,
+    policy: m.graph.cancellation_policies.find((p) => p.option_id === item.option.id) ?? null,
+  };
 }

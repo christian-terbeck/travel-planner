@@ -5,12 +5,12 @@ import { useAction } from "@/api/queries";
 import { type PlanItem, segmentFrom, segmentTo } from "@/domain/items";
 import type { Booking, CancellationPolicy, OptionBundle, Payment, PaymentStatus, Slot } from "@/domain/types";
 import { useT } from "@/i18n";
+import { bundleOf } from "@/lib/model";
 import { useFormat } from "@/lib/prefs";
 import { newBooking, newId, newPayment, newPolicy, nil } from "@/lib/rows";
 import { Button, Checkbox, Field, Input, Select, Textarea } from "@/ui/core";
 import { Dialog } from "@/ui/dialog";
 import { DateInput, MoneyInput } from "@/ui/inputs";
-import { bundleOf } from "./PlanningView";
 import { PolicyEditor } from "./PolicyEditor";
 import { useTrip } from "./TripLayout";
 

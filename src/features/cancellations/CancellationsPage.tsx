@@ -12,7 +12,7 @@ import { useFormat } from "@/lib/prefs";
 import { SLOT_KINDS } from "@/lib/rows";
 import { Card, cn, EmptyState, Input, PageHeader, Select, Stat } from "@/ui/core";
 import { KindIcon } from "@/ui/status";
-import { CancellationCell } from "../trip/BookingsView";
+import { CancellationCell } from "../trip/bookings/CancellationCell";
 
 type Group = "all" | "free" | "approaching" | "non_refundable" | "unknown";
 
