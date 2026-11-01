@@ -377,8 +377,13 @@ const en = {
     stay_outside_station: "{{items}} is outside the planned dates of {{station}}.",
     insurance_not_covering: "{{items}} does not cover the whole trip ({{from}} – {{to}}).",
   },
+  notifications: {
+    summary_one: "{{count}} reminder needs your attention.",
+    summary_other: "{{count}} reminders need your attention.",
+  },
   reminder: {
-    inAppOnly: "Shown while the app is open — no notifications are sent when it is closed.",
+    inAppOnly:
+      "Also sent as Windows notifications while the app runs (see Settings). Nothing is sent when it is fully closed.",
     none: "No upcoming reminders.",
     cancellation_deadline: "Free cancellation of {{title}} ends {{date}}.",
     departure: "Departure in {{days}} days ({{date}}).",
@@ -1010,6 +1015,13 @@ const en = {
     languageAuto: "Like the formats",
     reminders: "Reminders",
     remindersHint: "How many days in advance reminders appear in the app",
+    notifications: {
+      enable: "Windows notifications",
+      hint: "Cancellation deadlines, open payments, departures, tasks and missing confirmations also appear as notifications: once when they come up and again on the day before.",
+      tray: "Keep running in the notification area when the window is closed",
+      autostart: "Start with Windows (in the notification area)",
+      autostartHint: "Then reminders arrive even if you have not opened Travel Planner.",
+    },
     reminder: {
       cancellationDays: "Cancellation deadlines",
       departureDays: "Departure",

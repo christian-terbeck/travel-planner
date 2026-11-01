@@ -1,5 +1,5 @@
-// In-app reminders derived from the data whenever the app shows them. They are not delivered
-// while the app is closed, and the UI says so.
+// Reminders derived from the data whenever the app shows them; while the app runs, some are also
+// sent as Windows notifications (see notify.ts). Nothing is delivered when the app is closed.
 
 import { type CancellationState, cancellationStatus } from "./cancellation";
 import { isJourney } from "./items";

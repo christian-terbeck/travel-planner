@@ -3,7 +3,9 @@
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-use tauri::{Manager, State};
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::{Manager, State, WindowEvent};
 use tp_core::model::{Booking, CancellationPolicy, Document, OptionBundle, Scenario, ScenarioSelection, TripGraph};
 use tp_core::routing::{self, RoadQuery, RoadResult};
 use tp_core::store::{AppInfo, BookingInput, CancelInput, Entity, EntityKind};
@@ -213,6 +215,77 @@ fn clear_road_cache(state: State<'_, AppState>) -> CmdResult<usize> {
     with(&state, |s| s.clear_road_cache())
 }
 
+/// Shows a Windows notification (reminders computed by the UI).
+#[tauri::command]
+fn notify(app: tauri::AppHandle, title: String, body: String) -> CmdResult<()> {
+    use tauri_plugin_notification::NotificationExt;
+    app.notification()
+        .builder()
+        .title(title)
+        .body(body)
+        .show()
+        .map_err(|e| err(CoreError::rule("notify_failed", e.to_string())))
+}
+
+#[tauri::command]
+fn autostart_enabled(app: tauri::AppHandle) -> CmdResult<bool> {
+    use tauri_plugin_autostart::ManagerExt;
+    app.autolaunch().is_enabled().map_err(|e| err(CoreError::rule("autostart_failed", e.to_string())))
+}
+
+/// Starts the app with Windows (in the tray, see `MINIMIZED_ARG`) or stops doing so.
+#[tauri::command]
+fn set_autostart(app: tauri::AppHandle, enabled: bool) -> CmdResult<()> {
+    use tauri_plugin_autostart::ManagerExt;
+    let launcher = app.autolaunch();
+    let result = if enabled { launcher.enable() } else { launcher.disable() };
+    result.map_err(|e| err(CoreError::rule("autostart_failed", e.to_string())))
+}
+
+/// Passed when started with Windows: the window stays hidden and the app waits in the tray.
+const MINIMIZED_ARG: &str = "--minimized";
+
+fn show_main(app: &tauri::AppHandle) {
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.unminimize();
+        let _ = w.show();
+        let _ = w.set_focus();
+    }
+}
+
+/// Closing the window keeps the app running in the tray when the user chose so, so that
+/// reminders still arrive as notifications.
+fn keeps_running_in_tray(app: &tauri::AppHandle) -> bool {
+    let state = app.state::<AppState>();
+    let setting = state.0.lock().ok().and_then(|s| s.setting("close_to_tray").ok().flatten());
+    setting.as_deref() == Some("1")
+}
+
+fn create_tray(app: &tauri::App) -> tauri::Result<()> {
+    let open = MenuItem::with_id(app, "open", "Travel Planner", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit / Beenden", true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&open, &quit])?;
+    let mut tray = TrayIconBuilder::with_id("main")
+        .tooltip("Travel Planner")
+        .menu(&menu)
+        .show_menu_on_left_click(false)
+        .on_menu_event(|app, event| match event.id.as_ref() {
+            "open" => show_main(app),
+            "quit" => app.exit(0),
+            _ => {}
+        })
+        .on_tray_icon_event(|tray, event| {
+            if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
+                show_main(tray.app_handle());
+            }
+        });
+    if let Some(icon) = app.default_window_icon() {
+        tray = tray.icon(icon.clone());
+    }
+    tray.build(app)?;
+    Ok(())
+}
+
 /// Marker file that switches the app to portable mode.
 const PORTABLE_MARKER: &str = "portable.txt";
 
@@ -229,6 +302,11 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec![MINIMIZED_ARG]),
+        ))
         .setup(|app| {
             let data_dir = match portable_data_dir() {
                 Some(dir) => dir,
@@ -236,7 +314,21 @@ pub fn run() {
             };
             let store = Store::open(&data_dir)?;
             app.manage(AppState(Mutex::new(store)));
+            create_tray(app)?;
+            // The window starts hidden (see tauri.conf.json) to avoid a flash when started in the tray.
+            if !std::env::args().any(|a| a == MINIMIZED_ARG) {
+                show_main(app.handle());
+            }
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let WindowEvent::CloseRequested { api, .. } = event
+                && window.label() == "main"
+                && keeps_running_in_tray(window.app_handle())
+            {
+                api.prevent_close();
+                let _ = window.hide();
+            }
         })
         .invoke_handler(tauri::generate_handler![
             app_info,
@@ -265,6 +357,9 @@ pub fn run() {
             restore_backup,
             road_routes,
             clear_road_cache,
+            notify,
+            autostart_enabled,
+            set_autostart,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Travel Planner");

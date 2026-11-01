@@ -134,6 +134,10 @@ impl Store {
         })
     }
 
+    pub fn setting(&self, key: &str) -> CoreResult<Option<String>> {
+        Ok(self.conn.query_row("SELECT value FROM settings WHERE key = ?1", [key], |r| r.get(0)).optional()?)
+    }
+
     pub fn set_setting(&self, key: &str, value: Option<&str>) -> CoreResult<()> {
         if key.is_empty() || key.len() > 64 || value.is_some_and(|v| v.len() > 10_000) {
             return Err(CoreError::invalid("key", "invalid setting"));

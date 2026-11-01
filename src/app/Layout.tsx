@@ -13,6 +13,7 @@ import { inDesktopApp } from "@/api/client";
 import { useTrips } from "@/api/queries";
 import { useT } from "@/i18n";
 import { useTripModels } from "@/lib/model";
+import { useOsNotifications } from "@/lib/notifications";
 import { cn, EmptyState, Spinner } from "@/ui/core";
 
 function NavItem({ to, icon, label, count }: { to: string; icon: ReactNode; label: string; count?: number }) {
@@ -45,6 +46,7 @@ export function Layout() {
   const t = useT();
   const trips = useTrips();
   const models = useTripModels(trips.data);
+  useOsNotifications(models, trips.isSuccess);
   const urgent = models.flatMap((m) => m.reminders).filter((r) => r.kind === "cancellation_deadline").length;
 
   return (

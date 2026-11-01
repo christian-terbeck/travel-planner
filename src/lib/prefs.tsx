@@ -28,6 +28,12 @@ export interface Prefs {
   /** Default currency for new trips and cross-trip summaries. */
   currency: string;
   reminders: ReminderSettings;
+  /** Reminders also appear as Windows notifications while the app runs. */
+  notifications: boolean;
+  /** Closing the window keeps the app running in the tray. */
+  closeToTray: boolean;
+  /** Keys of notifications already shown. */
+  notifiedKeys: string[];
   timeZone: string;
   rates: ExchangeRate[];
   routing: RoutingPrefs;
@@ -44,6 +50,9 @@ const PrefsCtx = createContext<Prefs>({
   theme: "system",
   currency: "EUR",
   reminders: defaultReminderSettings,
+  notifications: true,
+  closeToTray: false,
+  notifiedKeys: [],
   timeZone: systemTimeZone(),
   rates: [],
   routing: { enabled: false, url: DEFAULT_ROUTING_URL },
@@ -60,6 +69,15 @@ function parseReminders(raw: string | undefined): ReminderSettings {
   }
 }
 
+function parseList(raw: string | undefined): string[] {
+  try {
+    const v: unknown = JSON.parse(raw ?? "[]");
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
 export function PrefsProvider({ children }: { children: ReactNode }) {
   const info = useAppInfo();
   const prefs = useMemo<Prefs>(() => {
@@ -72,6 +90,9 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
       theme: (s.get("theme") as Theme) || "system",
       currency: s.get("currency") || "EUR",
       reminders: parseReminders(s.get("reminders")),
+      notifications: s.get("notifications") !== "0",
+      closeToTray: s.get("close_to_tray") === "1",
+      notifiedKeys: parseList(s.get("notified_keys")),
       timeZone: systemTimeZone(),
       rates: info.data?.exchange_rates ?? [],
       routing: {

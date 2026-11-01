@@ -13,6 +13,8 @@
     "windows": [
       {
         "title": "Travel Planner",
+        "label": "main",
+        "visible": false,
         "width": 1440,
         "height": 900,
         "minWidth": 1024,

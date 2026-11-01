@@ -78,6 +78,9 @@ export const api = {
   createBackup: (path: string) => call<BackupManifest>("create_backup", { path }),
   previewRestore: (path: string) => call<RestorePreview>("preview_restore", { path }),
   restoreBackup: (path: string) => call<string>("restore_backup", { path }),
+  notify: (title: string, body: string) => call<void>("notify", { title, body }),
+  autostartEnabled: () => call<boolean>("autostart_enabled"),
+  setAutostart: (enabled: boolean) => call<void>("set_autostart", { enabled }),
   roadRoutes: (queries: RoadQuery[]) => call<RoadResult[]>("road_routes", { queries }),
   clearRoadCache: () => call<number>("clear_road_cache"),
 };

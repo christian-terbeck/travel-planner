@@ -384,9 +384,13 @@ const de: Translation = {
     stay_outside_station: "{{items}} liegt außerhalb der geplanten Daten von {{station}}.",
     insurance_not_covering: "{{items}} deckt nicht die ganze Reise ab ({{from}} – {{to}}).",
   },
+  notifications: {
+    summary_one: "{{count}} Erinnerung braucht deine Aufmerksamkeit.",
+    summary_other: "{{count}} Erinnerungen brauchen deine Aufmerksamkeit.",
+  },
   reminder: {
     inAppOnly:
-      "Wird angezeigt, solange die App geöffnet ist – bei geschlossener App gibt es keine Benachrichtigungen.",
+      "Kommt auch als Windows-Benachrichtigung, solange die App läuft (siehe Einstellungen). Bei ganz geschlossener App wird nichts gesendet.",
     none: "Keine anstehenden Erinnerungen.",
     cancellation_deadline: "Kostenlose Stornierung von {{title}} endet {{date}}.",
     departure: "Abreise in {{days}} Tagen ({{date}}).",
@@ -1023,6 +1027,13 @@ const de: Translation = {
     languageAuto: "Wie die Formate",
     reminders: "Erinnerungen",
     remindersHint: "Wie viele Tage vorher Erinnerungen in der App erscheinen",
+    notifications: {
+      enable: "Windows-Benachrichtigungen",
+      hint: "Stornofristen, offene Zahlungen, Abreisen, Aufgaben und fehlende Bestätigungen erscheinen auch als Benachrichtigung: einmal, sobald sie anstehen, und noch einmal am Vortag.",
+      tray: "Beim Schließen des Fensters im Infobereich weiterlaufen",
+      autostart: "Mit Windows starten (im Infobereich)",
+      autostartHint: "Dann kommen Erinnerungen auch, wenn du Travel Planner nicht geöffnet hast.",
+    },
     reminder: {
       cancellationDays: "Stornofristen",
       departureDays: "Abreise",
