@@ -37,6 +37,11 @@ export interface Prefs {
   timeZone: string;
   rates: ExchangeRate[];
   routing: RoutingPrefs;
+  /** The user allowed sending search texts to the address search. */
+  geocoding: boolean;
+  /** ECB reference rates are fetched automatically; last successful fetch. */
+  ecbRates: boolean;
+  ecbFetchedAt: string | null;
   dataDir: string;
   ready: boolean;
 }
@@ -56,6 +61,9 @@ const PrefsCtx = createContext<Prefs>({
   timeZone: systemTimeZone(),
   rates: [],
   routing: { enabled: false, url: DEFAULT_ROUTING_URL },
+  geocoding: false,
+  ecbRates: false,
+  ecbFetchedAt: null,
   dataDir: "",
   ready: false,
 });
@@ -99,6 +107,9 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
         enabled: s.get("routing_enabled") === "1",
         url: s.get("routing_url")?.trim() || DEFAULT_ROUTING_URL,
       },
+      geocoding: s.get("geocoding_enabled") === "1",
+      ecbRates: s.get("ecb_rates_enabled") === "1",
+      ecbFetchedAt: s.get("ecb_rates_fetched_at") ?? null,
       dataDir: info.data?.data_dir ?? "",
       ready: info.isSuccess,
     };

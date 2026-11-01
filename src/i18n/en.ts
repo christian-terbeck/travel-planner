@@ -78,6 +78,11 @@ const en = {
     backup_invalid: "This file is not a valid Travel Planner backup.",
     routing_disabled: "Online road routes are turned off in Settings.",
     backup_newer: "The backup was made by a newer version of Travel Planner.",
+    geocoding_disabled: "The address search is turned off in Settings.",
+    rates_disabled: "Fetching exchange rates is turned off in Settings.",
+    online_failed: "The online service could not be reached or gave no usable answer. Try again later.",
+    notify_failed: "The notification could not be shown.",
+    autostart_failed: "Starting with Windows could not be changed.",
   },
   status: {
     idea: "Idea",
@@ -987,9 +992,16 @@ const en = {
     restoredTitle: "Backup restored",
     safety: "Your previous data was saved to {{path}}.",
   },
+  geocode: {
+    search: "Find the location online",
+    find: "Find “{{query}}” online",
+    needQuery: "Enter an address or place first",
+    none: "Nothing found. Try a shorter or different address.",
+    attribution: "Search: Nominatim · © OpenStreetMap contributors",
+  },
   rates: {
     title: "Exchange rates",
-    hint: "Used to compare and total amounts in different currencies. Nothing is fetched online.",
+    hint: "Used to compare and total amounts in different currencies. Only fetched online if you turn on ECB rates under Integrations.",
     add: "Add rate",
     empty: "No exchange rates. Amounts in other currencies are shown separately.",
     asOf: "as of {{date}}",
@@ -999,6 +1011,9 @@ const en = {
     rateHint: "Decimal point, e.g. 1.0825",
     date: "Date",
     source: "Source",
+    ecbNow: "Fetch ECB rates",
+    ecbFetched_one: "{{count}} new rate from the ECB.",
+    ecbFetched_other: "{{count}} new rates from the ECB.",
     sourcePlaceholder: "Bank statement, ECB…",
   },
   settings: {
@@ -1037,7 +1052,7 @@ const en = {
     integrations: "Integrations & privacy",
     integrationsNone: "No search or price providers are configured.",
     privacy:
-      "No trip data, documents or search criteria are sent anywhere. Links open in your browser only when you click them. The map draws offline from bundled data.",
+      "Nothing is sent anywhere unless you turn on one of the online services above. Links open in your browser only when you click them. The map draws offline from bundled data.",
     routing: {
       enable: "Online road routes",
       hint: "Exact driving distances, times and road lines on the route map instead of estimates.",
@@ -1050,6 +1065,14 @@ const en = {
       clearCache: "Clear cached routes",
       cleared_one: "{{count}} cached route removed.",
       cleared_other: "{{count}} cached routes removed.",
+    },
+    geocoding: {
+      enable: "Online address search",
+      hint: "A search button next to locations finds coordinates for an address, station or place. Only the text you search for and the interface language are sent, to the public Nominatim server of OpenStreetMap, and only when you click it. Answers are kept on this computer.",
+    },
+    ecb: {
+      enable: "Exchange rates from the European Central Bank",
+      hint: "Fetches the euro reference rates once a day when the app starts. Nothing about your trips is sent. Rates you enter yourself stay as they are.",
     },
     version: "Travel Planner {{version}}",
   },

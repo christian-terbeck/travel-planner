@@ -82,6 +82,12 @@ const de: Translation = {
     backup_invalid: "Diese Datei ist keine gültige Travel-Planner-Sicherung.",
     routing_disabled: "Online-Straßenrouten sind in den Einstellungen ausgeschaltet.",
     backup_newer: "Die Sicherung stammt von einer neueren Version von Travel Planner.",
+    geocoding_disabled: "Die Adresssuche ist in den Einstellungen ausgeschaltet.",
+    rates_disabled: "Das Abrufen von Wechselkursen ist in den Einstellungen ausgeschaltet.",
+    online_failed:
+      "Der Online-Dienst war nicht erreichbar oder hat keine brauchbare Antwort geliefert. Versuche es später noch einmal.",
+    notify_failed: "Die Benachrichtigung konnte nicht angezeigt werden.",
+    autostart_failed: "Der Start mit Windows konnte nicht geändert werden.",
   },
   status: {
     idea: "Idee",
@@ -999,9 +1005,16 @@ const de: Translation = {
     restoredTitle: "Sicherung wiederhergestellt",
     safety: "Deine bisherigen Daten wurden in {{path}} gesichert.",
   },
+  geocode: {
+    search: "Lage online suchen",
+    find: "„{{query}}“ online suchen",
+    needQuery: "Gib zuerst eine Adresse oder einen Ort ein",
+    none: "Nichts gefunden. Versuche eine kürzere oder andere Adresse.",
+    attribution: "Suche: Nominatim · © OpenStreetMap-Mitwirkende",
+  },
   rates: {
     title: "Wechselkurse",
-    hint: "Zum Vergleichen und Summieren von Beträgen in verschiedenen Währungen. Es wird nichts online abgerufen.",
+    hint: "Zum Vergleichen und Summieren von Beträgen in verschiedenen Währungen. Nur online abgerufen, wenn du unter Integrationen die EZB-Kurse einschaltest.",
     add: "Kurs hinzufügen",
     empty: "Keine Wechselkurse. Beträge in anderen Währungen werden getrennt angezeigt.",
     asOf: "Stand {{date}}",
@@ -1011,6 +1024,9 @@ const de: Translation = {
     rateHint: "Mit Dezimalpunkt, z. B. 1.0825",
     date: "Datum",
     source: "Quelle",
+    ecbNow: "EZB-Kurse abrufen",
+    ecbFetched_one: "{{count}} neuer Kurs von der EZB.",
+    ecbFetched_other: "{{count}} neue Kurse von der EZB.",
     sourcePlaceholder: "Kontoauszug, EZB…",
   },
   settings: {
@@ -1049,7 +1065,7 @@ const de: Translation = {
     integrations: "Integrationen & Datenschutz",
     integrationsNone: "Es sind keine Such- oder Preisanbieter eingerichtet.",
     privacy:
-      "Es werden keine Reisedaten, Dokumente oder Suchkriterien irgendwohin gesendet. Links öffnen sich nur in deinem Browser, wenn du sie anklickst. Die Karte wird offline aus mitgelieferten Daten gezeichnet.",
+      "Es wird nichts gesendet, solange du keinen der Online-Dienste oben einschaltest. Links öffnen sich nur in deinem Browser, wenn du sie anklickst. Die Karte wird offline aus mitgelieferten Daten gezeichnet.",
     routing: {
       enable: "Online-Straßenrouten",
       hint: "Genaue Fahrstrecken, Fahrzeiten und Straßenverläufe auf der Routenkarte statt Schätzungen.",
@@ -1062,6 +1078,14 @@ const de: Translation = {
       clearCache: "Gespeicherte Routen löschen",
       cleared_one: "{{count}} gespeicherte Route entfernt.",
       cleared_other: "{{count}} gespeicherte Routen entfernt.",
+    },
+    geocoding: {
+      enable: "Online-Adresssuche",
+      hint: "Ein Suchknopf neben Ortsangaben findet die Koordinaten zu einer Adresse, einem Bahnhof oder Ort. Gesendet werden nur der gesuchte Text und die Sprache der Oberfläche, an den öffentlichen Nominatim-Server von OpenStreetMap, und nur wenn du klickst. Antworten werden auf diesem Computer gespeichert.",
+    },
+    ecb: {
+      enable: "Wechselkurse der Europäischen Zentralbank",
+      hint: "Ruft einmal täglich beim Start der App die Euro-Referenzkurse ab. Es wird nichts über deine Reisen gesendet. Selbst eingetragene Kurse bleiben unverändert.",
     },
     version: "Travel Planner {{version}}",
   },

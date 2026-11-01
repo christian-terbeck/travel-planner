@@ -162,6 +162,7 @@ export function TransportSection({ b, setB }: { b: OptionBundle; setB: (b: Optio
                 id={`t-fc-${i}`}
                 lat={s.from_lat}
                 lon={s.from_lon}
+                query={s.from_place}
                 onChange={(lat, lon) => set(i, { from_lat: lat, from_lon: lon })}
               />
             </Field>
@@ -191,6 +192,7 @@ export function TransportSection({ b, setB }: { b: OptionBundle; setB: (b: Optio
                 id={`t-tc-${i}`}
                 lat={s.to_lat}
                 lon={s.to_lon}
+                query={s.to_place}
                 onChange={(lat, lon) => set(i, { to_lat: lat, to_lon: lon })}
               />
             </Field>

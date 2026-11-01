@@ -14,6 +14,7 @@ import type { ErrorPayload } from "./bindings/ErrorPayload";
 import type { ImportMode } from "./bindings/ImportMode";
 import type { ImportPreview } from "./bindings/ImportPreview";
 import type { OptionBundle } from "./bindings/OptionBundle";
+import type { Place } from "./bindings/Place";
 import type { RestorePreview } from "./bindings/RestorePreview";
 import type { RoadQuery } from "./bindings/RoadQuery";
 import type { RoadResult } from "./bindings/RoadResult";
@@ -78,6 +79,8 @@ export const api = {
   createBackup: (path: string) => call<BackupManifest>("create_backup", { path }),
   previewRestore: (path: string) => call<RestorePreview>("preview_restore", { path }),
   restoreBackup: (path: string) => call<string>("restore_backup", { path }),
+  geocode: (query: string, language: string) => call<Place[]>("geocode", { query, language }),
+  fetchReferenceRates: () => call<number>("fetch_reference_rates"),
   notify: (title: string, body: string) => call<void>("notify", { title, body }),
   autostartEnabled: () => call<boolean>("autostart_enabled"),
   setAutostart: (enabled: boolean) => call<void>("set_autostart", { enabled }),

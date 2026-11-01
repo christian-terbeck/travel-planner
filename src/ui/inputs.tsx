@@ -1,9 +1,12 @@
 // Specialised inputs: money, currency, time zone, airport, dates.
 
+import { Loader2, Search } from "lucide-react";
 import { useEffect, useId, useMemo, useState } from "react";
+import type { Place } from "@/api/bindings/Place";
+import { api } from "@/api/client";
 import { parseCoordinates } from "@/domain/geo";
 import { currencyDigits, parseAmount, toMajorString } from "@/domain/money";
-import { useT } from "@/i18n";
+import { useErrorText, useT } from "@/i18n";
 import { type Airport, searchAirports, useAirports } from "@/lib/airports";
 import { usePrefs } from "@/lib/prefs";
 import { cn, Input, Select } from "./core";
@@ -350,16 +353,28 @@ export function LocationInput({
   lon,
   onChange,
   id,
+  query,
 }: {
   lat: number | null;
   lon: number | null;
   onChange: (lat: number | null, lon: number | null) => void;
   id?: string;
+  /** Address or place name to look up when the online address search is enabled. */
+  query?: string | null;
 }) {
+  const t = useT();
+  const errorText = useErrorText();
+  const { geocoding, language } = usePrefs();
   const shown = lat !== null && lon !== null ? `${lat}, ${lon}` : "";
   const [text, setText] = useState(shown);
   const [bad, setBad] = useState(false);
+  const [search, setSearch] = useState<{ busy: boolean; places: Place[] | null; error: string | null }>({
+    busy: false,
+    places: null,
+    error: null,
+  });
   useEffect(() => setText(shown), [shown]);
+  const set = (la: number, lo: number) => onChange(Math.round(la * 1e6) / 1e6, Math.round(lo * 1e6) / 1e6);
   const commit = () => {
     if (!text.trim()) {
       setBad(false);
@@ -368,18 +383,77 @@ export function LocationInput({
     }
     const c = parseCoordinates(text);
     setBad(!c);
-    if (c) onChange(Math.round(c.lat * 1e6) / 1e6, Math.round(c.lon * 1e6) / 1e6);
+    if (c) set(c.lat, c.lon);
   };
+  const find = async () => {
+    if (!query?.trim()) return;
+    setSearch({ busy: true, places: null, error: null });
+    try {
+      const places = await api.geocode(query, language);
+      setSearch({ busy: false, places, error: null });
+    } catch (e) {
+      setSearch({ busy: false, places: null, error: errorText(e) });
+    }
+  };
+  const close = () => setSearch({ busy: false, places: null, error: null });
   return (
-    <Input
-      id={id}
-      value={text}
-      placeholder="38.7139, -9.1334"
-      aria-invalid={bad}
-      onChange={(e) => setText(e.target.value)}
-      onBlur={commit}
-      onKeyDown={(e) => e.key === "Enter" && commit()}
-      className="tabular"
-    />
+    <div className="relative">
+      <div className="flex gap-1">
+        <Input
+          id={id}
+          value={text}
+          placeholder="38.7139, -9.1334"
+          aria-invalid={bad}
+          onChange={(e) => setText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => e.key === "Enter" && commit()}
+          className="tabular min-w-0 flex-1"
+        />
+        {geocoding && query !== undefined && (
+          <button
+            type="button"
+            className="flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-fg-2 hover:bg-surface-2 disabled:opacity-40"
+            title={query?.trim() ? t("geocode.find", { query }) : t("geocode.needQuery")}
+            aria-label={t("geocode.search")}
+            disabled={!query?.trim() || search.busy}
+            onClick={() => void find()}
+          >
+            {search.busy ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
+          </button>
+        )}
+      </div>
+      {(search.places || search.error) && (
+        <div className="absolute right-0 z-20 mt-1 w-80 rounded-md border border-line bg-surface py-1 shadow-lg">
+          {search.error ? (
+            <p className="px-2.5 py-1.5 text-danger text-xs">{search.error}</p>
+          ) : search.places?.length === 0 ? (
+            <p className="px-2.5 py-1.5 text-fg-3 text-xs">{t("geocode.none")}</p>
+          ) : (
+            <ul className="max-h-60 overflow-y-auto">
+              {search.places?.map((p) => (
+                <li key={`${p.lat},${p.lon}`}>
+                  <button
+                    type="button"
+                    className="w-full px-2.5 py-1.5 text-left text-sm hover:bg-surface-2"
+                    onClick={() => {
+                      set(p.lat, p.lon);
+                      close();
+                    }}
+                  >
+                    {p.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex items-center justify-between border-line border-t px-2.5 pt-1 text-[10px] text-fg-3">
+            <span>{t("geocode.attribution")}</span>
+            <button type="button" className="hover:text-fg" onClick={close}>
+              {t("common.close")}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -108,6 +108,7 @@ export function AccommodationSection({
             id="a-loc"
             lat={a.lat}
             lon={a.lon}
+            query={a.address}
             onChange={(lat, lon) => onChange({ ...a, lat, lon })}
           />
         </Field>

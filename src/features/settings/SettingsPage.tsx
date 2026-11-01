@@ -89,6 +89,7 @@ function RatesCard() {
   const t = useT();
   const prefs = usePrefs();
   const run = useAction();
+  const toast = useToast();
   const [draft, setDraft] = useState<ExchangeRate | null>(null);
   const create = (): ExchangeRate => ({
     id: newId(),
@@ -108,9 +109,24 @@ function RatesCard() {
         title={t("rates.title")}
         subtitle={t("rates.hint")}
         actions={
-          <Button size="sm" icon={<Plus className="size-3.5" />} onClick={() => setDraft(create())}>
-            {t("rates.add")}
-          </Button>
+          <div className="flex gap-2">
+            {prefs.ecbRates && (
+              <Button
+                size="sm"
+                icon={<RefreshCcw className="size-3.5" />}
+                onClick={async () => {
+                  const n = await run(() => api.fetchReferenceRates());
+                  if (n !== undefined)
+                    toast.show({ kind: "success", text: t("rates.ecbFetched", { count: n }) });
+                }}
+              >
+                {t("rates.ecbNow")}
+              </Button>
+            )}
+            <Button size="sm" icon={<Plus className="size-3.5" />} onClick={() => setDraft(create())}>
+              {t("rates.add")}
+            </Button>
+          </div>
         }
       />
       {prefs.rates.length === 0 ? (
@@ -429,7 +445,7 @@ function DataCard() {
 
 function IntegrationsCard() {
   const t = useT();
-  const { routing } = usePrefs();
+  const { routing, geocoding, ecbRates } = usePrefs();
   const run = useAction();
   const toast = useToast();
   const set = (key: string, value: string | null) => run(() => api.setSetting(key, value));
@@ -483,6 +499,22 @@ function IntegrationsCard() {
           </Button>
         </div>
         <p className="pl-6 text-fg-3 text-xs">{t("settings.routing.defaultService")}</p>
+        <div className="flex flex-col gap-1 border-line border-t pt-3">
+          <Checkbox
+            label={<span className="font-medium">{t("settings.geocoding.enable")}</span>}
+            checked={geocoding}
+            onChange={(e) => set("geocoding_enabled", e.target.checked ? "1" : null)}
+          />
+          <p className="pl-6 text-fg-3 text-xs">{t("settings.geocoding.hint")}</p>
+        </div>
+        <div className="flex flex-col gap-1 border-line border-t pt-3">
+          <Checkbox
+            label={<span className="font-medium">{t("settings.ecb.enable")}</span>}
+            checked={ecbRates}
+            onChange={(e) => set("ecb_rates_enabled", e.target.checked ? "1" : null)}
+          />
+          <p className="pl-6 text-fg-3 text-xs">{t("settings.ecb.hint")}</p>
+        </div>
         <p className="border-line border-t pt-3">{t("settings.integrationsNone")}</p>
         <p className="text-fg-3">{t("settings.privacy")}</p>
       </div>

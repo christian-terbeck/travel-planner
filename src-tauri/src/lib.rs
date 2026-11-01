@@ -7,6 +7,8 @@ use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Manager, State, WindowEvent};
 use tp_core::model::{Booking, CancellationPolicy, Document, OptionBundle, Scenario, ScenarioSelection, TripGraph};
+use tp_core::geocoding::{self, Place};
+use tp_core::rates;
 use tp_core::routing::{self, RoadQuery, RoadResult};
 use tp_core::store::{AppInfo, BookingInput, CancelInput, Entity, EntityKind};
 use tp_core::transfer::{self, BackupManifest, ImportMode, ImportPreview, RestorePreview};
@@ -178,10 +180,7 @@ async fn road_routes(app: tauri::AppHandle, queries: Vec<RoadQuery>) -> CmdResul
     })?;
     let missing: Vec<usize> = (0..queries.len()).filter(|&i| results[i].is_none()).collect();
     if !missing.is_empty() {
-        let user_agent = format!(
-            "TravelPlanner/{} (+https://github.com/christian-terbeck/travel-planner)",
-            app.package_info().version
-        );
+        let user_agent = user_agent(&app);
         let todo: Vec<RoadQuery> = missing.iter().map(|&i| queries[i]).collect();
         let url = service.clone();
         let fetched = tauri::async_runtime::spawn_blocking(move || {
@@ -208,6 +207,54 @@ async fn road_routes(app: tauri::AppHandle, queries: Vec<RoadQuery>) -> CmdResul
         })?;
     }
     Ok(results.into_iter().flatten().collect())
+}
+
+/// Identifies the app to online services, as their usage policies ask.
+fn user_agent(app: &tauri::AppHandle) -> String {
+    format!("TravelPlanner/{} (+https://github.com/christian-terbeck/travel-planner)", app.package_info().version)
+}
+
+/// Searches an address or place, when the user enabled the address search. Only the search text
+/// and the UI language are sent; answers are cached.
+#[tauri::command]
+async fn geocode(app: tauri::AppHandle, query: String, language: String) -> CmdResult<Vec<Place>> {
+    let state = app.state::<AppState>();
+    let query = geocoding::normalize(&query).map_err(err)?;
+    let language = if language == "de" { "de" } else { "en" };
+    let (service, cached) = with(&state, |s| {
+        let config = s.geocoding_config()?;
+        if !config.enabled {
+            return Err(CoreError::rule("geocoding_disabled", "the address search is turned off"));
+        }
+        let cached = s.cached_places(&config.url, &query, language)?;
+        Ok((config.url, cached))
+    })?;
+    if let Some(places) = cached {
+        return Ok(places);
+    }
+    let agent = user_agent(&app);
+    let (url, q) = (service.clone(), query.clone());
+    let places = tauri::async_runtime::spawn_blocking(move || geocoding::fetch(&url, &q, language, &agent))
+        .await
+        .map_err(|e| err(CoreError::rule("busy", e.to_string())))?
+        .map_err(err)?;
+    with(&state, |s| s.cache_places(&service, &query, language, &places))?;
+    Ok(places)
+}
+
+/// Fetches the ECB reference rates, when enabled; returns how many new rates were stored.
+#[tauri::command]
+async fn fetch_reference_rates(app: tauri::AppHandle) -> CmdResult<usize> {
+    let state = app.state::<AppState>();
+    if !with(&state, |s| s.ecb_rates_enabled())? {
+        return Err(err(CoreError::rule("rates_disabled", "fetching exchange rates is turned off")));
+    }
+    let agent = user_agent(&app);
+    let rates = tauri::async_runtime::spawn_blocking(move || rates::fetch(&agent))
+        .await
+        .map_err(|e| err(CoreError::rule("busy", e.to_string())))?
+        .map_err(err)?;
+    with(&state, |s| s.store_reference_rates(&rates))
 }
 
 #[tauri::command]
@@ -357,6 +404,8 @@ pub fn run() {
             restore_backup,
             road_routes,
             clear_road_cache,
+            geocode,
+            fetch_reference_rates,
             notify,
             autostart_enabled,
             set_autostart,

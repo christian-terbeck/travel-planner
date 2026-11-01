@@ -124,6 +124,7 @@ export function ActivitySection({
             id="ac-coords"
             lat={a.lat}
             lon={a.lon}
+            query={a.location}
             onChange={(lat, lon) => onChange({ ...a, lat, lon })}
           />
         </Field>
