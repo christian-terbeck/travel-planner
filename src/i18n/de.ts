@@ -891,7 +891,7 @@ const de: Translation = {
     explore: "Kombinationen berechnen",
     recalculate: "Neu berechnen",
     exploreIntro:
-      "Berechnet alle Kombinationen deiner gespeicherten Alternativen, entfernt unvereinbare und sortiert sie nach Gesamtkosten.",
+      "Berechnet alle Kombinationen deiner gespeicherten Alternativen, entfernt unvereinbare und sortiert sie nach Gesamtkosten – oder nach deiner Gewichtung.",
     disclaimer:
       "Verglichen werden nur Alternativen, die du gespeichert hast. „Günstigste“ heißt die günstigste deiner gespeicherten Optionen – nicht das günstigste Angebot überhaupt.",
     tooMany:
@@ -922,8 +922,24 @@ const de: Translation = {
       car: "Auto",
       total: "Gesamt",
       vsPreferred: "ggü. Plan",
+      tradeOffs: "Zeit · Bewertung · flexibel",
       check: "Prüfung",
     },
+    weightsHint:
+      "Sortiere die Kombinationen nach dem, was dir wichtig ist. Jede Kennzahl wird nur mit den anderen Kombinationen hier verglichen.",
+    criterion: {
+      price: "Preis",
+      time: "Reisezeit & Umstiege",
+      rating: "Deine Bewertungen",
+      flexibility: "Kostenlos stornierbar",
+    },
+    weight: { 0: "Egal", 1: "Etwas", 2: "Wichtig", 3: "Sehr wichtig" },
+    byPrice: "Wieder nur nach Preis",
+    bestWeighed: "Am besten nach deiner Gewichtung",
+    changes_one: "{{count}} Umstieg",
+    changes_other: "{{count}} Umstiege",
+    avgRating: "★ {{rating}} im Schnitt",
+    flexibleShare: "{{percent}} % kostenlos stornierbar",
   },
   booking: {
     title: "{{title}} buchen",

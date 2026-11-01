@@ -879,7 +879,7 @@ const en = {
     explore: "Explore combinations",
     recalculate: "Recalculate",
     exploreIntro:
-      "Calculates all combinations of the alternatives you saved, removes incompatible ones and sorts them by total cost.",
+      "Calculates all combinations of the alternatives you saved, removes incompatible ones and sorts them by total cost — or by the weights you set.",
     disclaimer:
       "Only alternatives you saved are compared. “Cheapest” means the cheapest of your saved options — not the cheapest offer available anywhere.",
     tooMany:
@@ -910,8 +910,24 @@ const en = {
       car: "Car",
       total: "Total",
       vsPreferred: "vs. plan",
+      tradeOffs: "Time · rating · flexible",
       check: "Check",
     },
+    weightsHint:
+      "Order the combinations by what matters to you. Each measure is compared with the other combinations here only.",
+    criterion: {
+      price: "Price",
+      time: "Time on the way & changes",
+      rating: "Your ratings",
+      flexibility: "Free cancellation",
+    },
+    weight: { 0: "Doesn't matter", 1: "A little", 2: "Important", 3: "Very important" },
+    byPrice: "Back to price only",
+    bestWeighed: "Best by your weights",
+    changes_one: "{{count}} change",
+    changes_other: "{{count}} changes",
+    avgRating: "★ {{rating}} on average",
+    flexibleShare: "{{percent}} % cancellable for free",
   },
   booking: {
     title: "Book {{title}}",

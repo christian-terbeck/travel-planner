@@ -76,3 +76,5 @@ untouched):
     the balances become even; delete the settlement and undo.
 28. Edit a trip's buffers (change 30 / 120 min): a flight followed by a train 60 minutes later is
     flagged; an activity 30 minutes after landing and a 15:00 check-in after a 09:00 landing show up.
+29. Explorer with a direct and a connecting flight: by price the cheaper comes first; set “Time on the
+    way” to “Very important” and price to “A little”: the direct one leads, marked “Best by your weights”.

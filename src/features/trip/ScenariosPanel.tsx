@@ -13,6 +13,14 @@ import {
   scenarioSelection,
 } from "@/domain/scenarios";
 import type { Scenario } from "@/domain/types";
+import {
+  CRITERIA,
+  DEFAULT_WEIGHTS,
+  isPriceOnly,
+  type Metrics,
+  type Weights,
+  weigh,
+} from "@/domain/weighting";
 import { useT } from "@/i18n";
 import { useFormat } from "@/lib/prefs";
 import { newScenario, nil } from "@/lib/rows";
@@ -45,7 +53,8 @@ export function ScenariosPanel() {
   const remove = useRemove();
   const confirm = useConfirm();
   const navigate = useNavigate();
-  const [, setUi] = useTripUi(m.graph.trip.id);
+  const [ui, setUi] = useTripUi(m.graph.trip.id);
+  const weights = ui.weights ?? DEFAULT_WEIGHTS;
   const [editing, setEditing] = useState<{ scenario: Scenario; selection: Selection } | null>(null);
   const [explored, setExplored] = useState(false);
   const cur = m.graph.trip.currency;
@@ -59,6 +68,15 @@ export function ScenariosPanel() {
   const bestSaved = cheapest(saved.map((s) => s.e));
   const exploration = useMemo(() => (explored ? explore(m.ctx) : null), [explored, m]);
   const bestCombo = exploration ? cheapest(exploration.results) : null;
+  const weighed = useMemo(
+    () =>
+      exploration && !exploration.tooMany ? weigh(exploration.results, m.graph, weights, m.now, m.tz) : null,
+    [exploration, m, weights],
+  );
+  const bestWeighed =
+    weighed && !isPriceOnly(weights)
+      ? (weighed.find((w) => w.e.compatible && w.e.complete)?.e ?? null)
+      : null;
 
   const preview = (id: string) => {
     setUi({ previewScenarioId: id });
@@ -187,6 +205,7 @@ export function ScenariosPanel() {
           <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden />
           {t("scenario.disclaimer")}
         </p>
+        <WeightsBar weights={weights} onChange={(w) => setUi({ weights: w })} />
         {!exploration ? (
           <p className="px-4 py-4 text-fg-3 text-sm">{t("scenario.exploreIntro")}</p>
         ) : exploration.tooMany ? (
@@ -212,13 +231,17 @@ export function ScenariosPanel() {
                 )}
             </p>
             <ScenarioTable
-              rows={exploration.results.slice(0, SHOWN).map((e, i) => ({
-                key: String(i),
-                scenario: saved.find((s) => sameSelection(s.e.selection, e.selection))?.scenario ?? null,
-                e,
-              }))}
+              rows={(weighed ?? exploration.results.map((e) => ({ e, metrics: null })))
+                .slice(0, SHOWN)
+                .map(({ e, metrics }, i) => ({
+                  key: String(i),
+                  scenario: saved.find((s) => sameSelection(s.e.selection, e.selection))?.scenario ?? null,
+                  e,
+                  metrics,
+                }))}
               reference={preferred?.e ?? null}
               best={bestCombo}
+              bestWeighed={bestWeighed}
               currency={cur}
               showSlots
               actions={(row) =>
@@ -253,12 +276,15 @@ interface Row {
   key: string;
   scenario: Scenario | null;
   e: Evaluation;
+  /** Measures for weighing (explorer only). */
+  metrics?: Metrics | null;
 }
 
 function ScenarioTable({
   rows,
   reference,
   best,
+  bestWeighed,
   currency,
   actions,
   showSlots,
@@ -266,6 +292,7 @@ function ScenarioTable({
   rows: Row[];
   reference: Evaluation | null;
   best: Evaluation | null;
+  bestWeighed?: Evaluation | null;
   currency: string;
   actions: (r: Row) => React.ReactNode;
   showSlots?: boolean;
@@ -274,6 +301,7 @@ function ScenarioTable({
   const f = useFormat();
   const m = useTrip();
   const warningText = useWarningText(m);
+  const withMetrics = rows.some((r) => r.metrics);
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -289,6 +317,7 @@ function ScenarioTable({
             <th className="px-2 py-1.5 text-right font-medium">{t("scenario.col.car")}</th>
             <th className="px-2 py-1.5 text-right font-medium">{t("scenario.col.total")}</th>
             <th className="px-2 py-1.5 text-right font-medium">{t("scenario.col.vsPreferred")}</th>
+            {withMetrics && <th className="px-2 py-1.5 font-medium">{t("scenario.col.tradeOffs")}</th>}
             <th className="px-2 py-1.5 font-medium">{t("scenario.col.check")}</th>
             <th className="px-4 py-1.5" />
           </tr>
@@ -340,6 +369,11 @@ function ScenarioTable({
                   {best === e && (
                     <Badge tone="ok" className="mt-1">
                       {t("scenario.cheapestSaved")}
+                    </Badge>
+                  )}
+                  {bestWeighed === e && (
+                    <Badge tone="primary" className="mt-1">
+                      {t("scenario.bestWeighed")}
                     </Badge>
                   )}
                 </td>
@@ -403,6 +437,11 @@ function ScenarioTable({
                       ? "±0"
                       : f.minor(diff, currency, { signed: true, compact: true })}
                 </td>
+                {withMetrics && (
+                  <td className="whitespace-nowrap px-2 py-2 text-fg-2 text-xs">
+                    {row.metrics && <MetricsCell m={row.metrics} />}
+                  </td>
+                )}
                 <td className="px-2 py-2 text-xs">
                   {!e.compatible ? (
                     <Badge
@@ -428,6 +467,55 @@ function ScenarioTable({
           })}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function MetricsCell({ m }: { m: Metrics }) {
+  const t = useT();
+  const f = useFormat();
+  return (
+    <ul className="flex flex-col gap-0.5">
+      <li>
+        {m.travelMinutes === null ? "—" : f.duration(m.travelMinutes)}
+        {m.changes > 0 && ` · ${t("scenario.changes", { count: m.changes })}`}
+      </li>
+      {m.rating !== null && <li>{t("scenario.avgRating", { rating: m.rating.toFixed(1) })}</li>}
+      {m.flexible !== null && (
+        <li>{t("scenario.flexibleShare", { percent: Math.round(m.flexible * 100) })}</li>
+      )}
+    </ul>
+  );
+}
+
+const LEVELS = [0, 1, 2, 3];
+
+/** How much each measure counts when the explorer orders combinations. */
+function WeightsBar({ weights, onChange }: { weights: Weights; onChange: (w: Weights | null) => void }) {
+  const t = useT();
+  return (
+    <div className="flex flex-wrap items-end gap-3 border-line border-b px-4 py-2.5">
+      <span className="w-full text-fg-3 text-xs">{t("scenario.weightsHint")}</span>
+      {CRITERIA.map((c) => (
+        <Field key={c} label={t(`scenario.criterion.${c}`)} htmlFor={`w-${c}`} className="w-40">
+          <Select
+            id={`w-${c}`}
+            value={weights[c]}
+            onChange={(e) => onChange({ ...weights, [c]: Number(e.target.value) })}
+          >
+            {LEVELS.map((l) => (
+              <option key={l} value={l}>
+                {t(`scenario.weight.${l}`)}
+              </option>
+            ))}
+          </Select>
+        </Field>
+      ))}
+      {!isPriceOnly(weights) && (
+        <Button size="sm" variant="ghost" onClick={() => onChange(null)}>
+          {t("scenario.byPrice")}
+        </Button>
+      )}
     </div>
   );
 }

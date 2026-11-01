@@ -1,15 +1,18 @@
-// Per-trip UI context that survives switching between the workspace views: the selected item
-// and the scenario previewed in the calendar.
+// Per-trip UI context that survives switching between the workspace views: the selected item,
+// the scenario previewed in the calendar and the weights of the combination explorer.
 
 import { useCallback, useSyncExternalStore } from "react";
+import type { Weights } from "@/domain/weighting";
 
 export interface TripUiState {
   selectedOptionId: string | null;
   /** Scenario shown as a preview in the itinerary instead of the current plan. */
   previewScenarioId: string | null;
+  /** How combinations are weighed in the explorer; null = by price. */
+  weights: Weights | null;
 }
 
-const empty: TripUiState = { selectedOptionId: null, previewScenarioId: null };
+const empty: TripUiState = { selectedOptionId: null, previewScenarioId: null, weights: null };
 const states = new Map<string, TripUiState>();
 const listeners = new Set<() => void>();
 
