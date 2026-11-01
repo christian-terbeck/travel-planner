@@ -673,6 +673,39 @@ fn packing_lists_belong_to_their_trip_and_start_unpacked_in_a_copy() {
 }
 
 #[test]
+fn travel_documents_stay_with_their_traveler() {
+    let (mut s, dir) = store();
+    let t = trip(&mut s, "Portugal");
+    let anna = traveler(&mut s, &t, "Anna");
+    let doc = TravelerDocument {
+        id: new_id(),
+        traveler_id: anna.clone(),
+        kind: TravelDocumentKind::Passport,
+        label: None,
+        expires_on: Some("2027-08-01".into()),
+        notes: None,
+    };
+    s.save(Entity::TravelerDocument(doc.clone())).unwrap();
+    assert!(s.save(Entity::TravelerDocument(TravelerDocument { expires_on: Some("soon".into()), ..doc.clone() })).is_err());
+    let other = trip(&mut s, "Iceland");
+    let ben = traveler(&mut s, &other, "Ben");
+    let moved = s.save(Entity::TravelerDocument(TravelerDocument { traveler_id: ben, ..doc.clone() }));
+    assert!(moved.is_err(), "documents do not move to a traveler of another trip");
+
+    let file = dir.path().join("trip.json");
+    s.export_trip(&t, &file).unwrap();
+    let imported = s.import_trip(&file, ImportMode::AsNew).unwrap();
+    let g = s.trip_graph(&imported).unwrap();
+    assert_eq!(g.traveler_documents.len(), 1);
+    assert_eq!(g.traveler_documents[0].traveler_id, g.travelers[0].id);
+
+    let undo = s.delete(EntityKind::Traveler, &[anna]).unwrap();
+    assert!(s.trip_graph(&t).unwrap().traveler_documents.is_empty());
+    s.undo_delete(&undo).unwrap();
+    assert_eq!(s.trip_graph(&t).unwrap().traveler_documents.len(), 1);
+}
+
+#[test]
 fn packing_templates_are_checked_and_listed() {
     let (mut s, _dir) = store();
     let template = |items: &str| PackingTemplate {

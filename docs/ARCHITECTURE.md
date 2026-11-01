@@ -19,6 +19,7 @@ these decisions.
 | Confirmation import | Optional, **off by default**: a picked PDF/image/mail is sent by the Rust core to the Anthropic Messages API (`claude-opus-5-5`, structured JSON output, `fallbacks: "default"`; raw HTTP because there is no Rust SDK). The answer only pre-fills the normal option and booking forms; every value is format-checked and dropped if it does not fit; the file is attached to the booking on save. The API key is kept in the Windows Credential Manager (`keyring`), never in the database, backups or the UI | README §12 "extract candidate details and ask the user to confirm"; AI stays optional (README Phase 5) |
 | Automatic backup | Optional, **off** until a folder is chosen: a thread in the Tauri shell checks every 30 min; when the last automatic backup is ≥ 20 h old and the data changed (trip count, last trip change, documents, rates), a normal full backup `travel-planner-auto-YYYYMMDD-HHMMSS.zip` is written there and the oldest beyond the limit (default 10) are deleted. Errors are kept in the settings and shown on the settings page | A synced folder (OneDrive) protects against a lost PC without a sync service; runs while the app waits in the tray |
 | Packing lists | Own rows per trip (category, quantity, optional traveler, packed), not tasks: tasks are dated to-dos, packing is a checklist per person. Starting lists ship with the UI in English and German; own lists are saved as `packing_templates` (JSON items) and merged without duplicates. Trip copies take the list unpacked | Reused every trip; a template per trip type saves retyping |
+| Travel documents | Per traveler: kind (passport, ID card, visa, driving licence, other), optional name and expiry; no numbers are stored. A document expiring before the trip ends is a critical (non-blocking) warning, a passport valid for less than 6 months after it an info; both also appear as reminders before the trip. A traveler added under a name known from another trip takes over their category, birth date and documents | Expired passports are a costly surprise; travelers are per trip, so known names avoid retyping |
 | Calendar export | ICS export of a trip's itinerary | Offline, works with Outlook/Google Calendar |
 | Travelers | Travelers are entities; payments record who paid, costs can be split | Cost splitting and per-traveler settlement |
 | Calendar rendering | Own month/week/agenda/itinerary views | Needs plan/booking/preview semantics, stays and time zones; FullCalendar 7 is a new headless API with v6 plugins |
@@ -65,7 +66,7 @@ code. Times for travel events are stored as **local date-time + IANA time zone**
 ticket says); instants are derived. Record timestamps (`created_at`, `checked_at`, …) are UTC.
 
 ```
-Trip ─┬─ Traveler
+Trip ─┬─ Traveler ── TravelerDocument* (kind + validity, no numbers)
       ├─ Station (ordered stops)
       ├─ Slot (a need: "Flights", "Stay Lisbon", "Rental car", "Boat tour")
       │    └─ Option (an alternative; kind-specific details)
@@ -133,7 +134,7 @@ ExchangeRate* (explicit rate + date + source), PackingTemplate* (reusable lists)
   days, per option.
 - *Conflicts:* activities outside the period, overlapping timed activities, accommodation gaps
   and overlaps, rental period not covering driving days, pickup before flight arrival + buffer,
-  duplicate bookings, deadlines, travel insurance not covering the trip. Connections are checked
+  duplicate bookings, deadlines, travel insurance not covering the trip, travel documents expiring before the end (passports: within 6 months after it). Connections are checked
   across flights and other transport; parking and insurance are not activities. Each warning has a stable key (for dismissal) and references
   the components involved.
 - *Combinations:* cartesian product over the options of each slot (booked options are fixed,

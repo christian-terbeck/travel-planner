@@ -473,6 +473,16 @@ impl Validate for Task {
     }
 }
 
+impl Validate for TravelerDocument {
+    fn validate(&self) -> CoreResult<()> {
+        id("id", &self.id)?;
+        id("traveler_id", &self.traveler_id)?;
+        opt_line("label", &self.label)?;
+        opt_date("expires_on", &self.expires_on)?;
+        opt_text("notes", &self.notes)
+    }
+}
+
 impl Validate for PackingItem {
     fn validate(&self) -> CoreResult<()> {
         id("id", &self.id)?;

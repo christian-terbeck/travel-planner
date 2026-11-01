@@ -101,6 +101,28 @@ const de: Translation = {
     savedLists: "Deine Listen",
     builtInLists: "Vorschläge",
   },
+  travelDocument: {
+    title: "Reisende & Dokumente",
+    hint: "Gültigkeit von Reisepässen, Ausweisen und Visa, geprüft gegen die Reisedaten.",
+    noTravelers: "Füge Reisende beim Bearbeiten der Reise hinzu.",
+    add: "Dokument für {{name}} hinzufügen",
+    edit: "Dokument von {{name}}",
+    privacy: "Es werden nur Art und Gültigkeit gespeichert, keine Dokumentnummern.",
+    validUntil: "gültig bis {{date}}",
+    noExpiry: "ohne Ablaufdatum",
+    kindLabel: "Art",
+    expires: "Gültig bis",
+    label: "Bezeichnung (optional)",
+    labelPlaceholder: "z. B. ESTA USA",
+    notes: "Notizen",
+    kind: {
+      passport: "Reisepass",
+      id_card: "Personalausweis",
+      visa: "Visum",
+      driving_licence: "Führerschein",
+      other: "Dokument",
+    },
+  },
   common: {
     back: "Zurück",
     cancel: "Abbrechen",
@@ -476,6 +498,9 @@ const de: Translation = {
     duplicate_booking: "Mögliche Doppelbuchung: {{items}}.",
     stay_outside_station: "{{items}} liegt außerhalb der geplanten Daten von {{station}}.",
     insurance_not_covering: "{{items}} deckt nicht die ganze Reise ab ({{from}} – {{to}}).",
+    document_expires: "{{name}}: {{doc}} läuft am {{date}} ab, vor dem Ende der Reise.",
+    passport_validity:
+      "{{name}}: Reisepass läuft am {{date}} ab, weniger als 6 Monate nach der Reise. Viele Länder verlangen 6 Monate Gültigkeit.",
   },
   notifications: {
     summary_one: "{{count}} Erinnerung braucht deine Aufmerksamkeit.",
@@ -493,6 +518,8 @@ const de: Translation = {
     missing_document: "Keine Bestätigung angehängt für {{title}} ({{date}}).",
     task_due: "Aufgabe fällig am {{date}}: {{title}}.",
     price_target: "{{title}} gibt es für {{price}} – zum Zielpreis von {{target}} oder darunter.",
+    document_expiry: "{{name}}: {{doc}} läuft {{date}} ab, vor dem Ende der Reise.",
+    passport_validity: "{{name}}: Reisepass nur bis {{date}} gültig (weniger als 6 Monate nach der Reise).",
   },
 
   planning: {

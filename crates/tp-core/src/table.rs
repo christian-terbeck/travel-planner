@@ -27,6 +27,7 @@ macro_rules! rows {
 rows! {
     Trip => "trips";
     Traveler => "travelers";
+    TravelerDocument => "traveler_documents";
     Station => "stations";
     Slot => "slots";
     PlanOption => "options";

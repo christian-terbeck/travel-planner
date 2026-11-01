@@ -15,7 +15,9 @@ export type ReminderKind =
   | "missing_accommodation"
   | "missing_document"
   | "task_due"
-  | "price_target";
+  | "price_target"
+  | "document_expiry"
+  | "passport_validity";
 
 export interface Reminder {
   key: string;
@@ -163,6 +165,22 @@ export function reminders(
         optionId: null,
         bookingId: null,
         params: { from: first.toString(), to: last.toString(), nights: daysBetween(first, last) + 1 },
+      });
+    }
+  }
+  // Travel documents that are not valid long enough (unless the warning was dismissed).
+  if (upcoming) {
+    for (const w of plan.warnings) {
+      if (w.code !== "document_expires" && w.code !== "passport_validity") continue;
+      push({
+        kind: w.code === "document_expires" ? "document_expiry" : "passport_validity",
+        severity: w.code === "document_expires" ? "warning" : "info",
+        key: `document|${w.key}`,
+        date: w.date ?? start?.toString() ?? today.toString(),
+        at: null,
+        optionId: null,
+        bookingId: null,
+        params: w.params,
       });
     }
   }

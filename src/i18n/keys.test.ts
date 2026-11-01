@@ -70,6 +70,8 @@ describe("translations", () => {
         "duplicate_booking",
         "stay_outside_station",
         "insurance_not_covering",
+        "document_expires",
+        "passport_validity",
       ],
       reminder: [
         "cancellation_deadline",
@@ -80,6 +82,8 @@ describe("translations", () => {
         "missing_document",
         "task_due",
         "price_target",
+        "document_expiry",
+        "passport_validity",
       ],
       "cancellation.state": [
         "free",

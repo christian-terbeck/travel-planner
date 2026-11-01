@@ -32,6 +32,7 @@ pub struct Store {
 pub enum Entity {
     Trip(Trip),
     Traveler(Traveler),
+    TravelerDocument(TravelerDocument),
     Station(Station),
     Slot(Slot),
     Payment(Payment),
@@ -53,6 +54,7 @@ pub enum Entity {
 pub enum EntityKind {
     Trip,
     Traveler,
+    TravelerDocument,
     Station,
     Slot,
     Option,
@@ -195,6 +197,15 @@ impl Store {
                 t.validate()?;
                 table::upsert(&tx, &t)?;
                 t.trip_id
+            }
+            Entity::TravelerDocument(d) => {
+                d.validate()?;
+                let trip = trip_of(&tx, "traveler", &d.traveler_id)?;
+                if let Some(old) = table::find::<TravelerDocument>(&tx, &d.id)? {
+                    same_trip(&trip, trip_of(&tx, "traveler", &old.traveler_id)?, "traveler_id")?;
+                }
+                table::upsert(&tx, &d)?;
+                trip
             }
             Entity::Station(s) => {
                 s.validate()?;
@@ -369,6 +380,7 @@ impl Store {
             }
             EntityKind::Document => Some(del::<Document>(&tx, "document", key)?),
             EntityKind::Traveler => Some(del::<Traveler>(&tx, "traveler", key)?),
+            EntityKind::TravelerDocument => Some(del::<TravelerDocument>(&tx, "traveler_document", key)?),
             EntityKind::Station => Some(del::<Station>(&tx, "station", key)?),
             EntityKind::Payment => Some(del::<Payment>(&tx, "payment", key)?),
             EntityKind::Expense => Some(del::<Expense>(&tx, "expense", key)?),
@@ -853,6 +865,11 @@ pub(crate) fn load_graph(conn: &Connection, trip: Trip) -> CoreResult<TripGraph>
     let by_option = |extra: &str| format!("option_id IN {OPTIONS}{extra}");
     Ok(TripGraph {
         travelers: table::select(conn, "trip_id = ? ORDER BY sort, name", &id)?,
+        traveler_documents: table::select(
+            conn,
+            "traveler_id IN (SELECT id FROM travelers WHERE trip_id = ?) ORDER BY expires_on",
+            &id,
+        )?,
         stations: table::select(conn, "trip_id = ? ORDER BY sort", &id)?,
         slots: table::select(conn, "trip_id = ? ORDER BY sort, created_at", &id)?,
         options: table::select(conn, "slot_id IN (SELECT id FROM slots WHERE trip_id = ?) ORDER BY sort, created_at", &id)?,
@@ -892,6 +909,7 @@ fn table_of(kind: EntityKind) -> &'static str {
     match kind {
         EntityKind::Trip => Trip::TABLE,
         EntityKind::Traveler => Traveler::TABLE,
+        EntityKind::TravelerDocument => TravelerDocument::TABLE,
         EntityKind::Station => Station::TABLE,
         EntityKind::Slot => Slot::TABLE,
         EntityKind::Option => PlanOption::TABLE,
@@ -924,6 +942,9 @@ pub(crate) fn trip_of(conn: &Connection, what: &str, id: &str) -> CoreResult<Str
         "slot" => "SELECT trip_id FROM slots WHERE id = ?1",
         "station" => "SELECT trip_id FROM stations WHERE id = ?1",
         "traveler" => "SELECT trip_id FROM travelers WHERE id = ?1",
+        "traveler_document" => {
+            "SELECT t.trip_id FROM traveler_documents d JOIN travelers t ON t.id = d.traveler_id WHERE d.id = ?1"
+        }
         "expense" => "SELECT trip_id FROM expenses WHERE id = ?1",
         "scenario" => "SELECT trip_id FROM scenarios WHERE id = ?1",
         "task" => "SELECT trip_id FROM tasks WHERE id = ?1",

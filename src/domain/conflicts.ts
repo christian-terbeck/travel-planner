@@ -14,7 +14,7 @@ import {
   type PlainDate,
   parseDate,
 } from "./time";
-import type { Slot, Station, Trip } from "./types";
+import type { Slot, Station, Traveler, TravelerDocument, Trip } from "./types";
 
 export type Severity = "critical" | "warning" | "info";
 
@@ -39,7 +39,9 @@ export type WarningCode =
   | "nights_outside_limits"
   | "duplicate_booking"
   | "stay_outside_station"
-  | "insurance_not_covering";
+  | "insurance_not_covering"
+  | "document_expires"
+  | "passport_validity";
 
 export interface Warning {
   key: string;
@@ -64,13 +66,17 @@ function warn(
     slotIds?: string[];
     date?: string | null;
     params?: Warning["params"];
+    /** Distinguishes findings about other rows, e.g. a traveler's document. */
+    ref?: string;
   },
 ): Warning {
   const optionIds = [...(opts.optionIds ?? [])].sort();
   const slotIds = [...(opts.slotIds ?? [])].sort();
   const date = opts.date ?? null;
   return {
-    key: [code, optionIds.join("+"), slotIds.join("+"), date ?? ""].join("|"),
+    key: [code, optionIds.join("+"), slotIds.join("+"), date ?? "", ...(opts.ref ? [opts.ref] : [])].join(
+      "|",
+    ),
     code,
     severity,
     blocking: opts.blocking ?? false,
@@ -85,6 +91,8 @@ export interface CheckInput {
   trip: Trip;
   slots: Slot[];
   stations: Station[];
+  travelers?: Traveler[];
+  travelerDocuments?: TravelerDocument[];
   items: PlanItem[];
   /** Slot → selected option id, or null when intentionally left out. Missing key = no choice. */
   selection: Map<string, string | null>;
@@ -378,6 +386,23 @@ export function checkPlan(input: CheckInput): Warning[] {
             params: { from: period.start.toString(), to: period.end.toString() },
           }),
         );
+      }
+    }
+  }
+
+  // Travel documents must be valid for the whole trip; many countries want passports to be
+  // valid for six more months.
+  if (period.start && period.end) {
+    const names = new Map((input.travelers ?? []).map((t) => [t.id, t.name]));
+    for (const d of input.travelerDocuments ?? []) {
+      const expires = parseDate(d.expires_on);
+      const name = names.get(d.traveler_id);
+      if (!expires || name === undefined) continue;
+      const params = { name, kind: d.kind, label: d.label ?? "", date: expires.toString() };
+      if (compareDate(expires, period.end) < 0) {
+        out.push(warn("document_expires", "critical", { date: expires.toString(), params, ref: d.id }));
+      } else if (d.kind === "passport" && compareDate(expires, period.end.add({ months: 6 })) < 0) {
+        out.push(warn("passport_validity", "info", { date: expires.toString(), params, ref: d.id }));
       }
     }
   }

@@ -1,11 +1,11 @@
 import { Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { api } from "@/api/client";
-import { useAction } from "@/api/queries";
-import type { Traveler, TravelerCategory, Trip, TripGraph } from "@/domain/types";
+import { useAction, useTrips } from "@/api/queries";
+import type { Traveler, TravelerCategory, TravelerDocument, Trip, TripGraph } from "@/domain/types";
 import { useT } from "@/i18n";
 import { usePrefs } from "@/lib/prefs";
-import { newTraveler, newTrip, nil } from "@/lib/rows";
+import { newId, newTraveler, newTrip, nil } from "@/lib/rows";
 import { Button, Field, IconButton, Input, Select, Textarea } from "@/ui/core";
 import { Dialog } from "@/ui/dialog";
 import { CurrencySelect, DateInput, MoneyInput, NumberInput } from "@/ui/inputs";
@@ -29,6 +29,8 @@ export function TripForm({
   const run = useAction();
   const [trip, setTrip] = useState<Trip>(() => graph?.trip ?? newTrip(prefs.currency));
   const [travelers, setTravelers] = useState<Traveler[]>(graph?.travelers ?? []);
+  const known = useKnownTravelers(trip.id);
+  const namesId = useId();
   const [titleError, setTitleError] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -52,8 +54,22 @@ export function TripForm({
       async () => {
         await api.save({ type: "trip", row: { ...trip, title: trip.title.trim() } });
         const keep = travelers.filter((x) => x.name.trim());
-        for (const [i, tr] of keep.entries())
-          await api.save({ type: "traveler", row: { ...tr, name: tr.name.trim(), sort: i } });
+        for (const [i, tr] of keep.entries()) {
+          const isNew = !graph?.travelers.some((x) => x.id === tr.id);
+          const same = isNew ? known.get(tr.name.trim().toLocaleLowerCase()) : undefined;
+          await api.save({
+            type: "traveler",
+            row: {
+              ...tr,
+              name: tr.name.trim(),
+              sort: i,
+              birth_date: tr.birth_date ?? same?.traveler.birth_date ?? null,
+            },
+          });
+          // Someone who travelled before brings their documents along.
+          for (const d of same?.documents ?? [])
+            await api.save({ type: "traveler_document", row: { ...d, id: newId(), traveler_id: tr.id } });
+        }
         for (const old of graph?.travelers ?? []) {
           if (!keep.some((k) => k.id === old.id)) await api.remove("traveler", old.id);
         }
@@ -249,16 +265,37 @@ export function TripForm({
               {t("trip.addTraveler")}
             </Button>
           </div>
+          <datalist id={namesId}>
+            {[...known.values()].map((k) => (
+              <option key={k.traveler.id} value={k.traveler.name} />
+            ))}
+          </datalist>
           <div className="flex flex-col gap-2">
             {travelers.map((tr, i) => (
               <div key={tr.id} className="flex items-center gap-2">
                 <Input
                   aria-label={t("trip.travelerName")}
                   placeholder={t("trip.travelerName")}
+                  list={namesId}
                   value={tr.name}
-                  onChange={(e) =>
-                    setTravelers((l) => l.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))
-                  }
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    const same = known.get(name.trim().toLocaleLowerCase());
+                    setTravelers((l) =>
+                      l.map((x, j) =>
+                        j === i
+                          ? {
+                              ...x,
+                              name,
+                              category:
+                                same && !graph?.travelers.some((g) => g.id === x.id)
+                                  ? same.traveler.category
+                                  : x.category,
+                            }
+                          : x,
+                      ),
+                    );
+                  }}
                 />
                 <Select
                   aria-label={t("trip.travelerCategory")}
@@ -313,4 +350,25 @@ export function TripForm({
       </form>
     </Dialog>
   );
+}
+
+/** Travelers of other trips by lower-case name, the most recently changed trip first. */
+function useKnownTravelers(tripId: string) {
+  const trips = useTrips();
+  return useMemo(() => {
+    const out = new Map<string, { traveler: Traveler; documents: TravelerDocument[] }>();
+    const graphs = [...(trips.data ?? [])].sort((a, b) => b.trip.updated_at.localeCompare(a.trip.updated_at));
+    for (const g of graphs) {
+      if (g.trip.id === tripId) continue;
+      for (const p of g.travelers) {
+        const key = p.name.trim().toLocaleLowerCase();
+        if (!out.has(key))
+          out.set(key, {
+            traveler: p,
+            documents: g.traveler_documents.filter((d) => d.traveler_id === p.id),
+          });
+      }
+    }
+    return out;
+  }, [trips.data, tripId]);
 }

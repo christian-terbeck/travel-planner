@@ -52,6 +52,7 @@ export function graph(t: Trip = trip()): TripGraph {
   return {
     trip: t,
     travelers: [],
+    traveler_documents: [],
     stations: [],
     slots: [],
     options: [],

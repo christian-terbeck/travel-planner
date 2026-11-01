@@ -15,6 +15,7 @@ macro_rules! string_enum {
 }
 
 string_enum!(TravelerCategory { Adult, Child, Infant, Senior, Student, Other });
+string_enum!(TravelDocumentKind { Passport, IdCard, Visa, DrivingLicence, Other });
 string_enum!(SlotKind { Flight, Accommodation, RentalCar, Activity, Transport, Parking, Insurance, Other });
 string_enum!(
     /// Means of a non-flight transport segment.
@@ -368,6 +369,19 @@ pub struct Task {
     pub created_at: String,
 }
 
+/// A passport, ID card, visa or licence of a traveler; only its kind and validity are kept.
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct TravelerDocument {
+    pub id: String,
+    pub traveler_id: String,
+    pub kind: TravelDocumentKind,
+    /// E.g. "ESTA USA" for a visa.
+    pub label: Option<String>,
+    pub expires_on: Option<String>,
+    pub notes: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct PackingItem {
@@ -492,6 +506,9 @@ pub struct OptionBundle {
 pub struct TripGraph {
     pub trip: Trip,
     pub travelers: Vec<Traveler>,
+    /// Missing in exports made before travel documents existed.
+    #[serde(default)]
+    pub traveler_documents: Vec<TravelerDocument>,
     pub stations: Vec<Station>,
     pub slots: Vec<Slot>,
     pub options: Vec<PlanOption>,

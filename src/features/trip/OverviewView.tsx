@@ -23,6 +23,7 @@ import { Dialog } from "@/ui/dialog";
 import { DateInput } from "@/ui/inputs";
 import { Certainty, SeverityIcon } from "@/ui/status";
 import { useRoute } from "./MapView";
+import { TravelersCard } from "./TravelersCard";
 import { useTrip } from "./TripLayout";
 import { DismissedList, useReminderText, WarningList } from "./warnings";
 
@@ -148,6 +149,7 @@ export function OverviewView() {
             )}
           </Card>
           <StationsCard />
+          <TravelersCard />
         </div>
       </div>
     </div>

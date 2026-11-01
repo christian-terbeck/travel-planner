@@ -96,7 +96,17 @@ export function evaluate(ctx: PlanContext, selection: Selection): Evaluation {
   );
   const warnings = withoutDismissed(
     [
-      ...checkPlan({ trip: g.trip, slots: g.slots, stations: g.stations, items, selection, period, nights }),
+      ...checkPlan({
+        trip: g.trip,
+        slots: g.slots,
+        stations: g.stations,
+        travelers: g.travelers,
+        travelerDocuments: g.traveler_documents,
+        items,
+        selection,
+        period,
+        nights,
+      }),
       ...duplicateBookings(items),
     ],
     ctx.dismissed,

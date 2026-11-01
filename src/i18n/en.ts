@@ -97,6 +97,28 @@ const en = {
     savedLists: "Your lists",
     builtInLists: "Suggested lists",
   },
+  travelDocument: {
+    title: "Travelers & documents",
+    hint: "Validity of passports, ID cards and visas; checked against the trip dates.",
+    noTravelers: "Add travelers when editing the trip.",
+    add: "Add a document for {{name}}",
+    edit: "Document of {{name}}",
+    privacy: "Only the kind and validity are stored — no document numbers.",
+    validUntil: "valid until {{date}}",
+    noExpiry: "no expiry date",
+    kindLabel: "Kind",
+    expires: "Valid until",
+    label: "Name (optional)",
+    labelPlaceholder: "e.g. ESTA USA",
+    notes: "Notes",
+    kind: {
+      passport: "Passport",
+      id_card: "ID card",
+      visa: "Visa",
+      driving_licence: "Driving licence",
+      other: "Document",
+    },
+  },
   common: {
     back: "Back",
     cancel: "Cancel",
@@ -465,6 +487,9 @@ const en = {
     duplicate_booking: "Possible duplicate booking: {{items}}.",
     stay_outside_station: "{{items}} is outside the planned dates of {{station}}.",
     insurance_not_covering: "{{items}} does not cover the whole trip ({{from}} – {{to}}).",
+    document_expires: "{{name}}: {{doc}} expires on {{date}}, before the trip ends.",
+    passport_validity:
+      "{{name}}: passport expires on {{date}}, less than 6 months after the trip. Many countries require 6 months of validity.",
   },
   notifications: {
     summary_one: "{{count}} reminder needs your attention.",
@@ -482,6 +507,8 @@ const en = {
     missing_document: "No confirmation attached for {{title}} ({{date}}).",
     task_due: "Task due {{date}}: {{title}}.",
     price_target: "{{title}} was found for {{price}} — at or below your target of {{target}}.",
+    document_expiry: "{{name}}: {{doc}} expires {{date}}, before the trip ends.",
+    passport_validity: "{{name}}: passport valid only until {{date}} (less than 6 months after the trip).",
   },
 
   planning: {

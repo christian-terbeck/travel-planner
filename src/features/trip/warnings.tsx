@@ -31,6 +31,8 @@ export function useWarningText(model: TripModel) {
     params.items = w.optionIds.map((id) => model.item(id)?.option.title ?? "?").join(" · ");
     params.slots = w.slotIds.map((id) => model.graph.slots.find((s) => s.id === id)?.title ?? "?").join(", ");
     params.date = w.date ? f.date(w.date, "short") : "";
+    if (typeof w.params.kind === "string")
+      params.doc = (w.params.label as string) || t(`travelDocument.kind.${w.params.kind}`);
     return t(`warning.${w.code}`, params);
   };
 }
@@ -137,6 +139,8 @@ export function useReminderText() {
       for (const k of ["open", "price", "target"])
         if (typeof r.params[k] === "number") p[k] = f.minor(r.params[k], r.params.currency);
     }
+    if (typeof r.params.kind === "string")
+      p.doc = (r.params.label as string) || t(`travelDocument.kind.${r.params.kind}`);
     return t(`reminder.${r.kind}`, p);
   };
 }

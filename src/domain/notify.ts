@@ -11,6 +11,7 @@ export const NOTIFY_KINDS: ReadonlySet<ReminderKind> = new Set([
   "task_due",
   "missing_document",
   "price_target",
+  "document_expiry",
 ]);
 
 export interface Notification {
