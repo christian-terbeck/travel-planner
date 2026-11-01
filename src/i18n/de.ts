@@ -45,8 +45,12 @@ const de: Translation = {
     save: "Speichern",
     total: "Gesamt",
     unknownPrice: "Preis unbekannt",
+    undo: "Rückgängig",
+    deleted: "Gelöscht",
+    restored: "Wiederhergestellt",
   },
   errors: {
+    undo_unavailable: "Das Löschen kann nicht mehr rückgängig gemacht werden.",
     unknown: "Etwas ist schiefgelaufen. Deine Daten wurden nicht verändert.",
     required: "Pflichtfeld",
     amount: "Gib einen Betrag wie 280 oder 280,50 ein",

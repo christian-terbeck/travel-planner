@@ -55,8 +55,13 @@ fn save(state: State<'_, AppState>, entity: Entity) -> CmdResult<()> {
 }
 
 #[tauri::command]
-fn delete(state: State<'_, AppState>, kind: EntityKind, keys: Vec<String>) -> CmdResult<()> {
+fn delete(state: State<'_, AppState>, kind: EntityKind, keys: Vec<String>) -> CmdResult<String> {
     with(&state, |s| s.delete(kind, &keys))
+}
+
+#[tauri::command]
+fn undo_delete(state: State<'_, AppState>, id: String) -> CmdResult<()> {
+    with(&state, |s| s.undo_delete(&id))
 }
 
 #[tauri::command]
@@ -435,6 +440,7 @@ pub fn run() {
             get_trip,
             save,
             delete,
+            undo_delete,
             save_option,
             duplicate_option,
             create_booking,

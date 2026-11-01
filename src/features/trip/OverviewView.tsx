@@ -13,7 +13,7 @@ import {
 import { useState } from "react";
 import { Link } from "react-router";
 import { api } from "@/api/client";
-import { useAction } from "@/api/queries";
+import { useAction, useRemove } from "@/api/queries";
 import type { Station } from "@/domain/types";
 import { useT } from "@/i18n";
 import { useFormat } from "@/lib/prefs";
@@ -257,6 +257,7 @@ function StationsCard() {
   const f = useFormat();
   const m = useTrip();
   const run = useAction();
+  const remove = useRemove();
   const [edit, setEdit] = useState<Station | null>(null);
   const stations = m.graph.stations;
   const nightsAt = (id: string) =>
@@ -305,7 +306,7 @@ function StationsCard() {
           if ((await run(() => api.save({ type: "station", row: s }))) !== undefined) setEdit(null);
         }}
         onDelete={async (s) => {
-          if ((await run(() => api.remove("station", s.id))) !== undefined) setEdit(null);
+          if (await remove("station", [s.id])) setEdit(null);
         }}
         isNew={!!edit && !stations.some((s) => s.id === edit.id)}
       />

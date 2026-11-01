@@ -1,7 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/api/client";
-import { useAction } from "@/api/queries";
+import { useAction, useRemove } from "@/api/queries";
 import { suggestedPaymentStatus } from "@/domain/budget";
 import type { Booking, CancellationPolicy, OptionBundle, Payment, PaymentStatus } from "@/domain/types";
 import { useT } from "@/i18n";
@@ -175,7 +175,7 @@ function PaymentsList({ booking }: { booking: Booking }) {
   const t = useT();
   const f = useFormat();
   const m = useTrip();
-  const run = useAction();
+  const remove = useRemove();
   const pays = m.graph.payments.filter((p) => p.booking_id === booking.id);
   if (pays.length === 0) return null;
   return (
@@ -194,7 +194,7 @@ function PaymentsList({ booking }: { booking: Booking }) {
             <span className="tabular font-medium">
               {f.minor(p.kind === "refund" ? -p.amount_minor : p.amount_minor, p.currency)}
             </span>
-            <IconButton label={t("common.delete")} onClick={() => run(() => api.remove("payment", p.id))}>
+            <IconButton label={t("common.delete")} onClick={() => remove("payment", [p.id])}>
               <Trash2 className="size-3.5" />
             </IconButton>
           </li>

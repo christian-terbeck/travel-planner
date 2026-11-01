@@ -3,7 +3,7 @@ import { Archive, Bell, Database, Globe, Lock, Plus, RefreshCcw, Trash2, Upload 
 import { useEffect, useState } from "react";
 import type { RestorePreview } from "@/api/bindings/RestorePreview";
 import { api, inDesktopApp } from "@/api/client";
-import { useAction } from "@/api/queries";
+import { useAction, useRemove } from "@/api/queries";
 import type { ReminderSettings } from "@/domain/reminders";
 import type { ExchangeRate } from "@/domain/types";
 import { useErrorText, useT } from "@/i18n";
@@ -89,6 +89,7 @@ function RatesCard() {
   const t = useT();
   const prefs = usePrefs();
   const run = useAction();
+  const remove = useRemove();
   const toast = useToast();
   const [draft, setDraft] = useState<ExchangeRate | null>(null);
   const create = (): ExchangeRate => ({
@@ -142,10 +143,7 @@ function RatesCard() {
                 <td className="px-2 py-2 text-fg-3">{t("rates.asOf", { date: r.as_of })}</td>
                 <td className="px-2 py-2 text-fg-3">{r.source}</td>
                 <td className="px-4 py-2 text-right">
-                  <IconButton
-                    label={t("common.delete")}
-                    onClick={() => run(() => api.remove("exchange_rate", r.id))}
-                  >
+                  <IconButton label={t("common.delete")} onClick={() => remove("exchange_rate", [r.id])}>
                     <Trash2 className="size-3.5" />
                   </IconButton>
                 </td>

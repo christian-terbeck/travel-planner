@@ -13,6 +13,7 @@ use crate::documents;
 use crate::error::{CoreError, CoreResult};
 use crate::model::*;
 use crate::table::{self, Row};
+use crate::trash::{self, Trash};
 use crate::validate::Validate;
 
 pub type Clock = Box<dyn Fn() -> String + Send>;
@@ -21,6 +22,7 @@ pub struct Store {
     pub(crate) conn: Connection,
     pub(crate) data_dir: PathBuf,
     clock: Clock,
+    pub(crate) trash: Trash,
 }
 
 /// Rows that are saved as they are (after validation and ownership checks).
@@ -110,13 +112,16 @@ impl Store {
     pub fn open(data_dir: &Path) -> CoreResult<Self> {
         std::fs::create_dir_all(documents::dir(data_dir))?;
         let conn = db::open(&data_dir.join("travel-planner.sqlite"))?;
-        Ok(Self { conn, data_dir: data_dir.to_path_buf(), clock: Box::new(utc_now) })
+        let store = Self { conn, data_dir: data_dir.to_path_buf(), clock: Box::new(utc_now), trash: Trash::default() };
+        // Files of deletions that could have been undone in the last session.
+        store.remove_orphan_files()?;
+        Ok(store)
     }
 
     /// In-memory database with a fixed clock, for tests.
     pub fn for_tests(data_dir: &Path, now: &'static str) -> CoreResult<Self> {
         std::fs::create_dir_all(documents::dir(data_dir))?;
-        Ok(Self { conn: db::open_in_memory()?, data_dir: data_dir.to_path_buf(), clock: Box::new(move || now.to_string()) })
+        Ok(Self { conn: db::open_in_memory()?, data_dir: data_dir.to_path_buf(), clock: Box::new(move || now.to_string()), trash: Trash::default() })
     }
 
     pub fn now(&self) -> String {
@@ -277,13 +282,20 @@ impl Store {
         Ok(tx.commit()?)
     }
 
-    /// Deletes a row. `keys` are the primary key values (two for composite keys).
-    pub fn delete(&mut self, kind: EntityKind, keys: &[String]) -> CoreResult<()> {
+    /// Deletes a row and returns an ID to undo it with (see [`Store::undo_delete`]). `keys` are
+    /// the primary key values (two for composite keys).
+    pub fn delete(&mut self, kind: EntityKind, keys: &[String]) -> CoreResult<String> {
         let key = keys.first().ok_or_else(|| CoreError::invalid("keys", "missing"))?.as_str();
         let second = || keys.get(1).map(String::as_str).ok_or_else(|| CoreError::invalid("keys", "missing"));
         let now = self.now();
         let tx = self.conn.transaction()?;
-        let mut orphan_check = false;
+        let text = |v: &str| rusqlite::types::Value::Text(v.to_string());
+        let (table, filter, params) = match kind {
+            EntityKind::DismissedWarning => ("dismissed_warnings", "trip_id = ? AND key = ?", vec![text(key), text(second()?)]),
+            EntityKind::OpenNight => ("open_nights", "trip_id = ? AND night = ?", vec![text(key), text(second()?)]),
+            other => (table_of(other), "id = ?", vec![text(key)]),
+        };
+        let mut captured = trash::capture(&tx, table, filter, &params)?;
         let trip = match kind {
             EntityKind::Trip => {
                 // Bookings protect their options from accidental deletion, so a trip removes them first.
@@ -295,9 +307,7 @@ impl Store {
                 if table::delete_by::<Trip>(&tx, "id = ?", &[&key])? == 0 {
                     return Err(CoreError::NotFound(format!("trip {key}")));
                 }
-                tx.commit()?;
-                documents::remove_orphans(&self.conn, &self.data_dir)?;
-                return Ok(());
+                None
             }
             EntityKind::Option => {
                 let trip = trip_of(&tx, "option", key)?;
@@ -305,7 +315,7 @@ impl Store {
                     return Err(CoreError::rule("option_has_bookings", "booked options can be archived, not deleted"));
                 }
                 table::delete_by::<PlanOption>(&tx, "id = ?", &[&key])?;
-                trip
+                Some(trip)
             }
             EntityKind::Slot => {
                 let trip = trip_of(&tx, "slot", key)?;
@@ -318,52 +328,49 @@ impl Store {
                     return Err(CoreError::rule("slot_has_bookings", "a slot with bookings cannot be deleted"));
                 }
                 table::delete_by::<Slot>(&tx, "id = ?", &[&key])?;
-                trip
+                Some(trip)
             }
             EntityKind::Booking => {
                 // Removes a booking entered by mistake. Cancellations keep the booking instead.
                 let booking: Booking = table::get(&tx, key)?;
                 let trip = trip_of(&tx, "booking", key)?;
+                captured.keep_changed(&tx, "options", &booking.option_id)?;
                 tx.execute("UPDATE flight_segments SET booking_id = NULL WHERE booking_id = ?1", [key])?;
                 table::delete_by::<Booking>(&tx, "id = ?", &[&key])?;
                 refresh_option_status(&tx, &trip, &booking.option_id, &now)?;
-                orphan_check = true;
-                trip
+                Some(trip)
             }
-            EntityKind::Document => {
-                let trip = trip_of(&tx, "document", key)?;
-                table::delete_by::<Document>(&tx, "id = ?", &[&key])?;
-                orphan_check = true;
-                trip
-            }
-            EntityKind::Traveler => del::<Traveler>(&tx, "traveler", key)?,
-            EntityKind::Station => del::<Station>(&tx, "station", key)?,
-            EntityKind::Payment => del::<Payment>(&tx, "payment", key)?,
-            EntityKind::Expense => del::<Expense>(&tx, "expense", key)?,
-            EntityKind::CostShare => del::<CostShare>(&tx, "cost_share", key)?,
-            EntityKind::Scenario => del::<Scenario>(&tx, "scenario", key)?,
-            EntityKind::Task => del::<Task>(&tx, "task", key)?,
-            EntityKind::Note => del::<Note>(&tx, "note", key)?,
-            EntityKind::PriceObservation => del::<PriceObservation>(&tx, "observation", key)?,
+            EntityKind::Document => Some(del::<Document>(&tx, "document", key)?),
+            EntityKind::Traveler => Some(del::<Traveler>(&tx, "traveler", key)?),
+            EntityKind::Station => Some(del::<Station>(&tx, "station", key)?),
+            EntityKind::Payment => Some(del::<Payment>(&tx, "payment", key)?),
+            EntityKind::Expense => Some(del::<Expense>(&tx, "expense", key)?),
+            EntityKind::CostShare => Some(del::<CostShare>(&tx, "cost_share", key)?),
+            EntityKind::Scenario => Some(del::<Scenario>(&tx, "scenario", key)?),
+            EntityKind::Task => Some(del::<Task>(&tx, "task", key)?),
+            EntityKind::Note => Some(del::<Note>(&tx, "note", key)?),
+            EntityKind::PriceObservation => Some(del::<PriceObservation>(&tx, "observation", key)?),
             EntityKind::DismissedWarning => {
                 table::delete_by::<DismissedWarning>(&tx, "trip_id = ? AND key = ?", &[&key, &second()?])?;
-                key.to_string()
+                Some(key.to_string())
             }
             EntityKind::OpenNight => {
                 table::delete_by::<OpenNight>(&tx, "trip_id = ? AND night = ?", &[&key, &second()?])?;
-                key.to_string()
+                Some(key.to_string())
             }
             EntityKind::ExchangeRate => {
                 table::delete_by::<ExchangeRate>(&tx, "id = ?", &[&key])?;
-                return Ok(tx.commit()?);
+                None
             }
         };
-        touch(&tx, &trip, &now)?;
-        tx.commit()?;
-        if orphan_check {
-            documents::remove_orphans(&self.conn, &self.data_dir)?;
+        if let Some(t) = &trip {
+            touch(&tx, t, &now)?;
         }
-        Ok(())
+        tx.commit()?;
+        captured.trip = trip;
+        let id = self.trash.push(captured);
+        self.remove_orphan_files()?;
+        Ok(id)
     }
 
     // ---- Options ------------------------------------------------------------------------
@@ -846,6 +853,28 @@ pub(crate) fn load_graph(conn: &Connection, trip: Trip) -> CoreResult<TripGraph>
         change_log: table::select(conn, "trip_id = ? ORDER BY id", &id)?,
         trip,
     })
+}
+
+fn table_of(kind: EntityKind) -> &'static str {
+    match kind {
+        EntityKind::Trip => Trip::TABLE,
+        EntityKind::Traveler => Traveler::TABLE,
+        EntityKind::Station => Station::TABLE,
+        EntityKind::Slot => Slot::TABLE,
+        EntityKind::Option => PlanOption::TABLE,
+        EntityKind::Booking => Booking::TABLE,
+        EntityKind::Payment => Payment::TABLE,
+        EntityKind::Expense => Expense::TABLE,
+        EntityKind::CostShare => CostShare::TABLE,
+        EntityKind::Scenario => Scenario::TABLE,
+        EntityKind::Task => Task::TABLE,
+        EntityKind::Note => Note::TABLE,
+        EntityKind::Document => Document::TABLE,
+        EntityKind::DismissedWarning => DismissedWarning::TABLE,
+        EntityKind::OpenNight => OpenNight::TABLE,
+        EntityKind::ExchangeRate => ExchangeRate::TABLE,
+        EntityKind::PriceObservation => PriceObservation::TABLE,
+    }
 }
 
 fn del<T: Row>(tx: &Transaction, what: &str, id: &str) -> CoreResult<String> {

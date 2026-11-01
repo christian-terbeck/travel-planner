@@ -431,8 +431,65 @@ fn deleting_a_trip_removes_everything_and_unreferenced_files() {
     assert!(s.trip_graph(&t).is_err());
     let left: i64 = s.conn.query_row("SELECT COUNT(*) FROM flight_segments", [], |r| r.get(0)).unwrap();
     assert_eq!(left, 0);
-    let files = std::fs::read_dir(crate::documents::dir(dir.path())).unwrap().count();
-    assert_eq!(files, 0);
+    let files = || std::fs::read_dir(crate::documents::dir(dir.path())).unwrap().count();
+    assert_eq!(files(), 1, "kept while the deletion can be undone");
+    s.clear_trash().unwrap();
+    assert_eq!(files(), 0);
+}
+
+#[test]
+fn undo_puts_back_a_deleted_trip_with_bookings_and_files() {
+    let (mut s, dir) = store();
+    let t = populated(&mut s);
+    let src = dir.path().join("ticket.pdf");
+    std::fs::write(&src, b"%PDF").unwrap();
+    let doc = s.attach_document(&t, &src, None, None).unwrap();
+    let before = serde_json::to_value(s.trip_graph(&t).unwrap()).unwrap();
+
+    let undo = s.delete(EntityKind::Trip, &[t.clone()]).unwrap();
+    assert!(s.trip_graph(&t).is_err());
+    s.undo_delete(&undo).unwrap();
+    let mut after = serde_json::to_value(s.trip_graph(&t).unwrap()).unwrap();
+    after["trip"]["updated_at"] = before["trip"]["updated_at"].clone();
+    assert_eq!(after, before);
+    assert!(s.document_path(&doc.id).unwrap().is_file());
+    assert_eq!(rule_code(s.undo_delete(&undo).unwrap_err()), "undo_unavailable");
+}
+
+#[test]
+fn undo_of_a_booking_restores_segments_and_option_status() {
+    let (mut s, _dir) = store();
+    let t = trip(&mut s, "Portugal");
+    let sl = slot(&mut s, &t, SlotKind::Flight);
+    let b = flight_bundle(&sl, 2);
+    let oid = b.option.id.clone();
+    s.save_option(b, false).unwrap();
+    let booking = book(&mut s, &oid, 1, vec![]);
+    let before = serde_json::to_value(s.trip_graph(&t).unwrap()).unwrap();
+
+    let undo = s.delete(EntityKind::Booking, &[booking]).unwrap();
+    let g = s.trip_graph(&t).unwrap();
+    assert!(g.flight_segments.iter().all(|f| f.booking_id.is_none()));
+    assert_eq!(g.options[0].status, OptionStatus::Planned);
+    s.undo_delete(&undo).unwrap();
+    let mut after = serde_json::to_value(s.trip_graph(&t).unwrap()).unwrap();
+    after["trip"]["updated_at"] = before["trip"]["updated_at"].clone();
+    after["change_log"] = before["change_log"].clone();
+    assert_eq!(after, before);
+}
+
+#[test]
+fn undo_fails_cleanly_when_the_parent_is_gone() {
+    let (mut s, _dir) = store();
+    let t = trip(&mut s, "Portugal");
+    let sl = slot(&mut s, &t, SlotKind::Flight);
+    let b = flight_bundle(&sl, 1);
+    let oid = b.option.id.clone();
+    s.save_option(b, false).unwrap();
+    let undo = s.delete(EntityKind::Option, &[oid.clone()]).unwrap();
+    s.delete(EntityKind::Slot, &[sl]).unwrap();
+    assert_eq!(rule_code(s.undo_delete(&undo).unwrap_err()), "undo_unavailable");
+    assert!(s.trip_graph(&t).unwrap().options.is_empty());
 }
 
 #[test]

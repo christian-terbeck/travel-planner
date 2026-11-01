@@ -64,7 +64,9 @@ export const api = {
   listTrips: () => call<TripGraph[]>("list_trips"),
   getTrip: (id: string) => call<TripGraph>("get_trip", { id }),
   save: (entity: Entity) => call<void>("save", { entity: trimmed(entity) }),
-  remove: (kind: EntityKind, ...keys: string[]) => call<void>("delete", { kind, keys }),
+  /** Resolves to an ID for `undoDelete`. */
+  remove: (kind: EntityKind, ...keys: string[]) => call<string>("delete", { kind, keys }),
+  undoDelete: (id: string) => call<void>("undo_delete", { id }),
   saveOption: (bundle: OptionBundle, confirmBookedEdit = false) =>
     call<void>("save_option", { bundle: trimmed(bundle), confirmBookedEdit }),
   duplicateOption: (id: string, title: string) => call<string>("duplicate_option", { id, title }),

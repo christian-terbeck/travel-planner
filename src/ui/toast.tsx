@@ -5,6 +5,8 @@ interface ToastItem {
   id: number;
   kind: "success" | "error" | "info";
   text: string;
+  /** A button in the toast, e.g. "Undo"; the toast stays longer and closes when it is used. */
+  action?: { label: string; run: () => void };
 }
 
 const Ctx = createContext<{ show: (t: Omit<ToastItem, "id">) => void }>({ show: () => {} });
@@ -16,7 +18,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     (t: Omit<ToastItem, "id">) => {
       const id = Date.now() + Math.random();
       setItems((l) => [...l.slice(-3), { ...t, id }]);
-      setTimeout(() => dismiss(id), t.kind === "error" ? 8000 : 3500);
+      setTimeout(() => dismiss(id), t.kind === "error" || t.action ? 8000 : 3500);
     },
     [dismiss],
   );
@@ -40,6 +42,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-ok" aria-hidden />
             )}
             <span className="flex-1">{t.text}</span>
+            {t.action ? (
+              <button
+                type="button"
+                className="font-semibold text-primary hover:underline"
+                onClick={() => {
+                  dismiss(t.id);
+                  t.action?.run();
+                }}
+              >
+                {t.action.label}
+              </button>
+            ) : null}
             <button
               type="button"
               className="text-fg-3 hover:text-fg"

@@ -106,6 +106,20 @@ describe("booking flow", () => {
     expect(api.cancelBooking.mock.calls[0]?.[0]).toMatchObject({ booking_id: booking.id });
   });
 
+  it("deletes a booking and undoes it from the toast", async () => {
+    const user = userEvent.setup();
+    const { g, option } = flightTrip();
+    const booking = addBooking(g, option, 29_500);
+    renderInTrip(g, <BookingsView />);
+    await user.click(await screen.findByRole("button", { name: "More actions" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Delete (entered by mistake)" }));
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Delete" }));
+    await waitFor(() => expect(api.remove).toHaveBeenCalledWith("booking", booking.id));
+    await user.click(await screen.findByRole("button", { name: "Undo" }));
+    await waitFor(() => expect(api.undoDelete).toHaveBeenCalledWith("undo-1"));
+    expect(await screen.findByText("Restored")).toBeTruthy();
+  });
+
   it("turns a confirmation read by Claude into a checked booking with the file attached", async () => {
     settings.push(["ai_import_enabled", "1"]);
     const extracted: ExtractedBooking = {

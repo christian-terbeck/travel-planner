@@ -12,6 +12,7 @@ pub mod routing;
 pub mod store;
 pub mod table;
 pub mod transfer;
+pub mod trash;
 pub mod validate;
 
 pub use error::{CoreError, CoreResult, ErrorPayload};

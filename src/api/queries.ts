@@ -3,8 +3,9 @@
 
 import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
-import { useErrorText } from "@/i18n";
+import { useErrorText, useT } from "@/i18n";
 import { useToast } from "@/ui/toast";
+import type { EntityKind } from "./bindings/EntityKind";
 import { ApiError, api } from "./client";
 
 export const queryClient = new QueryClient({
@@ -49,6 +50,32 @@ export function useAction() {
       }
     },
     [m, toast, errorText],
+  );
+}
+
+/**
+ * Deletes a row and offers to undo it in the confirmation toast. Resolves to whether the
+ * deletion happened.
+ */
+export function useRemove() {
+  const run = useAction();
+  const toast = useToast();
+  const t = useT();
+  return useCallback(
+    async (kind: EntityKind, keys: string[], text?: string): Promise<boolean> => {
+      const undoId = await run(() => api.remove(kind, ...keys));
+      if (undoId === undefined) return false;
+      toast.show({
+        kind: "success",
+        text: text ?? t("common.deleted"),
+        action: {
+          label: t("common.undo"),
+          run: () => void run(() => api.undoDelete(undoId), t("common.restored")),
+        },
+      });
+      return true;
+    },
+    [run, toast, t],
   );
 }
 

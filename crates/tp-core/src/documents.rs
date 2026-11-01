@@ -91,15 +91,15 @@ pub fn existing_path(data_dir: &Path, stored_name: &str) -> CoreResult<PathBuf> 
     if path.is_file() { Ok(path) } else { Err(CoreError::rule("file_missing", format!("{stored_name} is missing"))) }
 }
 
-/// Deletes files in the documents folder that no document row refers to any more.
-pub fn remove_orphans(conn: &Connection, data_dir: &Path) -> CoreResult<usize> {
+/// Deletes files in the documents folder that no document row refers to any more, except `keep`.
+pub fn remove_orphans(conn: &Connection, data_dir: &Path, keep: &std::collections::HashSet<String>) -> CoreResult<usize> {
     let mut stmt = conn.prepare("SELECT stored_name FROM documents")?;
     let used: std::collections::HashSet<String> = stmt.query_map([], |r| r.get(0))?.collect::<Result<_, _>>()?;
     let mut removed = 0;
     let Ok(entries) = fs::read_dir(dir(data_dir)) else { return Ok(0) };
     for entry in entries.flatten() {
         let name = entry.file_name().to_string_lossy().to_string();
-        if entry.path().is_file() && !used.contains(&name) && check_stored_name(&name).is_ok() {
+        if entry.path().is_file() && !used.contains(&name) && !keep.contains(&name) && check_stored_name(&name).is_ok() {
             fs::remove_file(entry.path())?;
             removed += 1;
         }

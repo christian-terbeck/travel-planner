@@ -43,8 +43,12 @@ const en = {
     save: "Save",
     total: "Total",
     unknownPrice: "Price unknown",
+    undo: "Undo",
+    deleted: "Deleted",
+    restored: "Restored",
   },
   errors: {
+    undo_unavailable: "This deletion can no longer be undone.",
     unknown: "Something went wrong. Your data was not changed.",
     required: "Required",
     amount: "Enter an amount like 280 or 280.50",

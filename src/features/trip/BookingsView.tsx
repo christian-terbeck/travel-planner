@@ -1,8 +1,7 @@
 import { Ban, CirclePlus, FileText, MoreHorizontal, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
-import { api } from "@/api/client";
-import { useAction } from "@/api/queries";
+import { useRemove } from "@/api/queries";
 import { type PlanItem, segmentFrom, segmentTo } from "@/domain/items";
 import type { Booking, OptionBundle } from "@/domain/types";
 import { useT } from "@/i18n";
@@ -116,7 +115,7 @@ function BookingTable({
   const f = useFormat();
   const m = useTrip();
   const when = useWhen();
-  const run = useAction();
+  const remove = useRemove();
   const confirm = useConfirm();
   const kinds = SLOT_KINDS;
   const sorted = [...bookings].sort((a, b) => {
@@ -265,7 +264,7 @@ function BookingTable({
                                 danger: true,
                               })
                             ) {
-                              await run(() => api.remove("booking", b.id), t("bookings.deleted"));
+                              await remove("booking", [b.id], t("bookings.deleted"));
                             }
                           }}
                         >

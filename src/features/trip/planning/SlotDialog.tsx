@@ -1,7 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/api/client";
-import { useAction } from "@/api/queries";
+import { useAction, useRemove } from "@/api/queries";
 import type { Slot, SlotKind } from "@/domain/types";
 import { useT } from "@/i18n";
 import { nil, SLOT_KINDS } from "@/lib/rows";
@@ -19,6 +19,7 @@ export function SlotDialog({
   const t = useT();
   const m = useTrip();
   const run = useAction();
+  const removeRow = useRemove();
   const confirm = useConfirm();
   const [s, setS] = useState<Slot | null>(null);
   useEffect(() => setS(state?.slot ?? null), [state]);
@@ -38,7 +39,7 @@ export function SlotDialog({
       }))
     )
       return;
-    if ((await run(() => api.remove("slot", s.id), t("slot.deleted"))) !== undefined) onClose();
+    if (await removeRow("slot", [s.id], t("slot.deleted"))) onClose();
   };
   return (
     <Dialog

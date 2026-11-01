@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/api/client";
-import { useAction } from "@/api/queries";
+import { useAction, useRemove } from "@/api/queries";
 import type { Note, Task } from "@/domain/types";
 import { useT } from "@/i18n";
 import { useFormat } from "@/lib/prefs";
@@ -58,6 +58,7 @@ function DocumentsCard() {
   const f = useFormat();
   const m = useTrip();
   const run = useAction();
+  const remove = useRemove();
   const confirm = useConfirm();
   const [link, setLink] = useState("");
   const [noteEdit, setNoteEdit] = useState<{ id: string; notes: string } | null>(null);
@@ -174,7 +175,7 @@ function DocumentsCard() {
                         danger: true,
                       })
                     ) {
-                      await run(() => api.remove("document", d.id));
+                      await remove("document", [d.id]);
                     }
                   }}
                 >
@@ -226,6 +227,7 @@ function NotesCard() {
   const f = useFormat();
   const m = useTrip();
   const run = useAction();
+  const remove = useRemove();
   const confirm = useConfirm();
   const [edit, setEdit] = useState<Note | null>(null);
   const create = (): Note => ({
@@ -275,7 +277,7 @@ function NotesCard() {
                         danger: true,
                       })
                     )
-                      await run(() => api.remove("note", n.id));
+                      await remove("note", [n.id]);
                   }}
                 >
                   <Trash2 className="size-3.5" />
@@ -355,6 +357,7 @@ function TasksCard() {
   const f = useFormat();
   const m = useTrip();
   const run = useAction();
+  const remove = useRemove();
   const reminderText = useReminderText();
   const [edit, setEdit] = useState<Task | null>(null);
   const [quick, setQuick] = useState("");
@@ -467,9 +470,7 @@ function TasksCard() {
                 variant="ghost"
                 className="mr-auto text-danger"
                 icon={<Trash2 className="size-4" />}
-                onClick={async () =>
-                  (await run(() => api.remove("task", edit.id))) !== undefined && setEdit(null)
-                }
+                onClick={async () => (await remove("task", [edit.id])) && setEdit(null)}
               >
                 {t("common.delete")}
               </Button>

@@ -107,6 +107,10 @@ ExchangeRate* (explicit rate + date + source), Setting*, ChangeLog*
 - **Duplicating an option** deep-copies details, fees and policy; bookings and observations are not copied.
 - **Deletion:** a trip deletes all its rows (FK `ON DELETE CASCADE`). Document files are removed
   only when no row references them any more. Options with bookings cannot be deleted, only archived.
+- **Undo:** before a delete the core captures every row it removes and every reference it clears,
+  found through the schema's foreign keys (plus the option whose status a booking delete changes).
+  The last 10 deletions can be undone in the same session; their document files stay until then
+  (removed at the next start). Undo fails without changes if the data no longer fits.
 - **Change log:** booking prices, cancellation policies and status transitions.
 
 ### Derived values (TypeScript domain)

@@ -3,7 +3,7 @@ import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate, useOutletContext, useParams } from "react-router";
 import { api } from "@/api/client";
-import { useAction, useTripGraph } from "@/api/queries";
+import { useAction, useRemove, useTripGraph } from "@/api/queries";
 import type { TripStatus } from "@/domain/types";
 import { useT } from "@/i18n";
 import { type TripModel, useTripModel } from "@/lib/model";
@@ -38,6 +38,7 @@ export function TripLayout() {
   const model = useTripModel(query.data);
   const navigate = useNavigate();
   const run = useAction();
+  const removeRow = useRemove();
   const confirm = useConfirm();
   const [editing, setEditing] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -63,7 +64,7 @@ export function TripLayout() {
       danger: true,
     });
     if (!ok) return;
-    if ((await run(() => api.remove("trip", trip.id), t("trip.deleted"))) !== undefined) navigate("/trips");
+    if (await removeRow("trip", [trip.id], t("trip.deleted"))) navigate("/trips");
   };
 
   const setOverride = (status: TripStatus | null) =>

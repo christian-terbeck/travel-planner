@@ -2,7 +2,7 @@ import { ArrowRight, Pencil, Plus, Split, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
 import { api } from "@/api/client";
-import { useAction } from "@/api/queries";
+import { useAction, useRemove } from "@/api/queries";
 import { type Converted, convertTotals } from "@/domain/money";
 import { settle } from "@/domain/splits";
 import type { CostShare, Expense, ExpenseCategory, ExpenseKind } from "@/domain/types";
@@ -52,7 +52,7 @@ export function BudgetView() {
     expense_id: string | null;
     title: string;
   } | null>(null);
-  const run = useAction();
+  const remove = useRemove();
   const confirm = useConfirm();
 
   const money = (c: Converted) => (
@@ -214,7 +214,7 @@ export function BudgetView() {
                               danger: true,
                             })
                           )
-                            await run(() => api.remove("expense", e.id));
+                            await remove("expense", [e.id]);
                         }}
                       >
                         <Trash2 className="size-3.5" />

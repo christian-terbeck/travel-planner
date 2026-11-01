@@ -13,7 +13,7 @@ import {
 import { DropdownMenu } from "radix-ui";
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/api/client";
-import { useAction } from "@/api/queries";
+import { useAction, useRemove } from "@/api/queries";
 import type { PlanItem } from "@/domain/items";
 import { scenarioSelection } from "@/domain/scenarios";
 import type { OptionBundle, Slot, SlotKind } from "@/domain/types";
@@ -78,6 +78,7 @@ function Alternatives() {
   const t = useT();
   const m = useTrip();
   const run = useAction();
+  const removeRow = useRemove();
   const confirm = useConfirm();
   const [slotEdit, setSlotEdit] = useState<{ slot: Slot; isNew: boolean } | null>(null);
   const [optionEdit, setOptionEdit] = useState<{ bundle: OptionBundle; slot: Slot; booked: boolean } | null>(
@@ -111,7 +112,7 @@ function Alternatives() {
       }))
     )
       return;
-    await run(() => api.remove("option", item.option.id), t("option.deleted"));
+    await removeRow("option", [item.option.id], t("option.deleted"));
   };
   const setDecision = (item: PlanItem, decision: "none" | "favorite" | "rejected") =>
     run(() => api.saveOption({ ...bundleOf(m, item), option: { ...item.option, decision } }, false));

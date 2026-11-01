@@ -2,7 +2,7 @@ import { CalendarSearch, Info, Pencil, Plus, Save, Sparkles, Star, Trash2 } from
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { api } from "@/api/client";
-import { useAction } from "@/api/queries";
+import { useAction, useRemove } from "@/api/queries";
 import {
   cheapest,
   type Evaluation,
@@ -42,6 +42,7 @@ export function ScenariosPanel() {
   const f = useFormat();
   const m = useTrip();
   const run = useAction();
+  const remove = useRemove();
   const confirm = useConfirm();
   const navigate = useNavigate();
   const [, setUi] = useTripUi(m.graph.trip.id);
@@ -143,7 +144,7 @@ export function ScenariosPanel() {
                         danger: true,
                       }))
                     ) {
-                      await run(() => api.remove("scenario", row.scenario?.id ?? ""));
+                      await remove("scenario", [row.scenario?.id ?? ""]);
                     }
                   }}
                 >

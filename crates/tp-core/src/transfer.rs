@@ -141,7 +141,7 @@ impl Store {
             }
         }
         tx.commit()?;
-        documents::remove_orphans(&self.conn, &self.data_dir)?;
+        self.remove_orphan_files()?;
         Ok(graph.trip.id)
     }
 
@@ -225,6 +225,8 @@ impl Store {
             }
             drop(backup_conn);
             db::migrate_existing(&mut self.conn)?;
+            // Deletions from before the restore refer to data that is gone.
+            self.trash = Default::default();
 
             let docs_dir = documents::dir(&self.data_dir);
             for entry in fs::read_dir(tmp.join("documents"))?.flatten() {
@@ -233,7 +235,7 @@ impl Store {
                     fs::rename(entry.path(), target)?;
                 }
             }
-            documents::remove_orphans(&self.conn, &self.data_dir)?;
+            self.remove_orphan_files()?;
             Ok(safety.display().to_string())
         })();
         let _ = fs::remove_dir_all(&tmp);
