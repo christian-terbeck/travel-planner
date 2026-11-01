@@ -12,6 +12,7 @@ export const api = {
     settings,
     exchange_rates: [],
   })),
+  listTrips: vi.fn(async (..._args: unknown[]): Promise<unknown> => []),
   save: vi.fn(async (..._args: unknown[]) => null),
   saveOption: vi.fn(async (..._args: unknown[]) => null),
   createBooking: vi.fn(async (..._args: unknown[]) => "booking-1"),

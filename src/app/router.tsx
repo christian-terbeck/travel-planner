@@ -4,6 +4,7 @@ import { CancellationsPage } from "@/features/cancellations/CancellationsPage";
 import { Dashboard } from "@/features/dashboard/Dashboard";
 import { PriceWatchPage } from "@/features/pricewatch/PriceWatchPage";
 import { SettingsPage } from "@/features/settings/SettingsPage";
+import { StatsPage } from "@/features/stats/StatsPage";
 import { BookingsView } from "@/features/trip/BookingsView";
 import { BudgetView } from "@/features/trip/BudgetView";
 import { DocumentsView } from "@/features/trip/DocumentsView";
@@ -41,6 +42,7 @@ export const router = createHashRouter([
       { path: "calendar", element: <CalendarPage /> },
       { path: "cancellations", element: <CancellationsPage /> },
       { path: "price-watch", element: <PriceWatchPage /> },
+      { path: "stats", element: <StatsPage /> },
       { path: "settings", element: <SettingsPage /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],

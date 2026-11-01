@@ -80,3 +80,5 @@ untouched):
     way” to “Very important” and price to “A little”: the direct one leads, marked “Best by your weights”.
 30. Two flight pairs a few days apart: the explorer shows “Travel dates compared” with the cheaper
     dates marked; “Save” stores that combination as a scenario.
+31. Statistics: a past trip with booked flights and stay appears with its days, flight km, country
+    and spending; switch between the years.

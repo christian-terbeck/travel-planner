@@ -1,5 +1,6 @@
 import {
   Backpack,
+  BarChart3,
   BookOpen,
   CalendarDays,
   CheckSquare,
@@ -110,6 +111,7 @@ export function CommandPalette({
       { id: "p:cal", icon: <CalendarDays />, title: t("nav.calendar"), run: go("/calendar") },
       { id: "p:canc", icon: <ShieldAlert />, title: t("nav.cancellations"), run: go("/cancellations") },
       { id: "p:price", icon: <TrendingDown />, title: t("nav.priceWatch"), run: go("/price-watch") },
+      { id: "p:stats", icon: <BarChart3 />, title: t("nav.stats"), run: go("/stats") },
       { id: "p:set", icon: <Settings />, title: t("nav.settings"), run: go("/settings") },
     ].map((c) => ({ ...c, group: t("search.pages") }));
     const words = normalize(query).split(/\s+/).filter(Boolean);

@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   CalendarDays,
   Compass,
   Download,
@@ -93,6 +94,7 @@ export function Layout() {
           <NavItem to="/calendar" icon={<CalendarDays />} label={t("nav.calendar")} />
           <NavItem to="/cancellations" icon={<ShieldAlert />} label={t("nav.cancellations")} count={urgent} />
           <NavItem to="/price-watch" icon={<TrendingDown />} label={t("nav.priceWatch")} />
+          <NavItem to="/stats" icon={<BarChart3 />} label={t("nav.stats")} />
         </nav>
         <div className="mt-auto px-2 pb-3">
           {update && (
