@@ -397,6 +397,7 @@ const en = {
     missing_accommodation: "No accommodation for {{nights}} night(s), {{from}} – {{to}}.",
     missing_document: "No confirmation attached for {{title}} ({{date}}).",
     task_due: "Task due {{date}}: {{title}}.",
+    price_target: "{{title}} was found for {{price}} — at or below your target of {{target}}.",
   },
 
   planning: {
@@ -1148,6 +1149,16 @@ const en = {
     applyToOption: "Also use as the new saved price",
     history: "Earlier checks",
     recorded: "Price check recorded",
+    trend: "Trend",
+    target: "Price alert at",
+    targetHint: "Reminds you when a price check is at or below this amount",
+    targetReached: "Target reached",
+  },
+  priceChart: {
+    saved: "Saved",
+    target: "Target",
+    summary_one: "{{count}} price check, latest {{last}}, lowest {{low}}",
+    summary_other: "{{count}} price checks, latest {{last}}, lowest {{low}}",
   },
   map: {
     title: "Route map",

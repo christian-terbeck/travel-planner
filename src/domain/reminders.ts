@@ -5,7 +5,7 @@ import { type CancellationState, cancellationStatus } from "./cancellation";
 import { isJourney } from "./items";
 import { currentPlan, evaluate, type PlanContext } from "./scenarios";
 import { dateRuns, daysBetween, type Instant, type PlainDate, parseDate, Temporal } from "./time";
-import type { TripStatus } from "./types";
+import type { PriceObservation, TripStatus } from "./types";
 
 export type ReminderKind =
   | "cancellation_deadline"
@@ -14,7 +14,8 @@ export type ReminderKind =
   | "activity"
   | "missing_accommodation"
   | "missing_document"
-  | "task_due";
+  | "task_due"
+  | "price_target";
 
 export interface Reminder {
   key: string;
@@ -165,6 +166,30 @@ export function reminders(
       });
     }
   }
+  // Price alerts: the latest check of an unbooked alternative is at or below its target.
+  for (const item of ctx.items.values()) {
+    const o = item.option;
+    if (o.target_price_minor === null || item.activeBookings.length > 0) continue;
+    if (o.status === "archived" || o.status === "cancelled" || o.decision === "rejected") continue;
+    const last = latestObservation(g.price_observations, o.id);
+    if (last && last.currency === o.currency && last.price_minor <= o.target_price_minor) {
+      push({
+        kind: "price_target",
+        severity: "info",
+        key: `price_target|${o.id}|${last.id}`,
+        date: Temporal.Instant.from(last.observed_at).toZonedDateTimeISO(tz).toPlainDate().toString(),
+        at: null,
+        optionId: o.id,
+        bookingId: null,
+        params: {
+          title: o.title,
+          price: last.price_minor,
+          target: o.target_price_minor,
+          currency: o.currency,
+        },
+      });
+    }
+  }
   for (const t of g.tasks) {
     const due = parseDate(t.due_date);
     if (t.done_at || !due) continue;
@@ -182,6 +207,12 @@ export function reminders(
     }
   }
   return out.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function latestObservation(obs: PriceObservation[], optionId: string): PriceObservation | null {
+  let best: PriceObservation | null = null;
+  for (const p of obs) if (p.option_id === optionId && (!best || p.observed_at > best.observed_at)) best = p;
+  return best;
 }
 
 /**

@@ -133,8 +133,10 @@ export function useReminderText() {
     const p: Record<string, string | number> = { ...r.params, date: f.date(r.date, "weekday") };
     if (typeof r.params.from === "string") p.from = f.date(r.params.from, "short");
     if (typeof r.params.to === "string") p.to = f.date(r.params.to, "short");
-    if (typeof r.params.open === "number" && typeof r.params.currency === "string")
-      p.open = f.minor(r.params.open, r.params.currency);
+    if (typeof r.params.currency === "string") {
+      for (const k of ["open", "price", "target"])
+        if (typeof r.params[k] === "number") p[k] = f.minor(r.params[k], r.params.currency);
+    }
     return t(`reminder.${r.kind}`, p);
   };
 }

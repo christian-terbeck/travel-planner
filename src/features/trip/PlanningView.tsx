@@ -38,6 +38,7 @@ import {
 } from "@/ui/core";
 import { Dialog, useConfirm } from "@/ui/dialog";
 import { MoneyInput } from "@/ui/inputs";
+import { PriceChart } from "@/ui/PriceChart";
 import { CancellationBadge, Certainty, KindIcon, StatusBadge } from "@/ui/status";
 import { BookingDialog } from "./BookingDialog";
 import { ExternalUrl, useDuration, useWhen } from "./itemText";
@@ -739,10 +740,12 @@ function PriceCheckDialog({ item, onClose }: { item: PlanItem | null; onClose: (
   const [price, setPrice] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
   const [apply, setApply] = useState(false);
+  const [target, setTarget] = useState<number | null>(null);
   useEffect(() => {
     setPrice(item?.option.price_minor ?? null);
     setNotes("");
     setApply(false);
+    setTarget(item?.option.target_price_minor ?? null);
   }, [item]);
   const history = useMemo(
     () => (item ? m.graph.price_observations.filter((p) => p.option_id === item.option.id) : []),
@@ -764,12 +767,13 @@ function PriceCheckDialog({ item, onClose }: { item: PlanItem | null; onClose: (
     };
     const ok = await run(async () => {
       await api.save({ type: "price_observation", row: obs });
-      if (apply && item.activeBookings.length === 0) {
+      const targetChanged = target !== item.option.target_price_minor;
+      if ((apply || targetChanged) && item.activeBookings.length === 0) {
+        const option = apply
+          ? { ...item.option, price_minor: price, price_verified_at: obs.observed_at }
+          : item.option;
         await api.saveOption(
-          {
-            ...bundleOf(m, item),
-            option: { ...item.option, price_minor: price, price_verified_at: obs.observed_at },
-          },
+          { ...bundleOf(m, item), option: { ...option, target_price_minor: target } },
           false,
         );
       }
@@ -812,15 +816,35 @@ function PriceCheckDialog({ item, onClose }: { item: PlanItem | null; onClose: (
           />
         </Field>
         {item.activeBookings.length === 0 && (
-          <Checkbox
-            label={t("priceWatch.applyToOption")}
-            checked={apply}
-            onChange={(e) => setApply(e.target.checked)}
-          />
+          <>
+            <Checkbox
+              label={t("priceWatch.applyToOption")}
+              checked={apply}
+              onChange={(e) => setApply(e.target.checked)}
+            />
+            <Field label={t("priceWatch.target")} hint={t("priceWatch.targetHint")} htmlFor="pc-target">
+              <MoneyInput
+                id="pc-target"
+                value={target}
+                currency={item.option.currency}
+                placeholder={t("common.notSet")}
+                onChange={setTarget}
+              />
+            </Field>
+          </>
         )}
         {history.length > 0 && (
           <div>
             <h4 className="mb-1 font-medium text-fg-2 text-xs">{t("priceWatch.history")}</h4>
+            <PriceChart
+              points={history
+                .filter((h) => h.currency === item.option.currency)
+                .map((h) => ({ at: h.observed_at, minor: h.price_minor }))}
+              saved={item.option.price_minor}
+              target={target}
+              currency={item.option.currency}
+              height={150}
+            />
             <ul className="text-sm">
               {history.map((h) => (
                 <li

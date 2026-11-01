@@ -209,6 +209,15 @@ export function OptionEditor({
                 </Button>
               </div>
             </Field>
+            <Field label={t("priceWatch.target")} hint={t("priceWatch.targetHint")} htmlFor="o-target">
+              <MoneyInput
+                id="o-target"
+                value={o.target_price_minor}
+                currency={o.currency}
+                placeholder={t("common.notSet")}
+                onChange={(v) => setO("target_price_minor", v)}
+              />
+            </Field>
             <Field label={t("option.source")} htmlFor="o-src">
               <Input
                 id="o-src"

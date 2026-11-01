@@ -129,6 +129,8 @@ pub struct PlanOption {
     pub sort: i64,
     pub created_at: String,
     pub updated_at: String,
+    /// Price alert: a price check at or below this amount (option currency) is reported.
+    pub target_price_minor: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]

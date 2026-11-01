@@ -111,6 +111,7 @@ export function newOption(slot: Slot, currency: string, sort: number): PlanOptio
     sort,
     created_at: now,
     updated_at: now,
+    target_price_minor: null,
   };
 }
 

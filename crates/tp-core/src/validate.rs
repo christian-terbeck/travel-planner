@@ -227,6 +227,7 @@ impl Validate for PlanOption {
         opt_line("platform", &self.platform)?;
         opt_url("url", &self.url)?;
         non_negative("price_minor", self.price_minor)?;
+        non_negative("target_price_minor", self.target_price_minor)?;
         currency("currency", &self.currency)?;
         range("party_size", self.party_size, 1, 99)?;
         opt_text("included_services", &self.included_services)?;

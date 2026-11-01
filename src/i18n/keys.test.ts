@@ -79,6 +79,7 @@ describe("translations", () => {
         "missing_accommodation",
         "missing_document",
         "task_due",
+        "price_target",
       ],
       "cancellation.state": [
         "free",

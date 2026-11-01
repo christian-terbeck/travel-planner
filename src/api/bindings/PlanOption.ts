@@ -3,4 +3,8 @@ import type { Decision } from "./Decision";
 import type { OptionStatus } from "./OptionStatus";
 import type { PriceBasis } from "./PriceBasis";
 
-export type PlanOption = { id: string, slot_id: string, title: string, status: OptionStatus, decision: Decision, rating: number | null, provider: string | null, platform: string | null, url: string | null, price_minor: number | null, currency: string, price_basis: PriceBasis, party_size: number | null, included_services: string | null, pros: string | null, cons: string | null, notes: string | null, source: string | null, price_verified_at: string | null, contact: string | null, sort: number, created_at: string, updated_at: string, };
+export type PlanOption = { id: string, slot_id: string, title: string, status: OptionStatus, decision: Decision, rating: number | null, provider: string | null, platform: string | null, url: string | null, price_minor: number | null, currency: string, price_basis: PriceBasis, party_size: number | null, included_services: string | null, pros: string | null, cons: string | null, notes: string | null, source: string | null, price_verified_at: string | null, contact: string | null, sort: number, created_at: string, updated_at: string, 
+/**
+ * Price alert: a price check at or below this amount (option currency) is reported.
+ */
+target_price_minor: number | null, };

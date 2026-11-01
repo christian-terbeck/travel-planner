@@ -8,6 +8,7 @@ import { type TripModel, useTripModels } from "@/lib/model";
 import { useFormat } from "@/lib/prefs";
 import { setTripUi } from "@/lib/tripUi";
 import { Badge, Card, CardHeader, cn, EmptyState, PageHeader } from "@/ui/core";
+import { PriceSparkline } from "@/ui/PriceChart";
 import { KindIcon } from "@/ui/status";
 
 const STALE_DAYS = 14;
@@ -43,7 +44,9 @@ export function PriceWatchPage() {
               (i.option.price_minor !== null || i.option.url),
           )
           .map((i) => {
-            const obs = m.graph.price_observations.filter((p) => p.option_id === i.option.id);
+            const obs = m.graph.price_observations
+              .filter((p) => p.option_id === i.option.id)
+              .sort((a, b) => a.observed_at.localeCompare(b.observed_at));
             const verified = i.option.price_verified_at ?? obs.at(-1)?.observed_at ?? null;
             const ageDays = verified
               ? Math.floor((Date.now() - new Date(verified).getTime()) / 86_400_000)
@@ -86,6 +89,8 @@ export function PriceWatchPage() {
                   <th className="px-2 py-2 text-right font-medium">{t("priceWatch.saved")}</th>
                   <th className="px-2 py-2 text-right font-medium">{t("priceWatch.lastObserved")}</th>
                   <th className="px-2 py-2 text-right font-medium">{t("priceWatch.difference")}</th>
+                  <th className="px-2 py-2 font-medium">{t("priceWatch.trend")}</th>
+                  <th className="px-2 py-2 text-right font-medium">{t("priceWatch.target")}</th>
                   <th className="px-4 py-2 font-medium">{t("priceWatch.checked")}</th>
                 </tr>
               </thead>
@@ -139,6 +144,30 @@ export function PriceWatchPage() {
                           : diff === 0
                             ? "±0"
                             : f.minor(diff, i.option.currency, { signed: true })}
+                      </td>
+                      <td className="px-2 py-2">
+                        <PriceSparkline
+                          currency={i.option.currency}
+                          points={obs
+                            .filter((p) => p.currency === i.option.currency)
+                            .map((p) => ({ at: p.observed_at, minor: p.price_minor }))}
+                        />
+                      </td>
+                      <td className="tabular px-2 py-2 text-right">
+                        {i.option.target_price_minor === null ? (
+                          <span className="text-fg-3">—</span>
+                        ) : (
+                          <>
+                            {f.minor(i.option.target_price_minor, i.option.currency)}
+                            {last &&
+                              last.currency === i.option.currency &&
+                              last.price_minor <= i.option.target_price_minor && (
+                                <div>
+                                  <Badge tone="ok">{t("priceWatch.targetReached")}</Badge>
+                                </div>
+                              )}
+                          </>
+                        )}
                       </td>
                       <td className="px-4 py-2">
                         {ageDays === null ? (

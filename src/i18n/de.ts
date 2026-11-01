@@ -405,6 +405,7 @@ const de: Translation = {
     missing_accommodation: "Keine Unterkunft für {{nights}} Nacht/Nächte, {{from}} – {{to}}.",
     missing_document: "Keine Bestätigung angehängt für {{title}} ({{date}}).",
     task_due: "Aufgabe fällig am {{date}}: {{title}}.",
+    price_target: "{{title}} gibt es für {{price}} – zum Zielpreis von {{target}} oder darunter.",
   },
 
   planning: {
@@ -1162,6 +1163,16 @@ const de: Translation = {
     applyToOption: "Auch als neuen gespeicherten Preis übernehmen",
     history: "Frühere Prüfungen",
     recorded: "Preisprüfung erfasst",
+    trend: "Verlauf",
+    target: "Preisalarm bei",
+    targetHint: "Erinnert dich, wenn eine Preisprüfung diesen Betrag erreicht oder unterschreitet",
+    targetReached: "Ziel erreicht",
+  },
+  priceChart: {
+    saved: "Gespeichert",
+    target: "Ziel",
+    summary_one: "{{count}} Preisprüfung, zuletzt {{last}}, niedrigster {{low}}",
+    summary_other: "{{count}} Preisprüfungen, zuletzt {{last}}, niedrigster {{low}}",
   },
   map: {
     title: "Routenkarte",

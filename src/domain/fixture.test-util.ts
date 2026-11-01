@@ -124,6 +124,7 @@ export function addOption(
     sort: 0,
     created_at: NOW,
     updated_at: NOW,
+    target_price_minor: null,
     ...over,
   };
   g.options.push(o);

@@ -84,6 +84,7 @@ fn option(slot_id: &str, price: Option<i64>) -> PlanOption {
         sort: 0,
         created_at: NOW.into(),
         updated_at: NOW.into(),
+        target_price_minor: None,
     }
 }
 

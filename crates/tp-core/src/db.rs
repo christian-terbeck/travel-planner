@@ -13,6 +13,7 @@ const MIGRATIONS: &[&str] = &[
     include_str!("../migrations/0003_road_routes.sql"),
     include_str!("../migrations/0004_transport.sql"),
     include_str!("../migrations/0005_geocode_cache.sql"),
+    include_str!("../migrations/0006_target_price.sql"),
 ];
 
 pub const SCHEMA_VERSION: i64 = MIGRATIONS.len() as i64;
