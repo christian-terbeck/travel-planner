@@ -67,3 +67,5 @@ untouched):
     “Reload icons” fetches them again.
 24. On a stay need, “Paste a link or offer”: paste a Booking.com hotel link with dates; the form opens
     with name, dates and travelers. Optional, with a key: paste an offer text and “Read with Claude”.
+25. Drag a PDF from Explorer onto a trip: the drop overlay appears; attach it to a booking. With the
+    import on, drop a confirmation and choose “Read as booking”.

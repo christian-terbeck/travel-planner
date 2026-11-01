@@ -49,7 +49,7 @@ describe("pasting an offer", () => {
     expect(screen.queryByRole("button", { name: "Read with Claude" }), "Claude is off by default").toBeNull();
     await user.click(screen.getByRole("button", { name: "Fill in the form" }));
 
-    expect((await screen.findByLabelText("Name") as HTMLInputElement).value).toBe("Casa Do Alfama");
+    expect(((await screen.findByLabelText("Name")) as HTMLInputElement).value).toBe("Casa Do Alfama");
     await user.click(screen.getByRole("button", { name: "Save" }));
     const saved = api.saveOption.mock.calls[0]?.[0] as OptionBundle;
     expect(saved.option).toMatchObject({

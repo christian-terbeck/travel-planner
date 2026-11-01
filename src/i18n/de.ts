@@ -1230,6 +1230,17 @@ const de: Translation = {
     check:
       "Als Nächstes siehst du die gewohnten Formulare mit den gelesenen Werten. Vergleiche sie vor dem Speichern mit der Bestätigung.",
   },
+  drop: {
+    overlay: "Ablegen, um es zu „{{title}}“ hinzuzufügen",
+    title_one: "{{count}} Datei abgelegt",
+    title_other: "{{count}} Dateien abgelegt",
+    attach: "Als Dokument anhängen",
+    attachTo: "Anhängen an",
+    trip: "Die Reise",
+    read: "Als Buchung lesen",
+    readHint:
+      "„Als Buchung lesen“ sendet die Datei an die API von Anthropic. Du prüfst das Ergebnis im Buchungsformular, bevor es gespeichert wird; die Datei wird an die Buchung angehängt.",
+  },
   offer: {
     button: "Link oder Angebot einfügen",
     title: "Angebot für {{slot}} einfügen",

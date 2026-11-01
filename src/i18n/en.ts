@@ -1214,6 +1214,17 @@ const en = {
     check:
       "Next you see the usual forms with the values read from the file. Check them against the confirmation before saving.",
   },
+  drop: {
+    overlay: "Drop to add to “{{title}}”",
+    title_one: "{{count}} file dropped",
+    title_other: "{{count}} files dropped",
+    attach: "Attach as document",
+    attachTo: "Attach to",
+    trip: "The trip",
+    read: "Read as booking",
+    readHint:
+      "“Read as booking” sends the file to Anthropic's API. You check the result in the booking form before it is saved; the file is attached to the booking.",
+  },
   offer: {
     button: "Paste a link or offer",
     title: "Paste an offer for {{slot}}",

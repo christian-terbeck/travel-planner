@@ -12,7 +12,8 @@ import { PrefsProvider } from "@/lib/prefs";
 import { ConfirmProvider } from "@/ui/dialog";
 import { ToastProvider } from "@/ui/toast";
 
-export function renderInTrip(graph: TripGraph, ui: ReactNode) {
+/** `state` is the navigation state the screen is opened with (e.g. a dropped file to import). */
+export function renderInTrip(graph: TripGraph, ui: ReactNode, state?: unknown) {
   const model = buildModel(
     graph,
     [],
@@ -21,7 +22,7 @@ export function renderInTrip(graph: TripGraph, ui: ReactNode) {
   );
   const router = createMemoryRouter(
     [{ path: "/", element: <Outlet context={model} />, children: [{ index: true, element: ui }] }],
-    { initialEntries: ["/"] },
+    { initialEntries: [{ pathname: "/", state }] },
   );
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return {

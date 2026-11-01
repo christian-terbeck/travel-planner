@@ -1,6 +1,6 @@
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { FileSearch, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ExtractedBooking } from "@/api/bindings/ExtractedBooking";
 import { api } from "@/api/client";
 import { useAction } from "@/api/queries";
@@ -32,10 +32,13 @@ export function ConfirmationImport({
   open,
   onClose,
   onStart,
+  initialPath,
 }: {
   open: boolean;
   onClose: () => void;
   onStart: (draft: BookingDraft) => void;
+  /** A file dropped on the trip: read at once instead of asking for one. */
+  initialPath?: string | null;
 }) {
   const t = useT();
   const m = useTrip();
@@ -45,6 +48,15 @@ export function ConfirmationImport({
   const airports = useAirports();
   const [step, setStep] = useState<Step>({ k: "idle" });
   const [target, setTarget] = useState("new");
+
+  const started = useRef<string | null>(null);
+  useEffect(() => {
+    if (!open) started.current = null;
+    else if (initialPath && started.current !== initialPath) {
+      started.current = initialPath;
+      void read(initialPath);
+    }
+  });
 
   const close = () => {
     setStep({ k: "idle" });
@@ -61,6 +73,9 @@ export function ConfirmationImport({
       ],
     });
     if (typeof path !== "string") return;
+    await read(path);
+  };
+  const read = async (path: string) => {
     setStep({ k: "reading", path });
     try {
       const result = await api.extractConfirmation(path, language);

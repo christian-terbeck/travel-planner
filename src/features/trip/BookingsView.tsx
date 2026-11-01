@@ -1,6 +1,7 @@
 import { Ban, CirclePlus, FileText, MoreHorizontal, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
 import { useRemove } from "@/api/queries";
 import { type PlanItem, segmentFrom, segmentTo } from "@/domain/items";
 import type { Booking, OptionBundle } from "@/domain/types";
@@ -33,6 +34,17 @@ export function BookingsView() {
   const [drafting, setDrafting] = useState<BookingDraft | null>(null);
   const [importing, setImporting] = useState(false);
   const { aiImport } = usePrefs();
+  // A confirmation dropped on the trip arrives here as navigation state and is read at once.
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [dropped, setDropped] = useState<string | null>(null);
+  useEffect(() => {
+    const path = (location.state as { importPath?: string } | null)?.importPath;
+    if (!path) return;
+    setDropped(path);
+    setImporting(true);
+    navigate(".", { replace: true, state: null });
+  }, [location.state, navigate]);
   const bookings = m.graph.bookings.filter((b) => filter === "all" || b.status === filter);
 
   return (
@@ -90,9 +102,14 @@ export function BookingsView() {
       <BookingDialog draft={draft} onClose={() => setDraft(null)} />
       <ConfirmationImport
         open={importing}
-        onClose={() => setImporting(false)}
+        initialPath={dropped}
+        onClose={() => {
+          setImporting(false);
+          setDropped(null);
+        }}
         onStart={(d) => {
           setImporting(false);
+          setDropped(null);
           setDrafting(d);
         }}
       />

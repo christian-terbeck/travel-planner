@@ -1,4 +1,4 @@
-import { ChevronLeft, Copy, Download, MoreHorizontal, Pencil, Trash2, Users } from "lucide-react";
+import { ChevronLeft, Copy, Download, FileDown, MoreHorizontal, Pencil, Trash2, Users } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import { useState } from "react";
 import { Link, NavLink, Outlet, useNavigate, useOutletContext, useParams } from "react-router";
@@ -6,6 +6,7 @@ import { api } from "@/api/client";
 import { useAction, useRemove, useTripGraph } from "@/api/queries";
 import type { TripStatus } from "@/domain/types";
 import { useT } from "@/i18n";
+import { useFileDrop } from "@/lib/fileDrop";
 import { type TripModel, useTripModel } from "@/lib/model";
 import { useFormat } from "@/lib/prefs";
 import { Button, cn, EmptyState, Spinner } from "@/ui/core";
@@ -14,6 +15,7 @@ import { TripStatusBadge } from "@/ui/status";
 import { TripForm } from "../trips/TripForm";
 import { CopyTripDialog } from "./CopyTripDialog";
 import { ExportDialog } from "./ExportDialog";
+import { FileDropDialog } from "./FileDropDialog";
 
 export function useTrip(): TripModel {
   return useOutletContext<TripModel>();
@@ -45,6 +47,8 @@ export function TripLayout() {
   const [editing, setEditing] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [copying, setCopying] = useState(false);
+  const [dropped, setDropped] = useState<string[] | null>(null);
+  const hovering = useFileDrop(setDropped, !!model);
 
   if (query.isPending) {
     return (
@@ -175,6 +179,15 @@ export function TripLayout() {
       <TripForm open={editing} onOpenChange={setEditing} graph={model.graph} />
       <ExportDialog open={exporting} onOpenChange={setExporting} model={model} />
       {copying && <CopyTripDialog model={model} onClose={() => setCopying(false)} />}
+      <FileDropDialog model={model} paths={dropped} onClose={() => setDropped(null)} />
+      {hovering && (
+        <div className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center bg-primary/10 p-8">
+          <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-primary border-dashed bg-surface px-10 py-8 shadow-lg">
+            <FileDown className="size-8 text-primary" aria-hidden />
+            <p className="font-medium">{t("drop.overlay", { title: trip.title })}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
