@@ -56,4 +56,25 @@ describe("combination explorer", () => {
     await user.click(screen.getByRole("button", { name: "Back to price only" }));
     expect(within(firstRow()).getByText("Via Madrid")).toBeTruthy();
   });
+
+  it("compares travel dates when the alternatives allow several", async () => {
+    const user = userEvent.setup();
+    const g = graph();
+    const fs = addSlot(g, "flight");
+    addFlight(g, fs, 30_000, [
+      ["FRA", "LIS", "2027-06-10T07:00", "2027-06-10T09:00"],
+      ["LIS", "FRA", "2027-06-17T18:00", "2027-06-17T22:00"],
+    ]);
+    addFlight(g, fs, 22_000, [
+      ["FRA", "LIS", "2027-06-12T07:00", "2027-06-12T09:00"],
+      ["LIS", "FRA", "2027-06-19T18:00", "2027-06-19T22:00"],
+    ]);
+    renderInTrip(g, <ScenariosPanel />);
+    await user.click(await screen.findByRole("button", { name: "Explore combinations" }));
+    const table = screen.getByRole("heading", { name: "Travel dates compared" }).parentElement as HTMLElement;
+    const rows = within(table).getAllByRole("row").slice(1);
+    expect(rows).toHaveLength(2);
+    expect(within(rows[0] as HTMLElement).getByText("+€80.00")).toBeTruthy();
+    expect(within(rows[1] as HTMLElement).getByText("Cheapest dates")).toBeTruthy();
+  });
 });

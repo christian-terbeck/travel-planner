@@ -5,12 +5,14 @@ import { api } from "@/api/client";
 import { useAction, useRemove } from "@/api/queries";
 import {
   cheapest,
+  type DateWindow,
   type Evaluation,
   evaluate,
   explore,
   type Selection,
   sameSelection,
   scenarioSelection,
+  travelWindows,
 } from "@/domain/scenarios";
 import type { Scenario } from "@/domain/types";
 import {
@@ -73,6 +75,7 @@ export function ScenariosPanel() {
       exploration && !exploration.tooMany ? weigh(exploration.results, m.graph, weights, m.now, m.tz) : null,
     [exploration, m, weights],
   );
+  const windows = useMemo(() => (exploration ? travelWindows(exploration.results) : []), [exploration]);
   const bestWeighed =
     weighed && !isPriceOnly(weights)
       ? (weighed.find((w) => w.e.compatible && w.e.complete)?.e ?? null)
@@ -258,6 +261,12 @@ export function ScenariosPanel() {
                   </Button>
                 )
               }
+            />
+            <DateWindows
+              windows={windows}
+              currency={cur}
+              plan={preferred?.e ?? null}
+              onSave={saveCombination}
             />
             {exploration.results.length > SHOWN && (
               <p className="px-4 py-2 text-fg-3 text-xs">
@@ -462,6 +471,87 @@ function ScenarioTable({
                   )}
                 </td>
                 <td className="px-4 py-2">{actions(row)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** The travel dates the saved alternatives allow, cheapest combination each; shown when there is a choice. */
+function DateWindows({
+  windows,
+  currency,
+  plan,
+  onSave,
+}: {
+  windows: DateWindow[];
+  currency: string;
+  plan: Evaluation | null;
+  onSave: (e: Evaluation) => void;
+}) {
+  const t = useT();
+  const f = useFormat();
+  if (windows.length < 2) return null;
+  const min = Math.min(...windows.map((w) => w.best.converted.minor));
+  const planKey = plan?.period.start && plan.period.end ? `${plan.period.start}/${plan.period.end}` : null;
+  return (
+    <div className="border-line border-t">
+      <h4 className="px-4 pt-3 font-semibold text-sm">{t("scenario.dates.title")}</h4>
+      <p className="px-4 text-fg-3 text-xs">{t("scenario.dates.hint")}</p>
+      <table className="mt-2 w-full text-sm">
+        <thead>
+          <tr className="border-line border-b text-left text-fg-3 text-xs">
+            <th className="px-4 py-1.5 font-medium">{t("scenario.col.period")}</th>
+            <th className="px-2 py-1.5 font-medium">{t("scenario.col.nights")}</th>
+            <th className="px-2 py-1.5 text-right font-medium">{t("scenario.dates.from")}</th>
+            <th className="px-2 py-1.5 text-right font-medium">{t("scenario.dates.vsCheapest")}</th>
+            <th className="px-2 py-1.5 font-medium">{t("scenario.dates.combinations")}</th>
+            <th className="px-4 py-1.5" />
+          </tr>
+        </thead>
+        <tbody>
+          {windows.map((w) => {
+            const diff = w.best.converted.minor - min;
+            const isPlan = planKey === `${w.start}/${w.end}`;
+            return (
+              <tr
+                key={`${w.start}/${w.end}`}
+                className={cn("border-line border-b last:border-0", diff === 0 && "bg-ok-soft/40")}
+              >
+                <td className="whitespace-nowrap px-4 py-1.5">
+                  {f.dateRange(w.start, w.end)}
+                  {isPlan && (
+                    <Badge tone="primary" className="ml-2">
+                      {t("scenario.dates.plan")}
+                    </Badge>
+                  )}
+                </td>
+                <td className="px-2 py-1.5">{w.nights}</td>
+                <td className="tabular whitespace-nowrap px-2 py-1.5 text-right font-medium">
+                  {f.minor(w.best.converted.minor, currency)}
+                </td>
+                <td
+                  className={cn(
+                    "tabular whitespace-nowrap px-2 py-1.5 text-right text-xs",
+                    diff === 0 ? "text-ok" : "text-fg-3",
+                  )}
+                >
+                  {diff === 0 ? t("scenario.dates.cheapest") : f.minor(diff, currency, { signed: true })}
+                </td>
+                <td className="px-2 py-1.5 text-fg-3 text-xs">{w.count}</td>
+                <td className="px-4 py-1.5 text-right">
+                  <Button
+                    size="sm"
+                    variant="subtle"
+                    icon={<Save className="size-3.5" />}
+                    onClick={() => onSave(w.best)}
+                  >
+                    {t("scenario.saveAs")}
+                  </Button>
+                </td>
               </tr>
             );
           })}

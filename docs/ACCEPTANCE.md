@@ -78,3 +78,5 @@ untouched):
     flagged; an activity 30 minutes after landing and a 15:00 check-in after a 09:00 landing show up.
 29. Explorer with a direct and a connecting flight: by price the cheaper comes first; set “Time on the
     way” to “Very important” and price to “A little”: the direct one leads, marked “Best by your weights”.
+30. Two flight pairs a few days apart: the explorer shows “Travel dates compared” with the cheaper
+    dates marked; “Save” stores that combination as a scenario.

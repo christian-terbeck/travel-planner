@@ -6,6 +6,7 @@ import { checkPlan, duplicateBookings, type Warning, withoutDismissed } from "./
 import { buildItems, type PlanItem, planBaseCost, travelerCount } from "./items";
 import { type NightPlan, nightPlan, type Period, travelDays, tripPeriod } from "./itinerary";
 import { addCost, type Converted, type CostSum, convertTotals, emptyCost } from "./money";
+import { compareDate, type PlainDate } from "./time";
 import type { ExchangeRate, Scenario, SlotKind, TripGraph } from "./types";
 
 /** Slot id → chosen option id, or null for "intentionally left out". */
@@ -220,6 +221,40 @@ export function rank(a: Evaluation, b: Evaluation): number {
   if (a.compatible !== b.compatible) return a.compatible ? -1 : 1;
   if (a.complete !== b.complete) return a.complete ? -1 : 1;
   return a.converted.minor - b.converted.minor;
+}
+
+export interface DateWindow {
+  start: PlainDate;
+  end: PlainDate;
+  nights: number;
+  /** Cheapest compatible, complete combination for these dates. */
+  best: Evaluation;
+  /** Compatible, complete combinations with these dates and the fewest nights without a bed. */
+  count: number;
+}
+
+/**
+ * Travel dates the saved alternatives allow, each with its cheapest compatible and complete
+ * combination, in date order. Shows whether shifting the trip saves money. Combinations that leave
+ * more nights uncovered than the best ones (e.g. a stay for other dates) are not a real
+ * alternative for their dates and are left out.
+ */
+export function travelWindows(results: Evaluation[]): DateWindow[] {
+  const usable = results.filter((e) => e.compatible && e.complete && e.period.start && e.period.end);
+  const fewestGaps = Math.min(...usable.map((e) => e.nights.gaps.length));
+  const byDates = new Map<string, DateWindow>();
+  for (const e of usable) {
+    const { start, end } = e.period;
+    if (!start || !end || e.nights.gaps.length > fewestGaps) continue;
+    const key = `${start}/${end}`;
+    const w = byDates.get(key);
+    if (!w) byDates.set(key, { start, end, nights: start.until(end).days, best: e, count: 1 });
+    else {
+      w.count += 1;
+      if (e.converted.minor < w.best.converted.minor) w.best = e;
+    }
+  }
+  return [...byDates.values()].sort((a, b) => compareDate(a.start, b.start) || compareDate(a.end, b.end));
 }
 
 /** The cheapest compatible, complete evaluation of a list (null when none qualifies). */

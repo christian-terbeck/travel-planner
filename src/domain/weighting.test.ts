@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { addFlight, addSlot, addStay, graph } from "./fixture.test-util";
-import { explore, planContext } from "./scenarios";
+import { explore, planContext, travelWindows } from "./scenarios";
 import { Temporal } from "./time";
 import type { CancellationPolicy, TripGraph } from "./types";
 import { DEFAULT_WEIGHTS, isPriceOnly, metrics, weigh } from "./weighting";
@@ -91,5 +91,42 @@ describe("weighing scenarios", () => {
       e.items.every((i) => ["Direct", "Flexible"].includes(i.option.title)),
     );
     expect(directFlex && metrics(directFlex, g, late, TZ).flexible).toBe(0);
+  });
+});
+
+describe("travel dates", () => {
+  it("lists each possible travel window with its cheapest combination", () => {
+    const g = graph();
+    const fs = addSlot(g, "flight");
+    addFlight(
+      g,
+      fs,
+      30_000,
+      [
+        ["FRA", "LIS", "2027-06-10T07:00", "2027-06-10T09:00"],
+        ["LIS", "FRA", "2027-06-17T18:00", "2027-06-17T22:00"],
+      ],
+      { title: "June 10" },
+    );
+    addFlight(
+      g,
+      fs,
+      22_000,
+      [
+        ["FRA", "LIS", "2027-06-12T07:00", "2027-06-12T09:00"],
+        ["LIS", "FRA", "2027-06-19T18:00", "2027-06-19T22:00"],
+      ],
+      { title: "June 12" },
+    );
+    const ss = addSlot(g, "accommodation");
+    addStay(g, ss, 60_000, "2027-06-10", "2027-06-17", { title: "Stay 10" });
+    addStay(g, ss, 65_000, "2027-06-12", "2027-06-19", { title: "Stay 12" });
+    addStay(g, ss, 70_000, "2027-06-12", "2027-06-19", { title: "Dearer stay 12" });
+    const windows = travelWindows(explore(planContext(g, [], TZ)).results);
+    expect(windows.map((w) => [w.start.toString(), w.nights, w.count, w.best.converted.minor])).toEqual([
+      ["2027-06-10", 7, 1, 90_000],
+      ["2027-06-12", 7, 2, 87_000],
+      // Mixing June 10 and June 12 leaves nights without a bed: not a window.
+    ]);
   });
 });
