@@ -611,3 +611,27 @@ fn transport_segments_need_a_mode_and_flights_must_not_have_one() {
     bundle.segments[0].to_lat = Some(41.1);
     assert!(matches!(s.save_option(bundle, false), Err(CoreError::Validation { .. })), "half a coordinate");
 }
+
+#[test]
+fn data_survives_closing_and_reopening_the_app() {
+    let dir = tempfile::tempdir().unwrap();
+    let (t, oid) = {
+        let mut s = Store::open(dir.path()).unwrap();
+        let t = trip(&mut s, "Portugal");
+        let sl = slot(&mut s, &t, SlotKind::Flight);
+        let b = flight_bundle(&sl, 28_000);
+        let oid = b.option.id.clone();
+        s.save_option(b, false).unwrap();
+        book(&mut s, &oid, 29_500, vec![]);
+        s.set_setting("locale", Some("de-DE")).unwrap();
+        (t, oid)
+    };
+    let s = Store::open(dir.path()).unwrap();
+    let g = s.trip_graph(&t).unwrap();
+    assert_eq!(g.options[0].id, oid);
+    assert_eq!(g.options[0].status, OptionStatus::Booked);
+    assert_eq!(g.bookings[0].price_minor, Some(29_500));
+    assert_eq!(g.flight_segments.len(), 2);
+    assert_eq!(s.setting("locale").unwrap().as_deref(), Some("de-DE"));
+    assert_eq!(s.app_info().unwrap().schema_version, crate::db::SCHEMA_VERSION);
+}

@@ -150,8 +150,16 @@ ExchangeRate* (explicit rate + date + source), Setting*, ChangeLog*
 | M11 | Settings, polish, accessibility pass, end-to-end acceptance run on Windows | All acceptance criteria |
 | M12 | Route map with flight/drive distances | Map tab shows the plan's route and km per mode |
 | M13 | Optional online road routes (OSRM) | Ground legs show road km, driving time and road lines when enabled |
+| M14 | Train, bus, ferry, transfer, parking, insurance | Transport segments work like flights in checks, calendar, ICS and map |
+| M15 | German interface | All texts translated, language follows the formats or the setting |
+| M16 | Windows notifications, tray, start with Windows | Reminders arrive as notifications while the app runs |
+| M17 | Optional address search and ECB exchange rates | Coordinates found by name; daily reference rates |
+| M18 | Price history and price alerts | Chart per alternative; reminder at or below a target price |
+| M19 | Travel companion export | One offline HTML file for the phone |
+| M20 | Optional confirmation import with Claude | A confirmation pre-fills the booking forms |
+| M21 | UI tests | Booking lifecycle runs in the real screens (jsdom) |
 
 ## 5. Status
 
-M0–M10, M12 and M13 are implemented. M11 (manual end-to-end acceptance run on Windows and UI
-polish from that run) is pending; the Windows build starts and initialises its database.
+M0–M10 and M12–M21 are implemented. For M11, every acceptance criterion is covered by automated
+tests ([ACCEPTANCE.md](ACCEPTANCE.md)); the manual run on Windows listed there is still pending.

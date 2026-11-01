@@ -285,7 +285,7 @@ export function addActivity(
   g: TripGraph,
   slot: Slot,
   price: number | null,
-  date: string,
+  date: string | null,
   start: string | null,
   end: string | null,
   endDate: string | null = null,
