@@ -13,6 +13,7 @@ import { SLOT_KINDS } from "@/lib/rows";
 import { Card, cn, EmptyState, Input, PageHeader, Select, Stat } from "@/ui/core";
 import { KindIcon } from "@/ui/status";
 import { CancellationCell } from "../trip/bookings/CancellationCell";
+import { ProviderLine } from "../trip/itemText";
 
 type Group = "all" | "free" | "approaching" | "non_refundable" | "unknown";
 
@@ -186,7 +187,13 @@ export function CancellationsPage() {
                       </Link>
                     </td>
                     <td className="px-2 py-2.5 text-fg-2">
-                      {[b.provider, b.platform].filter(Boolean).join(" · ")}
+                      <ProviderLine
+                        provider={b.provider}
+                        platform={b.platform}
+                        url={b.url ?? item?.option.url ?? null}
+                        segments={item?.segments.map((x) => x.segment)}
+                        showUrl={false}
+                      />
                     </td>
                     <td className="tabular px-2 py-2.5 text-right">{f.minor(b.price_minor, b.currency)}</td>
                     <td className="px-2 py-2.5">

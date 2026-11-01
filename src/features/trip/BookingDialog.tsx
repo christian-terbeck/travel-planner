@@ -7,10 +7,12 @@ import type { Booking, CancellationPolicy, OptionBundle, Payment, PaymentStatus,
 import { useT } from "@/i18n";
 import { bundleOf } from "@/lib/model";
 import { useFormat } from "@/lib/prefs";
+import { fillFromUrl } from "@/lib/providers";
 import { newBooking, newId, newPayment, newPolicy, nil } from "@/lib/rows";
 import { Button, Checkbox, Field, Input, Select, Textarea } from "@/ui/core";
 import { Dialog } from "@/ui/dialog";
 import { DateInput, MoneyInput } from "@/ui/inputs";
+import { ProviderInput } from "@/ui/provider";
 import { PolicyEditor } from "./PolicyEditor";
 import { useTrip } from "./TripLayout";
 
@@ -175,14 +177,14 @@ export function BookingDialog({
             />
           </Field>
           <Field label={t("option.provider")} htmlFor="bk-prov">
-            <Input
+            <ProviderInput
               id="bk-prov"
               value={booking.provider ?? ""}
               onChange={(e) => set("provider", nil(e.target.value))}
             />
           </Field>
           <Field label={t("option.platform")} htmlFor="bk-plat">
-            <Input
+            <ProviderInput
               id="bk-plat"
               value={booking.platform ?? ""}
               onChange={(e) => set("platform", nil(e.target.value))}
@@ -218,7 +220,10 @@ export function BookingDialog({
               id="bk-url"
               type="url"
               value={booking.url ?? ""}
-              onChange={(e) => set("url", nil(e.target.value))}
+              onChange={(e) => {
+                const url = nil(e.target.value);
+                setBooking({ ...booking, ...fillFromUrl(booking, url), url });
+              }}
             />
           </Field>
           <Field label={t("option.contact")} htmlFor="bk-contact">

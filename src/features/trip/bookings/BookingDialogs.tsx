@@ -6,10 +6,12 @@ import { suggestedPaymentStatus } from "@/domain/budget";
 import type { Booking, CancellationPolicy, OptionBundle, Payment, PaymentStatus } from "@/domain/types";
 import { useT } from "@/i18n";
 import { useFormat } from "@/lib/prefs";
+import { fillFromUrl } from "@/lib/providers";
 import { newPayment, newPolicy, nil, nowIso } from "@/lib/rows";
 import { Badge, Button, Checkbox, Field, IconButton, Input, Select, Textarea } from "@/ui/core";
 import { Dialog } from "@/ui/dialog";
 import { DateInput, DateTimeInput, MoneyInput } from "@/ui/inputs";
+import { ProviderInput } from "@/ui/provider";
 import { PAYMENT_STATUSES, PaymentFields } from "../BookingDialog";
 import { PolicyEditor } from "../PolicyEditor";
 import { useTrip } from "../TripLayout";
@@ -89,14 +91,14 @@ export function BookingEditDialog({ booking, onClose }: { booking: Booking; onCl
             <DateInput id="be-on" value={b.booked_on} onChange={(v) => set("booked_on", v)} />
           </Field>
           <Field label={t("option.provider")} htmlFor="be-prov">
-            <Input
+            <ProviderInput
               id="be-prov"
               value={b.provider ?? ""}
               onChange={(e) => set("provider", nil(e.target.value))}
             />
           </Field>
           <Field label={t("option.platform")} htmlFor="be-plat">
-            <Input
+            <ProviderInput
               id="be-plat"
               value={b.platform ?? ""}
               onChange={(e) => set("platform", nil(e.target.value))}
@@ -120,7 +122,10 @@ export function BookingEditDialog({ booking, onClose }: { booking: Booking; onCl
               id="be-url"
               type="url"
               value={b.url ?? ""}
-              onChange={(e) => set("url", nil(e.target.value))}
+              onChange={(e) => {
+                const url = nil(e.target.value);
+                setB({ ...b, ...fillFromUrl(b, url), url });
+              }}
             />
           </Field>
           <Field label={t("option.contact")} htmlFor="be-contact">

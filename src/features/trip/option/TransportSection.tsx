@@ -5,6 +5,7 @@ import { usePrefs } from "@/lib/prefs";
 import { newSegment, nil } from "@/lib/rows";
 import { Button, Field, IconButton, Input, Select } from "@/ui/core";
 import { DateTimeInput, LocationInput, TzInput } from "@/ui/inputs";
+import { ProviderInput } from "@/ui/provider";
 import { ModeIcon } from "@/ui/status";
 import { Section } from "./Section";
 
@@ -107,7 +108,7 @@ export function TransportSection({ b, setB }: { b: OptionBundle; setB: (b: Optio
               </Select>
             </Field>
             <Field label={t("transport.operator")} htmlFor={`t-op-${i}`}>
-              <Input
+              <ProviderInput
                 id={`t-op-${i}`}
                 value={s.airline ?? ""}
                 placeholder={t("transport.operatorPlaceholder")}

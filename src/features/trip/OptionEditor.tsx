@@ -5,16 +5,17 @@ import { useAction } from "@/api/queries";
 import type { Decision, OptionBundle, OptionStatus, PlanOption, PriceBasis, Slot } from "@/domain/types";
 import { useT } from "@/i18n";
 import { usePrefs } from "@/lib/prefs";
+import { fillFromUrl } from "@/lib/providers";
 import { newPolicy, nil, nowIso } from "@/lib/rows";
 import { Button, Field, Input, Select, Textarea } from "@/ui/core";
 import { Dialog, useConfirm } from "@/ui/dialog";
 import { MoneyInput, NumberInput } from "@/ui/inputs";
+import { ProviderInput } from "@/ui/provider";
 import { KindIcon } from "@/ui/status";
 import { AccommodationSection } from "./option/AccommodationSection";
 import { ActivitySection } from "./option/ActivitySection";
 import { FeesSection } from "./option/FeesSection";
 import { FlightSection } from "./option/FlightSection";
-import { platformFromUrl } from "./option/platforms";
 import { RentalSection } from "./option/RentalSection";
 import { Section } from "./option/Section";
 import { TransportSection } from "./option/TransportSection";
@@ -138,7 +139,7 @@ export function OptionEditor({
               />
             </Field>
             <Field label={t("option.provider")} htmlFor="o-prov">
-              <Input
+              <ProviderInput
                 id="o-prov"
                 value={o.provider ?? ""}
                 placeholder={t(`option.providerPlaceholder.${slot.kind}`)}
@@ -146,7 +147,7 @@ export function OptionEditor({
               />
             </Field>
             <Field label={t("option.platform")} htmlFor="o-plat">
-              <Input
+              <ProviderInput
                 id="o-plat"
                 value={o.platform ?? ""}
                 placeholder="Booking.com, Google Flights…"
@@ -161,8 +162,7 @@ export function OptionEditor({
                 placeholder="https://"
                 onChange={(e) => {
                   const url = nil(e.target.value);
-                  const platform = url && !o.platform ? platformFromUrl(url) : null;
-                  setB({ ...b, option: { ...o, url, platform: platform ?? o.platform } });
+                  setB({ ...b, option: { ...o, ...fillFromUrl(o, url), url } });
                 }}
               />
             </Field>

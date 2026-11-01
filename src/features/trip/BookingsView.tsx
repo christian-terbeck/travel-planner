@@ -15,7 +15,7 @@ import { BookingEditDialog, CancelDialog, PaymentDialog } from "./bookings/Booki
 import { CancellationCell } from "./bookings/CancellationCell";
 import { DirectBookingStart } from "./bookings/DirectBookingStart";
 import { ConfirmationImport } from "./ConfirmationImport";
-import { ExternalUrl, useWhen } from "./itemText";
+import { ProviderLine, useWhen } from "./itemText";
 import { OptionEditor } from "./OptionEditor";
 import { useTrip } from "./TripLayout";
 
@@ -172,8 +172,12 @@ function BookingTable({
                     {b.status === "cancelled" && <Badge tone="danger">{t("status.cancelled")}</Badge>}
                   </div>
                   <div className="flex items-center gap-2 text-fg-3 text-xs">
-                    {[b.provider, b.platform].filter(Boolean).join(" · ")}
-                    <ExternalUrl url={b.url} />
+                    <ProviderLine
+                      provider={b.provider}
+                      platform={b.platform}
+                      url={b.url}
+                      segments={(segs.length ? segs : (item?.segments ?? [])).map((s) => s.segment)}
+                    />
                     {docs > 0 && (
                       <span className="inline-flex items-center gap-0.5">
                         <FileText className="size-3" aria-hidden />

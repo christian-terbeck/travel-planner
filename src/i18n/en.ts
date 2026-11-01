@@ -620,6 +620,9 @@ const en = {
     deleteText: "All its alternatives are deleted as well.",
     deleted: "Need deleted",
   },
+  provider: {
+    openWebsite: "Open the {{name}} website",
+  },
   option: {
     newTitle: "New alternative for {{slot}}",
     editTitle: "Edit {{title}}",
@@ -655,7 +658,7 @@ const en = {
     },
     platform: "Booking platform",
     url: "Link",
-    urlHint: "Opened in your browser only when you click it.",
+    urlHint: "Provider and platform are recognised from the link. Opened only when you click it.",
     price: "Price",
     priceBasis: "Price applies",
     partySize: "People",

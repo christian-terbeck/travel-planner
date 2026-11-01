@@ -26,7 +26,7 @@ import { Badge, Button, Card, Checkbox, cn, EmptyState, IconButton, Segmented } 
 import { useConfirm } from "@/ui/dialog";
 import { CancellationBadge, Certainty, KindIcon, StatusBadge } from "@/ui/status";
 import { BookingDialog } from "./BookingDialog";
-import { ExternalUrl, useDuration, useWhen } from "./itemText";
+import { ProviderLine, useDuration, useWhen } from "./itemText";
 import { OptionEditor } from "./OptionEditor";
 import { PriceCheckDialog } from "./planning/PriceCheckDialog";
 import { SlotDialog } from "./planning/SlotDialog";
@@ -397,8 +397,12 @@ function SlotCard({
                         ) : null}
                       </div>
                       <div className="flex items-center gap-2 text-fg-3 text-xs">
-                        {[item.option.provider, item.option.platform].filter(Boolean).join(" · ")}
-                        <ExternalUrl url={item.option.url} />
+                        <ProviderLine
+                          provider={item.option.provider}
+                          platform={item.option.platform}
+                          url={item.option.url}
+                          segments={item.segments.map((s) => s.segment)}
+                        />
                       </div>
                     </td>
                     <td className="px-2 py-2 align-top text-xs">{when(item)}</td>

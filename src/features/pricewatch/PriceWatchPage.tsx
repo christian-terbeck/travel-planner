@@ -10,6 +10,7 @@ import { setTripUi } from "@/lib/tripUi";
 import { Badge, Card, CardHeader, cn, EmptyState, PageHeader } from "@/ui/core";
 import { PriceSparkline } from "@/ui/PriceChart";
 import { KindIcon } from "@/ui/status";
+import { ProviderLine } from "../trip/itemText";
 
 const STALE_DAYS = 14;
 
@@ -112,7 +113,17 @@ export function PriceWatchPage() {
                           {i.option.title}
                         </div>
                         <div className="text-fg-3 text-xs">
-                          {m.graph.trip.title} · {i.option.platform ?? i.option.provider ?? "—"}
+                          <span className="inline-flex items-center gap-1.5">
+                            {m.graph.trip.title} ·
+                            <ProviderLine
+                              provider={i.option.provider}
+                              platform={i.option.platform}
+                              url={i.option.url}
+                              segments={i.segments.map((s) => s.segment)}
+                              showUrl={false}
+                              fallback="—"
+                            />
+                          </span>
                         </div>
                       </td>
                       <td className="tabular px-2 py-2 text-right text-fg-3">

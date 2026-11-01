@@ -1,10 +1,13 @@
 import { ExternalLink } from "lucide-react";
+import type { ReactNode } from "react";
 import { api } from "@/api/client";
 import { useAction } from "@/api/queries";
 import { isJourney, type PlanItem, segmentFrom, segmentTo } from "@/domain/items";
 import { minutesBetween } from "@/domain/time";
 import { useT } from "@/i18n";
 import { useFormat } from "@/lib/prefs";
+import { type Provider, resolveProviders, type SegmentLike, segmentAirline } from "@/lib/providers";
+import { ProviderLogo } from "@/ui/provider";
 
 /** One-line "when" of an item, in the local times of its places. */
 export function useWhen() {
@@ -80,4 +83,62 @@ export function ExternalUrl({ url, label }: { url: string | null; label?: string
       <span className="truncate">{label ?? host}</span>
     </button>
   );
+}
+
+/**
+ * Provider and platform with their logos (recognised offline from the name, link or flight numbers),
+ * followed by the stored link. A logo opens the provider's website.
+ */
+export function ProviderLine({
+  provider,
+  platform,
+  url,
+  segments,
+  showUrl = true,
+  fallback = null,
+}: {
+  provider: string | null;
+  platform: string | null;
+  url: string | null;
+  segments?: SegmentLike[];
+  showUrl?: boolean;
+  /** Shown when there is nothing to name or link. */
+  fallback?: ReactNode;
+}) {
+  const run = useAction();
+  const found = resolveProviders({ provider, platform, url }, segments);
+  const open = (u: string) => void run(() => api.openUrl(u));
+  const names = [
+    provider ?? (found.providers.length ? found.providers.map((p) => p.name).join(" / ") : null),
+    platform ?? found.platform?.name ?? null,
+  ].filter(Boolean);
+  const logos = [...found.providers, ...(found.platform ? [found.platform] : [])];
+  if (!names.length && !(showUrl && url)) return fallback;
+  return (
+    <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
+      {logos.length > 0 && (
+        <span className="inline-flex shrink-0 items-center gap-0.5">
+          {logos.map((p) => (
+            <ProviderLogo key={p.id} provider={p} size="sm" onOpen={open} />
+          ))}
+        </span>
+      )}
+      {names.length > 0 && <span className="truncate">{names.join(" · ")}</span>}
+      {showUrl && <ExternalUrl url={url} />}
+    </span>
+  );
+}
+
+/** The one logo that stands for an item (or one of its segments): airline, company, else platform. */
+export function itemBrand(item: PlanItem, segmentId?: string): Provider | null {
+  const seg = item.segments.find((s) => s.segment.id === segmentId)?.segment;
+  const own = seg ? segmentAirline(seg) : null;
+  if (own) return own;
+  const b = item.activeBookings[0];
+  const o = item.option;
+  const found = resolveProviders(
+    { provider: b?.provider ?? o.provider, platform: b?.platform ?? o.platform, url: b?.url ?? o.url },
+    item.segments.map((s) => s.segment),
+  );
+  return found.providers[0] ?? found.platform;
 }

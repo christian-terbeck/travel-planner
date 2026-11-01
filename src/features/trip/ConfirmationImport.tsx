@@ -13,6 +13,7 @@ import { Button, Field, Select, Spinner } from "@/ui/core";
 import { Dialog } from "@/ui/dialog";
 import { KindIcon } from "@/ui/status";
 import type { BookingDraft } from "./BookingDialog";
+import { ProviderLine } from "./itemText";
 import { useTrip } from "./TripLayout";
 
 type Step =
@@ -148,6 +149,23 @@ export function ConfirmationImport({
               <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-3 text-fg-2 text-xs">
                 <dt>{t("slot.kind")}</dt>
                 <dd>{t(`kind.${kind}`)}</dd>
+                {(result.provider || result.platform || result.segments.some((g) => g.carrier)) && (
+                  <>
+                    <dt>{t("option.provider")}</dt>
+                    <dd>
+                      <ProviderLine
+                        provider={result.provider}
+                        platform={result.platform}
+                        url={null}
+                        segments={result.segments.map((g) => ({
+                          airline: g.carrier,
+                          flight_number: g.number,
+                          mode: g.mode === "flight" ? null : g.mode,
+                        }))}
+                      />
+                    </dd>
+                  </>
+                )}
                 <dt>{t("booking.reference")}</dt>
                 <dd className="font-mono">{result.reference ?? "—"}</dd>
                 <dt>{t("option.price")}</dt>

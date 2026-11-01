@@ -631,6 +631,9 @@ const de: Translation = {
     deleteText: "Alle zugehörigen Alternativen werden ebenfalls gelöscht.",
     deleted: "Bedarf gelöscht",
   },
+  provider: {
+    openWebsite: "Website von {{name}} öffnen",
+  },
   option: {
     newTitle: "Neue Alternative für {{slot}}",
     editTitle: "{{title}} bearbeiten",
@@ -666,7 +669,7 @@ const de: Translation = {
     },
     platform: "Buchungsplattform",
     url: "Link",
-    urlHint: "Wird nur in deinem Browser geöffnet, wenn du ihn anklickst.",
+    urlHint: "Anbieter und Plattform werden am Link erkannt. Geöffnet wird er nur per Klick.",
     price: "Preis",
     priceBasis: "Preis gilt",
     partySize: "Personen",

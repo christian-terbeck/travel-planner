@@ -1,9 +1,11 @@
 import { Plus, Repeat, Trash2 } from "lucide-react";
 import type { FlightSegment, OptionBundle } from "@/domain/types";
 import { useT } from "@/i18n";
+import { airlineFromCode, segmentAirline } from "@/lib/providers";
 import { newSegment, nil } from "@/lib/rows";
 import { Button, Field, IconButton, Input } from "@/ui/core";
 import { AirportInput, DateTimeInput, TzInput } from "@/ui/inputs";
+import { ProviderInput } from "@/ui/provider";
 import { Section } from "./Section";
 
 export function FlightSection({ b, setB }: { b: OptionBundle; setB: (b: OptionBundle) => void }) {
@@ -80,8 +82,9 @@ export function FlightSection({ b, setB }: { b: OptionBundle; setB: (b: OptionBu
           </div>
           <div className="grid grid-cols-6 gap-3">
             <Field label={t("flight.airline")} htmlFor={`s-al-${i}`}>
-              <Input
+              <ProviderInput
                 id={`s-al-${i}`}
+                detected={segmentAirline(s)}
                 value={s.airline ?? ""}
                 onChange={(e) => set(i, { airline: nil(e.target.value) })}
               />
@@ -91,7 +94,16 @@ export function FlightSection({ b, setB }: { b: OptionBundle; setB: (b: OptionBu
                 id={`s-fn-${i}`}
                 value={s.flight_number ?? ""}
                 placeholder="TP 571"
-                onChange={(e) => set(i, { flight_number: nil(e.target.value) })}
+                onChange={(e) => {
+                  const flight_number = nil(e.target.value);
+                  // Follow the flight number while the airline is empty or was filled in from it.
+                  const before = airlineFromCode(s.flight_number)?.name;
+                  const airline =
+                    !s.airline || s.airline === before
+                      ? (airlineFromCode(flight_number)?.name ?? (s.airline === before ? null : s.airline))
+                      : s.airline;
+                  set(i, { flight_number, airline });
+                }}
               />
             </Field>
             <Field label={t("flight.from")} htmlFor={`s-from-${i}`}>

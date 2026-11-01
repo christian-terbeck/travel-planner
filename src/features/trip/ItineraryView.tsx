@@ -7,11 +7,14 @@ import { evaluate, scenarioSelection } from "@/domain/scenarios";
 import { compareDate, dateRange, type PlainDate, Temporal, todayIn } from "@/domain/time";
 import { useT } from "@/i18n";
 import { useFormat } from "@/lib/prefs";
+import { segmentAirline } from "@/lib/providers";
 import { useTripUi } from "@/lib/tripUi";
 import { Badge, Button, Card, Checkbox, cn, EmptyState, Segmented, Select } from "@/ui/core";
+import { ProviderLogo } from "@/ui/provider";
 import { KindIcon, StatusBadge } from "@/ui/status";
 import { type CalEvent, startOfWeek, tripEvents, unscheduled } from "../calendar/events";
 import { AgendaView, eventClass, Legend, MonthView, WeekView } from "../calendar/views";
+import { itemBrand, ProviderLine } from "./itemText";
 import { useTrip } from "./TripLayout";
 import { useWarningText } from "./warnings";
 
@@ -315,6 +318,7 @@ function DayByDay({
                       : isEnd
                         ? f.time(e.end, e.tz)
                         : f.time(e.start, e.tz);
+                  const brand = item ? itemBrand(item, e.key) : null;
                   return (
                     <li key={`${e.key}-${k}`}>
                       <button
@@ -337,6 +341,9 @@ function DayByDay({
                         <span className="min-w-0 flex-1">
                           {label && <span className="mr-1.5 text-fg-3 text-xs">{label}</span>}
                           <span className="font-medium">{e.title}</span>
+                          {brand && (
+                            <ProviderLogo provider={brand} size="sm" className="ml-1.5 align-[-3px]" />
+                          )}
                           {e.kind === "flight" && !e.firstDay.equals(d) && (
                             <span className="ml-1.5 text-fg-3 text-xs">({t("itinerary.arrives")})</span>
                           )}
@@ -444,16 +451,39 @@ function SelectedCard({ item, onClose }: { item: PlanItem; onClose: () => void }
             ? f.totals(Object.fromEntries(item.activeBookings.map((b) => [b.currency, b.price_minor ?? 0])))
             : f.totals(item.estimate.totals)}
         </dd>
-        {item.segments.map((s) => (
-          <div key={s.segment.id} className="contents">
-            <dt className="text-fg-3">{`${segmentFrom(s.segment) ?? "?"}→${segmentTo(s.segment) ?? "?"}`}</dt>
-            <dd className="text-xs">
-              {f.local(s.segment.depart_local, s.segment.depart_tz)}
-              <br />
-              {f.local(s.segment.arrive_local, s.segment.arrive_tz)}
+        {(item.option.provider || item.option.platform || item.option.url || itemBrand(item)) && (
+          <>
+            <dt className="text-fg-3">{t("option.provider")}</dt>
+            <dd className="min-w-0 text-xs">
+              <ProviderLine
+                provider={item.activeBookings[0]?.provider ?? item.option.provider}
+                platform={item.activeBookings[0]?.platform ?? item.option.platform}
+                url={item.activeBookings[0]?.url ?? item.option.url}
+                segments={item.segments.map((s) => s.segment)}
+                fallback="—"
+              />
             </dd>
-          </div>
-        ))}
+          </>
+        )}
+        {item.segments.map((s) => {
+          const airline = s.segment.airline || s.segment.flight_number ? segmentAirline(s.segment) : null;
+          return (
+            <div key={s.segment.id} className="contents">
+              <dt className="text-fg-3">{`${segmentFrom(s.segment) ?? "?"}→${segmentTo(s.segment) ?? "?"}`}</dt>
+              <dd className="text-xs">
+                {(s.segment.airline || s.segment.flight_number) && (
+                  <span className="mb-0.5 flex items-center gap-1.5 text-fg-2">
+                    {airline && <ProviderLogo provider={airline} size="sm" />}
+                    {[s.segment.airline ?? airline?.name, s.segment.flight_number].filter(Boolean).join(" ")}
+                  </span>
+                )}
+                {f.local(s.segment.depart_local, s.segment.depart_tz)}
+                <br />
+                {f.local(s.segment.arrive_local, s.segment.arrive_tz)}
+              </dd>
+            </div>
+          );
+        })}
         {item.accommodation && (
           <>
             <dt className="text-fg-3">{t("stay.checkIn")}</dt>
